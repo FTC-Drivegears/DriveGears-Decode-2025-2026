@@ -51,7 +51,8 @@ public class PinPointOdometrySubsystem {
 
         // TODO: Tune these offsets for accurate positioning
         // odo.setOffsets(0, 865);
-        pinpointDriver.setOffsets(120, -48);
+        //120, -48
+        pinpointDriver.setOffsets(0, 0);
 
         // Set the encoder resolution to the 4-bar pod type
         pinpointDriver.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -92,8 +93,8 @@ public class PinPointOdometrySubsystem {
      * Adjusts y-axis sign to fit coordinate convention (positive y when strafing right).
      */
     public void processOdometry(){
-        x =  (pinpointDriver.getPosX() / 10);           // Convert mm or encoder units to cm for x
-        y = -(pinpointDriver.getPosY() / 10);           // Convert and invert y to match coordinate system
+        x =  pinpointDriver.getPosX();           // Convert mm or encoder units to cm for x
+        y = pinpointDriver.getPosY();           // Convert and invert y to match coordinate system
         heading = pinpointDriver.getHeading();          // Get current heading in degrees
         pinpointDriver.update();                        // Update internal odometry data
     }

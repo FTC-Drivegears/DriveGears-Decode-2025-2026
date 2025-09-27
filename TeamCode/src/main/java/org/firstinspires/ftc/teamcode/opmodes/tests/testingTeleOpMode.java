@@ -10,8 +10,8 @@ import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometryComman
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
 
 
-@TeleOp(name = "SampleTeleOpMode", group = "TeleOp")
-public class SampleTeleOpMode extends LinearOpMode {
+@TeleOp(name = "testingTeleOpMode", group = "TeleOp")
+public class testingTeleOpMode extends LinearOpMode {
 
     // opmodes should only own commands
     private MecanumCommand mecanumCommand;
@@ -39,11 +39,7 @@ public class SampleTeleOpMode extends LinearOpMode {
 
         // Loop while OpMode is running
         while (opModeIsActive()) {
-            theta = mecanumCommand.fieldOrientedMove(
-                    gamepad1.left_stick_y,
-                    gamepad1.left_stick_x,
-                    gamepad1.right_stick_x
-            );
+            pinPointOdometryCommand.processOdometry();
 
             x = mecanumCommand.getOdoX();
             y = mecanumCommand.getOdoY();
@@ -53,7 +49,7 @@ public class SampleTeleOpMode extends LinearOpMode {
             if (gamepad1.start){
                 mecanumCommand.resetPinPointOdometry();
             }
-            pinPointOdometryCommand.processOdometry();
+
 
         }
 

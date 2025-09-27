@@ -118,7 +118,7 @@ public class MecanumCommand {
             double angle = Math.PI / 2 - pinPointOdoSubsystem.getHeading();
             double localVertical = vertical * Math.cos(pinPointOdoSubsystem.getHeading()) - horizontal * Math.cos(angle);
             double localHorizontal = vertical * Math.sin(pinPointOdoSubsystem.getHeading()) + horizontal * Math.sin(angle);
-            mecanumSubsystem.partialMove(true, localVertical, localHorizontal, rotational);
+            mecanumSubsystem.partialMove( true, localVertical, localHorizontal, rotational);
     }
 
     public void resetPinPointOdometry() {
@@ -204,6 +204,7 @@ public class MecanumCommand {
 
     public void motorProcess() {
         mecanumSubsystem.motorProcessNoEncoder();
+        processPIDUsingPinpoint();
     }
 
 }

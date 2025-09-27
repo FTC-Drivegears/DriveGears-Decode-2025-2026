@@ -33,21 +33,14 @@ package org.firstinspires.ftc.teamcode;
 
 public class Specifications {
 
-    public static final String EXTENSION_MOTOR_MAIN = "lift1";
-    public static final String EXTENSION_MOTOR_AUX1 = "lift2";
-    public static final String EXTENSION_MOTOR_AUX2 = "lift3";
 
 
-    // subsystem name
 
-    public static final String CLAW_SERVO = "claw";
-    public static final String LEFT_OUTPUT_ARM = "larm";
-    public static final String RIGHT_OUTPUT_ARM = "rarm";
 
-    public static final String EXTENSION_ARM_LEFT = "llinkage";
-    public static final String EXTENSION_ARM_RIGHT = "rlinkage";
-    public static final String ROLL = "roll";
-    public static final String PITCH = "pitch";
+    public static final String INTAKE= "intake";
+    public static final String TURRET = "turret";
+
+    public static final String SHOOTER = "shooter";
 
 
 
@@ -62,12 +55,12 @@ public class Specifications {
 
     public static final String PIN_POINT_ODOMETRY = "odo";
 
-    public static final String HANGING_MOTOR = "hangingMotor";
-    public static final String HANGING_MOTOR_AUX = "hangingMotorAux";
+//    public static final String HANGING_MOTOR = "hangingMotor";
+//    public static final String HANGING_MOTOR_AUX = "hangingMotorAux";
 
-//    public static final String COLOR_SENSOR = "colorSensor";
+    public static final String COLOR_SENSOR = "colorSensor";
 
-//    public static final String LED = "led";
+    public static final String LED = "led";
 
 
     public static final int CVSmoothing = 30;
