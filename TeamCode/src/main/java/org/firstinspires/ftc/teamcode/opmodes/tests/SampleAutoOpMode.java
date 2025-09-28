@@ -8,16 +8,16 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
-import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometryCommand;
 
 
 @Autonomous (name = "SampleAutoOpMode")
 public class SampleAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
-    private PinPointOdometryCommand pinPointOdometryCommand;
     private FtcDashboard dash;
     private TelemetryPacket packet;
     private int stage1 = 0;
+
+    double[] motorPowers;
     enum AUTO_STATE {
         FIRST_BUCKET,
         SUB_PICKUP,
@@ -30,13 +30,12 @@ public class SampleAutoOpMode extends LinearOpMode {
         // create Hardware using hardwareMap
         Hardware hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
-        pinPointOdometryCommand = new PinPointOdometryCommand(hw);
 
 
         boolean firstInstance = true;
-        dash = FtcDashboard.getInstance();
-        telemetry = dash.getTelemetry();
-        packet = new TelemetryPacket();
+        //dash = FtcDashboard.getInstance();
+        //telemetry = dash.getTelemetry();
+        //packet = new TelemetryPacket();
         ElapsedTime timer;
 
 
@@ -45,13 +44,13 @@ public class SampleAutoOpMode extends LinearOpMode {
         while (opModeIsActive()) {
             // run processes
             updateTelemetry();
-            mecanumCommand.motorProcess();
-            pinPointOdometryCommand.processOdometry();
+            motorPowers = mecanumCommand.motorProcess();
+            mecanumCommand.processOdometry();
 
 
             switch (autoState) {
                 case FIRST_BUCKET:
-                    if (mecanumCommand.moveToPos(0, 10, 0.8)) {
+                    if (mecanumCommand.moveToPos(0, 10, 0.0)) {
                         autoState = AUTO_STATE.FINISH;
                     }
                     break;
@@ -66,9 +65,11 @@ public class SampleAutoOpMode extends LinearOpMode {
 
 
     public void updateTelemetry() {
-        packet.put("x: ", mecanumCommand.getOdoX());
-        packet.put("y: ", mecanumCommand.getOdoY());
-        packet.put("theta: ", mecanumCommand.getOdoHeading());
+        telemetry.addData("x: ", mecanumCommand.getOdoX());
+        telemetry.addData("y: ", mecanumCommand.getOdoY());
+        telemetry.addData("theta: ", mecanumCommand.getOdoHeading());
+        telemetry.addData("motor powers:", motorPowers[1]);
+        telemetry.update();
     }
 
 

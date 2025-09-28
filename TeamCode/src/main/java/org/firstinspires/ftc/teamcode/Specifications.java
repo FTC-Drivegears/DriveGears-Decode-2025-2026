@@ -4,10 +4,7 @@ package org.firstinspires.ftc.teamcode;
     Control Hub:
 
     Motors:
-    0:LeftBack
-    1:LeftForward
-    2:Lift 1
-    3:Lift 2
+    0:
 
     Servos:
     0. leftLinkage

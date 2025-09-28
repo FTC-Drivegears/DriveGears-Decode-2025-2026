@@ -8,6 +8,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.pidcore.PIDCore;
 
+import java.sql.Array;
+
 class MecanumSubsystem {
     //rf: right front/forward
     //rb: right back
@@ -58,10 +60,10 @@ class MecanumSubsystem {
         globalYController = new PIDCore(kpy, kdy, kiy);
         globalThetaController = new PIDCore(kptheta, kdtheta, kitheta);
 
-        hw.lf.setDirection(DcMotorSimple.Direction.REVERSE);
-        hw.rf.setDirection(DcMotorSimple.Direction.FORWARD);
-        hw.lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        hw.rb.setDirection(DcMotorSimple.Direction.FORWARD);
+        hw.lf.setDirection(DcMotorSimple.Direction.FORWARD);
+        hw.rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        hw.lb.setDirection(DcMotorSimple.Direction.FORWARD);
+        hw.rb.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // set motor behaviour
         hw.lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -164,7 +166,7 @@ class MecanumSubsystem {
         hw.lf.setVelocity(lfvel, AngleUnit.RADIANS);
     }
     // processes velocity control with no encoder feedback
-    public void motorProcessNoEncoder(){
+    public double[] motorProcessNoEncoder(){
         double lfVelTemp = lfVelMain + lfVelAdjustment1;
         double lbVelTemp = lbVelMain + lbVelAdjustment1;
         double rfVelTemp = rfVelMain + rfVelAdjustment1;
@@ -184,9 +186,10 @@ class MecanumSubsystem {
         rfvel = rfVelTemp;
         rbvel = rbVelTemp;
 
+        double[] motorPowers = {lfvel, lbvel, rfvel, rbvel};
         // set motor powers
-
         setPowers(rfvel,lbvel,rbvel,lfvel);
+        return motorPowers;
     }
 
     //    named maxDouble temporarily to avoid name conflicts with local variable
