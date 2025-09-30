@@ -27,7 +27,7 @@ public class Hardware {
     //public final CRServo turret;
     //public final CRServo intake;
 
-    public final DcMotorEx shooter;
+    //public final DcMotorEx shooter;
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
@@ -41,7 +41,7 @@ public class Hardware {
 
         //this.intake = hwMap.get(CRServo.class, Specifications.INTAKE);
         //this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
-        this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
+        //this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
 

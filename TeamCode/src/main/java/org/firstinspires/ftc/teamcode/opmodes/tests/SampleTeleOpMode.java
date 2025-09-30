@@ -26,7 +26,7 @@ public class SampleTeleOpMode extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         hw = Hardware.getInstance(hardwareMap);
-        mecanumCommand = new MecanumCommand(hw);
+        mecanumCommand = new MecanumCommand(hw, telemetry);
         resetTimer = new ElapsedTime();
 
 

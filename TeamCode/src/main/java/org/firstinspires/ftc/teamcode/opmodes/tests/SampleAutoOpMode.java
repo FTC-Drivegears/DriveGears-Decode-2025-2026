@@ -16,8 +16,6 @@ public class SampleAutoOpMode extends LinearOpMode {
     private FtcDashboard dash;
     private TelemetryPacket packet;
     private int stage1 = 0;
-
-    double[] motorPowers;
     enum AUTO_STATE {
         FIRST_BUCKET,
         SUB_PICKUP,
@@ -29,56 +27,47 @@ public class SampleAutoOpMode extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         // create Hardware using hardwareMap
         Hardware hw = Hardware.getInstance(hardwareMap);
-        mecanumCommand = new MecanumCommand(hw);
-
+        mecanumCommand = new MecanumCommand(hw, telemetry);
 
         boolean firstInstance = true;
-        //dash = FtcDashboard.getInstance();
-        //telemetry = dash.getTelemetry();
-        //packet = new TelemetryPacket();
+
         ElapsedTime timer;
-
-
         AUTO_STATE autoState = AUTO_STATE.FIRST_BUCKET;
         waitForStart();
         while (opModeIsActive()) {
             // run processes
-            updateTelemetry();
-            motorPowers = mecanumCommand.motorProcess();
+            //updateTelemetry();
+            mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
 
 
             switch (autoState) {
                 case FIRST_BUCKET:
-                    if (mecanumCommand.moveToPos(0, 10, 0.0)) {
+                    telemetry.addLine("running");
+                    if (mecanumCommand.moveToPos(0, 50, 0.0)) {
+
                         autoState = AUTO_STATE.FINISH;
                     }
                     break;
 
                 case FINISH:
                     stopRobot();
+                    telemetry.addLine("finished");
                     break;
             }
         }
-
     }
 
 
-    public void updateTelemetry() {
-        telemetry.addData("x: ", mecanumCommand.getOdoX());
-        telemetry.addData("y: ", mecanumCommand.getOdoY());
-        telemetry.addData("theta: ", mecanumCommand.getOdoHeading());
-        telemetry.addData("motor powers:", motorPowers[1]);
-        telemetry.update();
-    }
-
-
+//    public void updateTelemetry() {
+//        packet.put("x: ", mecanumCommand.getOdoX());
+//        packet.put("y: ", mecanumCommand.getOdoY());
+//        packet.put("theta: ", mecanumCommand.getOdoHeading());
+//    }
 
     private void stopRobot() {
         mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
     }
-
-
 
 }
 

@@ -4,11 +4,10 @@ package org.firstinspires.ftc.teamcode.subsystems.mecanum;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import static org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumConstants.*;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.pidcore.PIDCore;
-
-import java.sql.Array;
 
 class MecanumSubsystem {
     //rf: right front/forward
@@ -21,6 +20,8 @@ class MecanumSubsystem {
 
     // --- Dependencies ---
     private final Hardware hw;
+
+    Telemetry telemetry;
 
     // --- PID Controllers ---
     private final PIDCore globalXController;
@@ -52,9 +53,9 @@ class MecanumSubsystem {
     private double rfVelAdjustment1 = 0;
     private double rbVelAdjustment1 = 0;
 
-    public MecanumSubsystem(Hardware hw) {
+    public MecanumSubsystem(Hardware hw, Telemetry telemetry) {
         this.hw = hw;
-
+        this.telemetry = telemetry;
         // initialize PID controllers
         globalXController = new PIDCore(kpx, kdx, kix);
         globalYController = new PIDCore(kpy, kdy, kiy);
@@ -141,7 +142,7 @@ class MecanumSubsystem {
         hw.lb.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    // motorProcess(sets the powers)
+    // motorProcess tries to use the gobilda motor encoders
     public void motorProcess(){
         // combine main and adjustment velocities
         lfvel = lfVelMain + lfVelAdjustment1;
@@ -166,7 +167,7 @@ class MecanumSubsystem {
         hw.lf.setVelocity(lfvel, AngleUnit.RADIANS);
     }
     // processes velocity control with no encoder feedback
-    public double[] motorProcessNoEncoder(){
+    public void motorProcessNoEncoder(){
         double lfVelTemp = lfVelMain + lfVelAdjustment1;
         double lbVelTemp = lbVelMain + lbVelAdjustment1;
         double rfVelTemp = rfVelMain + rfVelAdjustment1;
@@ -186,10 +187,13 @@ class MecanumSubsystem {
         rfvel = rfVelTemp;
         rbvel = rbVelTemp;
 
-        double[] motorPowers = {lfvel, lbvel, rfvel, rbvel};
         // set motor powers
+        telemetry.addData("Final LF", lfvel);
+        telemetry.addData("Final LB", lbvel);
+        telemetry.addData("Final RF", rfvel);
+        telemetry.addData("Final RB", rbvel);
+
         setPowers(rfvel,lbvel,rbvel,lfvel);
-        return motorPowers;
     }
 
     //    named maxDouble temporarily to avoid name conflicts with local variable
@@ -202,13 +206,15 @@ class MecanumSubsystem {
     }
 
     //
-    public void partialMove(boolean run, double verticalVel, double horizontalVel, double rotationalVel){
-        if (run){
+    public void partialMove( double verticalVel, double horizontalVel, double rotationalVel){
             rbVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
             rfVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
             lfVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
             lbVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-        }
+            telemetry.addData("rbVelMain", rbVelMain);
+            telemetry.addData("rfVelMain", rfVelMain);
+            telemetry.addData("lfVelMain", lfVelMain);
+            telemetry.addData("lbVelMain", lbVelMain);
     }
 
     //PartialMoveAdjustment is used in GridAutoCentering, it allows the robot to auto center to the grid
@@ -319,9 +325,9 @@ class MecanumSubsystem {
 
     public void setPowers (double rightFront, double leftFront, double rightBack, double leftBack){
         hw.rf.setPower(rightFront);
-        hw.lb.setPower(leftFront);
+        hw.lb.setPower(leftBack);
         hw.rb.setPower(rightBack);
-        hw.lf.setPower(leftBack);
+        hw.lf.setPower(leftFront);
     }
 }
 
