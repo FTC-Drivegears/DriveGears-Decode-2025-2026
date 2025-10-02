@@ -53,8 +53,29 @@ public class DecodeAutoOpMode extends LinearOpMode {
 
             turnSorter();
 
+
+
+
+
+            if (String.valueOf(sorter.get(0)).equals(pattern.get(0))) {
+                // launch
+                servo.setPosition(servo.getPosition() - 0.5);
+            }
+            if (String.valueOf(sorter.get(1)).equals(pattern.get(1))) {
+                // launch
+                servo.setPosition(servo.getPosition() - 0.5);
+            }
+            // launch
+
+
+
+
+
+
+
+
             // Finds the green ball in the list and gets the position of it (1,2,3)
-            int greenPosition = sorter.get(sorter.indexOf("Green")).getPosition();
+            double greenPosition = sorter.get(sorter.indexOf("Green")).getPosition();
         }
     }
 
@@ -75,20 +96,17 @@ public class DecodeAutoOpMode extends LinearOpMode {
         Sorter turns
         If the sorter is full it stops
         */
-        servo.setPosition(servo.getPosition() + 0.33);
-
-        if (servo.getPosition() == 0.99) {
+        if (servo.getPosition() == 1) {
             // Stop getting balls
+        }
+        else {
+            servo.setPosition(servo.getPosition() + 0.5);
         }
     }
 }
 
 /*
-detect colour (1)
-turn (0.33)
-detect colour (2)
-turn (0.66)
-detect colour (3)
-turn (0.99)
-FULL
+detect colour : 0
+detect colour : 0.5
+detect colour : 1
  */
