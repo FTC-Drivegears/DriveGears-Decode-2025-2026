@@ -16,7 +16,10 @@ public class DecodeAutoOpMode extends LinearOpMode {
     int green;
     int blue;
     int alpha;
+    boolean full = false;
 
+    int numOfPattern = 1;
+    //shows which pattern are we at
     ArrayList<String> pattern = new ArrayList<>();
 
     ArrayList<Artifact> sorter = new ArrayList<Artifact>();
@@ -53,33 +56,26 @@ public class DecodeAutoOpMode extends LinearOpMode {
 
             turnSorter();
 
-
-
-
-
-            if (String.valueOf(sorter.get(0)).equals(pattern.get(0))) {
-                // launch
-                servo.setPosition(servo.getPosition() - 0.5);
-            }
-            if (String.valueOf(sorter.get(1)).equals(pattern.get(1))) {
-                // launch
-                servo.setPosition(servo.getPosition() - 0.5);
-            }
-            // launch
-
-
-
-
-
+//            //**
+//            if (String.valueOf(sorter.get(0)).equals(pattern.get(0))) {
+//                // launch
+//                servo.setPosition(servo.getPosition() - 0.5);
+//            }
+//            if (String.valueOf(sorter.get(1)).equals(pattern.get(1))) {
+//                // launch
+//                servo.setPosition(servo.getPosition() - 0.5);
+//            }
+//            *// launch
 
 
 
             // Finds the green ball in the list and gets the position of it (1,2,3)
-            double greenPosition = sorter.get(sorter.indexOf("Green")).getPosition();
+            //double greenPosition = sorter.get(sorter.indexOf("Green")).getPosition();
         }
     }
 
     public void detectColour() {
+
         // Purple ball is detected
         if (blue > green) {
             sorter.add(new Artifact("Purple",sorter.size() + 1));
@@ -89,19 +85,55 @@ public class DecodeAutoOpMode extends LinearOpMode {
         if (green - blue > 30) {
             sorter.add(new Artifact("Green", sorter.size() + 1));
         }
+
+        //if sorter is full
+        if (sorter.size() == 3) {
+            full = true;
+        }
     }
 
     public void turnSorter() {
-        /*
-        Sorter turns
-        If the sorter is full it stops
-        */
-        if (servo.getPosition() == 1) {
-            // Stop getting balls
+        //If the sorter is full it stops
+        if (full) {
+            return;
         }
-        else {
+
+        if (servo.getPosition() != 1) {
+            //make sure the servo don't break
             servo.setPosition(servo.getPosition() + 0.5);
         }
+    }
+
+    public void turnToColor(String color) {
+        double pos = 0;
+        if (color.equals("Green")) {
+            //gets position of the first green it finds
+            pos = sorter.get(sorter.indexOf("Green")).getPosition();
+        }
+
+        if (color.equals("Purple")) {
+            //gets position of the first purple it finds
+            pos = sorter.get(sorter.indexOf("Purple")).getPosition();
+        }
+
+        //move servo
+        servo.setPosition(pos);
+    }
+    public void quickFire() {
+        servo.setPosition(sorter.get(0).getPosition());
+        sleep(500);
+        //launch
+        sorter.remove(0);
+
+        servo.setPosition(sorter.get(0).getPosition());
+        sleep(500);
+        //launch
+        sorter.remove(0);
+
+        servo.setPosition(sorter.get(0).getPosition());
+        sleep(500);
+        //launch
+        sorter.remove(0);
     }
 }
 
