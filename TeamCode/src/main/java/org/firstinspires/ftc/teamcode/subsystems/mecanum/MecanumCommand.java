@@ -91,6 +91,7 @@ public class MecanumCommand {
      * Limits motion based on the configured {@code velocity}.
      */
     public void processPIDUsingPinpoint() {
+
         ex = mecanumSubsystem.globalXControllerOutputPositional(xFinal, pinPointOdoSubsystem.getX());
         ey = mecanumSubsystem.globalYControllerOutputPositional(yFinal, pinPointOdoSubsystem.getY());
         etheta = mecanumSubsystem.globalThetaControllerOutputPositional(thetaFinal, pinPointOdoSubsystem.getHeading());
@@ -145,7 +146,7 @@ public class MecanumCommand {
 
     public boolean moveToPos(double x, double y, double theta) {
         elapsedTime.reset();
-        setFinalPosition( 30, x, y, theta);
+        setFinalPosition( 0.5, x, y, theta);
         return !(positionNotReachedYet());
     }
 
@@ -220,8 +221,8 @@ public class MecanumCommand {
     }
 
     public void motorProcess() {
-        mecanumSubsystem.motorProcessNoEncoder();
         processPIDUsingPinpoint();
+        mecanumSubsystem.motorProcessNoEncoder();
     }
 
     public void processOdometry(){

@@ -43,7 +43,7 @@ public class PinPointOdometrySubsystem {
 
     /**
      * Constructor initializes the PinPointOdo with hardware mapping, sets encoder parameters and resets sensor.
-     * @param hw Hwardware to access sensors
+     * @param hw Hardware to access sensors
      */
     public PinPointOdometrySubsystem(Hardware hw){
         // Get the GoBildaPinpointDriver from hardware map with configured name
@@ -52,7 +52,7 @@ public class PinPointOdometrySubsystem {
         // TODO: Tune these offsets for accurate positioning
         // odo.setOffsets(0, 865);
         //120, -48
-        pinpointDriver.setOffsets(0, 0);
+        pinpointDriver.setOffsets(120, -48);
 
         // Set the encoder resolution to the 4-bar pod type
         pinpointDriver.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);

@@ -16,12 +16,6 @@ public class SampleAutoOpMode extends LinearOpMode {
     private FtcDashboard dash;
     private TelemetryPacket packet;
     private int stage1 = 0;
-    enum AUTO_STATE {
-        FIRST_BUCKET,
-        SUB_PICKUP,
-        FINISH
-
-    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -32,7 +26,6 @@ public class SampleAutoOpMode extends LinearOpMode {
         boolean firstInstance = true;
 
         ElapsedTime timer;
-        AUTO_STATE autoState = AUTO_STATE.FIRST_BUCKET;
         waitForStart();
         while (opModeIsActive()) {
             // run processes
@@ -40,21 +33,22 @@ public class SampleAutoOpMode extends LinearOpMode {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
 
+            mecanumCommand.moveToPos(0, 100, 0.0);
 
-            switch (autoState) {
-                case FIRST_BUCKET:
-                    telemetry.addLine("running");
-                    if (mecanumCommand.moveToPos(0, 50, 0.0)) {
-
-                        autoState = AUTO_STATE.FINISH;
-                    }
-                    break;
-
-                case FINISH:
-                    stopRobot();
-                    telemetry.addLine("finished");
-                    break;
-            }
+//            switch (autoState) {
+//                case FIRST_BUCKET:
+//                    telemetry.addLine("running");
+//                    if (mecanumCommand.moveToPos(100, 100, 0.0)) {
+//
+//                        autoState = AUTO_STATE.FINISH;
+//                    }
+//                    break;
+//
+//                case FINISH:
+//                    stopRobot();
+//                    telemetry.addLine("finished");
+//                    break;
+//            }
         }
     }
 
