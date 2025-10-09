@@ -11,25 +11,19 @@ import java.util.ArrayList;
 
 public class DecodeAutoOpMode extends LinearOpMode {
 
-    // Temporary order
     int red;
     int green;
     int blue;
     int alpha;
-    boolean full = false;
-
-    int numOfPattern = 1;
-    //shows which pattern are we at
+    boolean detectedColor = false;
     ArrayList<String> pattern = new ArrayList<>();
-
     ArrayList<Artifact> sorter = new ArrayList<Artifact>();
-
-    Servo servo = hardwareMap.get(Servo.class, "servo");
 
     @Override
     public void runOpMode() {
         ColorSensor colourSensor;
         colourSensor = hardwareMap.get(ColorSensor.class, "colour");
+        Servo servo = hardwareMap.get(Servo.class, "servo");
         colourSensor.enableLed(true);
 
         servo.setPosition(0);
@@ -50,61 +44,71 @@ public class DecodeAutoOpMode extends LinearOpMode {
             telemetry.addData("Green", green);
             telemetry.addData("Blue", blue);
             telemetry.addData("Alpha", alpha);
+            telemetry.addData("Amount of Artifacts", sorter.size());
+            telemetry.addData("position", servo.getPosition());
             telemetry.update();
 
-            detectColour();
+            // After intake it needs to detect 3 balls that enter the robot
+            detectColour(servo);
 
-            turnSorter();
+            /*
+            // After the colour is detected turn to the colour to prepare it for launch
+            turnToColour(pattern.get(0), servo);
+            sleep(2000);
+            // add launch code
 
-//            //**
-//            if (String.valueOf(sorter.get(0)).equals(pattern.get(0))) {
-//                // launch
-//                servo.setPosition(servo.getPosition() - 0.5);
-//            }
-//            if (String.valueOf(sorter.get(1)).equals(pattern.get(1))) {
-//                // launch
-//                servo.setPosition(servo.getPosition() - 0.5);
-//            }
-//            *// launch
+            turnToColour(pattern.get(1), servo);
+            sleep(2000);
+            // add launch code
 
-
-
-            // Finds the green ball in the list and gets the position of it (1,2,3)
-            //double greenPosition = sorter.get(sorter.indexOf("Green")).getPosition();
+            turnToColour(pattern.get(2), servo);
+            sleep(2000);
+            // add launch code
+             */
         }
     }
 
-    public void detectColour() {
+    public void detectColour(Servo servo) {
+        //If the sorter is full it stops
+        if (sorter.size() == 3) {
+            return;
+        }
 
         // Purple ball is detected
-        if (blue > green) {
-            sorter.add(new Artifact("Purple",sorter.size() + 1));
-        }
+        if (blue > green && alpha < 350) {
+            if (detectedColor == false) {
+                detectedColor = true;
+                sorter.add(new Artifact("Purple", servo.getPosition()));
+                telemetry.addLine("Purple Detected");
+                turnSorter(servo);
+            } //green detected
+        } else if (green - blue > 20 && alpha < 110 && alpha > 70) {
+            if (detectedColor == false) {
+                detectedColor = true;
+                sorter.add(new Artifact("Green", servo.getPosition()));
+                telemetry.addLine("Green Detected");
+                turnSorter(servo);
+            }
 
-        // Green ball is detected
-        if (green - blue > 30) {
-            sorter.add(new Artifact("Green", sorter.size() + 1));
+        }else {
+            detectedColor = false;
         }
-
-        //if sorter is full
-        if (sorter.size() == 3) {
-            full = true;
-        }
+        telemetry.update();
     }
 
-    public void turnSorter() {
+    public void turnSorter(Servo servo) {
         //If the sorter is full it stops
-        if (full) {
+        if (sorter.size() == 3) {
             return;
         }
 
         if (servo.getPosition() != 1) {
-            //make sure the servo don't break
-            servo.setPosition(servo.getPosition() + 0.5);
+            //make sure the servo doesn't break
+            servo.setPosition(sorter.size() * 0.45 );
         }
     }
 
-    public void turnToColor(String color) {
+    public void turnToColour(String color, Servo servo) {
         double pos = 0;
         if (color.equals("Green")) {
             //gets position of the first green it finds
@@ -119,7 +123,8 @@ public class DecodeAutoOpMode extends LinearOpMode {
         //move servo
         servo.setPosition(pos);
     }
-    public void quickFire() {
+
+    public void quickFire(Servo servo) {
         servo.setPosition(sorter.get(0).getPosition());
         sleep(500);
         //launch
@@ -136,9 +141,3 @@ public class DecodeAutoOpMode extends LinearOpMode {
         sorter.remove(0);
     }
 }
-
-/*
-detect colour : 0
-detect colour : 0.5
-detect colour : 1
- */
