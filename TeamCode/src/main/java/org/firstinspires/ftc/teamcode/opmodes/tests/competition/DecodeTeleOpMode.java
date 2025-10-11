@@ -107,7 +107,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isIntakeMotorOn = !isIntakeMotorOn;
                 telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
                 if (isIntakeMotorOn){
-                    intakeMotor.setPower(0.35);
+                    intakeMotor.setPower(-0.35);
                 }else{
                     intakeMotor.setPower(0);
                 }
