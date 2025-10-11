@@ -103,16 +103,15 @@ public class DecodeTeleOpMode extends LinearOpMode {
             );
 
 
-            if (gamepad1.a) {
-                isIntakeMotorOn = !isIntakeMotorOn;
-                telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-                telemetry.update();
-                if (isIntakeMotorOn){
-                    intakeMotor.setPower(-0.35);
-                }else{
-                    intakeMotor.setPower(0);
-                }
+            isIntakeMotorOn = gamepad1.a;
+            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+            telemetry.update();
+            if (isIntakeMotorOn){
+                intakeMotor.setPower(-0.5);
+            } else{
+                intakeMotor.setPower(0);
             }
+
             //motorTurret.setPower(0);
         }
     }
