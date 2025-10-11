@@ -106,6 +106,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             if (gamepad1.a) {
                 isIntakeMotorOn = !isIntakeMotorOn;
                 telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+                telemetry.update();
                 if (isIntakeMotorOn){
                     intakeMotor.setPower(-0.35);
                 }else{
