@@ -118,7 +118,7 @@ public class MecanumCommand {
             double angle = Math.PI / 2 - pinPointOdoSubsystem.getHeading();
             double localVertical = vertical * Math.cos(pinPointOdoSubsystem.getHeading()) - horizontal * Math.cos(angle);
             double localHorizontal = vertical * Math.sin(pinPointOdoSubsystem.getHeading()) + horizontal * Math.sin(angle);
-            mecanumSubsystem.partialMove(true, localVertical, localHorizontal, rotational);
+            mecanumSubsystem.partialMove(localVertical, localHorizontal, rotational);
     }
 
     public void resetPinPointOdometry() {
@@ -141,7 +141,7 @@ public class MecanumCommand {
     }
 
     public boolean positionNotReachedYet() {
-        return !(isXReached() && isYReached() && isThetaReached());
+        return (isXReached() && isYReached() && isThetaReached());
     }
 
     public double getXDifferencePinPoint() {
@@ -203,9 +203,13 @@ public class MecanumCommand {
     }
 
     public void motorProcess() {
+        processPIDUsingPinpoint();
         mecanumSubsystem.motorProcessNoEncoder();
     }
 
+    public void processOdometry() {
+        pinPointOdoSubsystem.processOdometry();
+    }
 }
 
 
