@@ -1,7 +1,5 @@
-package org.firstinspires.ftc.teamcode.opmodes.competition;
-
+package org.firstinspires.ftc.teamcode.opmodes.tests.vision;
 import android.util.Size;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -11,7 +9,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @TeleOp
-public class LogitechVision extends LinearOpMode{
+public class Vision extends LinearOpMode{
 
     @Override
     public void runOpMode() throws InterruptedException {
