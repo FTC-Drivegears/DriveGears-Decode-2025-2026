@@ -83,14 +83,14 @@ class MecanumSubsystem {
     }
 
     // provides more control at lower speeds
-    public void fieldOrientedMoveExponential(double x, double y, double z, double theta){
+    public void fieldOrientedMoveExponential(double x, double y, double z, double theta) {
         double newX = x * Math.cos(theta) - y * Math.sin(theta);
         double newY = x * Math.sin(theta) + y * Math.cos(theta);
 
-        rightFrontMotorOutput = - newY + newX - z;
+        rightFrontMotorOutput = -newY + newX - z;
         leftFrontMotorOutput = newY + newX + z;
-        rightBackMotorOutput = newY + newX -  z;
-        leftBackMotorOutput = - newY + newX + z;
+        rightBackMotorOutput = newY + newX - z;
+        leftBackMotorOutput = -newY + newX + z;
 
         double largest = Math.max(
                 Math.max(Math.abs(rightFrontMotorOutput), Math.abs(leftFrontMotorOutput)),
@@ -128,7 +128,7 @@ class MecanumSubsystem {
     }
 
     // resets all motor encoders
-    public void reset(){
+    public void reset() {
         hw.rf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hw.rb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hw.lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -140,7 +140,7 @@ class MecanumSubsystem {
     }
 
     // motorProcess(sets the powers)
-    public void motorProcess(){
+    public void motorProcess() {
         // combine main and adjustment velocities
         lfvel = lfVelMain + lfVelAdjustment1;
         lbvel = lbVelMain + lbVelAdjustment1;
@@ -163,8 +163,9 @@ class MecanumSubsystem {
         hw.rb.setVelocity(rbvel, AngleUnit.RADIANS);
         hw.lf.setVelocity(lfvel, AngleUnit.RADIANS);
     }
+
     // processes velocity control with no encoder feedback
-    public void motorProcessNoEncoder(){
+    public void motorProcessNoEncoder() {
         double lfVelTemp = lfVelMain + lfVelAdjustment1;
         double lbVelTemp = lbVelMain + lbVelAdjustment1;
         double rfVelTemp = rfVelMain + rfVelAdjustment1;
@@ -186,7 +187,7 @@ class MecanumSubsystem {
 
         // set motor powers
 
-        setPowers(rfvel,lbvel,rbvel,lfvel);
+        setPowers(rfvel, lbvel, rbvel, lfvel);
     }
 
     //    named maxDouble temporarily to avoid name conflicts with local variable
@@ -199,14 +200,13 @@ class MecanumSubsystem {
     }
 
     //
-    public void partialMove(boolean run, double verticalVel, double horizontalVel, double rotationalVel){
-        if (run){
-            rbVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            rfVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            lfVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            lbVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-        }
+    public void partialMove(double verticalVel, double horizontalVel, double rotationalVel) {
+        rbVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
+        rfVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
+        lfVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
+        lbVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
     }
+
 
     //PartialMoveAdjustment is used in GridAutoCentering, it allows the robot to auto center to the grid
     public void partialMoveAdjustment(boolean run, double verticalVel, double horizontalVel, double rotationalVel){
