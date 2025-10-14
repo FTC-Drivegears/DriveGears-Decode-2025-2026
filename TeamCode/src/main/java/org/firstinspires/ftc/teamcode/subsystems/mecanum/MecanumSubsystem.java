@@ -4,7 +4,6 @@ package org.firstinspires.ftc.teamcode.subsystems.mecanum;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import static org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumConstants.*;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.pidcore.PIDCore;
@@ -20,8 +19,6 @@ class MecanumSubsystem {
 
     // --- Dependencies ---
     private final Hardware hw;
-
-    Telemetry telemetry;
 
     // --- PID Controllers ---
     private final PIDCore globalXController;
@@ -53,18 +50,18 @@ class MecanumSubsystem {
     private double rfVelAdjustment1 = 0;
     private double rbVelAdjustment1 = 0;
 
-    public MecanumSubsystem(Hardware hw, Telemetry telemetry) {
+    public MecanumSubsystem(Hardware hw) {
         this.hw = hw;
-        this.telemetry = telemetry;
+
         // initialize PID controllers
         globalXController = new PIDCore(kpx, kdx, kix);
         globalYController = new PIDCore(kpy, kdy, kiy);
         globalThetaController = new PIDCore(kptheta, kdtheta, kitheta);
 
-        hw.lf.setDirection(DcMotorSimple.Direction.FORWARD);
+        hw.lf.setDirection(DcMotorSimple.Direction.REVERSE);
         hw.rf.setDirection(DcMotorSimple.Direction.FORWARD);
         hw.lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        hw.rb.setDirection(DcMotorSimple.Direction.REVERSE);
+        hw.rb.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // set motor behaviour
         hw.lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -86,14 +83,14 @@ class MecanumSubsystem {
     }
 
     // provides more control at lower speeds
-    public void fieldOrientedMoveExponential(double x, double y, double z, double theta){
+    public void fieldOrientedMoveExponential(double x, double y, double z, double theta) {
         double newX = x * Math.cos(theta) - y * Math.sin(theta);
         double newY = x * Math.sin(theta) + y * Math.cos(theta);
 
-        rightFrontMotorOutput = - newY + newX - z;
+        rightFrontMotorOutput = -newY + newX - z;
         leftFrontMotorOutput = newY + newX + z;
-        rightBackMotorOutput = newY + newX -  z;
-        leftBackMotorOutput = - newY + newX + z;
+        rightBackMotorOutput = newY + newX - z;
+        leftBackMotorOutput = -newY + newX + z;
 
         double largest = Math.max(
                 Math.max(Math.abs(rightFrontMotorOutput), Math.abs(leftFrontMotorOutput)),
@@ -131,7 +128,7 @@ class MecanumSubsystem {
     }
 
     // resets all motor encoders
-    public void reset(){
+    public void reset() {
         hw.rf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hw.rb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hw.lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -142,8 +139,8 @@ class MecanumSubsystem {
         hw.lb.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    // motorProcess tries to use the gobilda motor encoders
-    public void motorProcess(){
+    // motorProcess(sets the powers)
+    public void motorProcess() {
         // combine main and adjustment velocities
         lfvel = lfVelMain + lfVelAdjustment1;
         lbvel = lbVelMain + lbVelAdjustment1;
@@ -166,8 +163,9 @@ class MecanumSubsystem {
         hw.rb.setVelocity(rbvel, AngleUnit.RADIANS);
         hw.lf.setVelocity(lfvel, AngleUnit.RADIANS);
     }
+
     // processes velocity control with no encoder feedback
-    public void motorProcessNoEncoder(){
+    public void motorProcessNoEncoder() {
         double lfVelTemp = lfVelMain + lfVelAdjustment1;
         double lbVelTemp = lbVelMain + lbVelAdjustment1;
         double rfVelTemp = rfVelMain + rfVelAdjustment1;
@@ -188,12 +186,8 @@ class MecanumSubsystem {
         rbvel = rbVelTemp;
 
         // set motor powers
-        telemetry.addData("Final LF", lfvel);
-        telemetry.addData("Final LB", lbvel);
-        telemetry.addData("Final RF", rfvel);
-        telemetry.addData("Final RB", rbvel);
 
-        setPowers(rfvel,lbvel,rbvel,lfvel);
+        setPowers(rfvel, lbvel, rbvel, lfvel);
     }
 
     //    named maxDouble temporarily to avoid name conflicts with local variable
@@ -206,16 +200,13 @@ class MecanumSubsystem {
     }
 
     //
-    public void partialMove( double verticalVel, double horizontalVel, double rotationalVel){
-            rbVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            rfVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            lfVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            lbVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            telemetry.addData("rbVelMain", rbVelMain);
-            telemetry.addData("rfVelMain", rfVelMain);
-            telemetry.addData("lfVelMain", lfVelMain);
-            telemetry.addData("lbVelMain", lbVelMain);
+    public void partialMove(double verticalVel, double horizontalVel, double rotationalVel) {
+        rbVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
+        rfVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
+        lfVelMain = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
+        lbVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
     }
+
 
     //PartialMoveAdjustment is used in GridAutoCentering, it allows the robot to auto center to the grid
     public void partialMoveAdjustment(boolean run, double verticalVel, double horizontalVel, double rotationalVel){
@@ -325,9 +316,9 @@ class MecanumSubsystem {
 
     public void setPowers (double rightFront, double leftFront, double rightBack, double leftBack){
         hw.rf.setPower(rightFront);
-        hw.lb.setPower(leftBack);
+        hw.lb.setPower(leftFront);
         hw.rb.setPower(rightBack);
-        hw.lf.setPower(leftFront);
+        hw.lf.setPower(leftBack);
     }
 }
 

@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems.mecanum;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.util.pidcore.PIDCore;
@@ -14,7 +13,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * subsystem interactions and provides high-level movement commands.
  */
 public class MecanumCommand {
-    Telemetry telemetry;
     // create a class to consolidate subsystems
     private MecanumSubsystem mecanumSubsystem;
     private PinPointOdometrySubsystem pinPointOdoSubsystem;
@@ -37,11 +35,10 @@ public class MecanumCommand {
      *
      * @param hw     Hardware configuration object for accessing devices.
      */
-    public MecanumCommand(Hardware hw, Telemetry telemetry) {
+    public MecanumCommand( Hardware hw) {
         this.hw = hw;
-        this.mecanumSubsystem = new MecanumSubsystem(hw, telemetry);
+        this.mecanumSubsystem = new MecanumSubsystem(hw);
         this.pinPointOdoSubsystem = new PinPointOdometrySubsystem(hw);
-        this.telemetry = telemetry;
         elapsedTime = new ElapsedTime();
         xFinal = pinPointOdoSubsystem.getX();
         yFinal = pinPointOdoSubsystem.getY();
@@ -91,7 +88,6 @@ public class MecanumCommand {
      * Limits motion based on the configured {@code velocity}.
      */
     public void processPIDUsingPinpoint() {
-
         ex = mecanumSubsystem.globalXControllerOutputPositional(xFinal, pinPointOdoSubsystem.getX());
         ey = mecanumSubsystem.globalYControllerOutputPositional(yFinal, pinPointOdoSubsystem.getY());
         etheta = mecanumSubsystem.globalThetaControllerOutputPositional(thetaFinal, pinPointOdoSubsystem.getHeading());
@@ -105,18 +101,8 @@ public class MecanumCommand {
             etheta *= scalar;
         }
 
-        telemetry.addData("PID ex", ex);
-        telemetry.addData("PID ey", ey);
-        telemetry.addData("PID etheta", etheta);
-        telemetry.addData("Current X", pinPointOdoSubsystem.getX());
-        telemetry.addData("Current Y", pinPointOdoSubsystem.getY());
-        telemetry.addData("Current Heading", pinPointOdoSubsystem.getHeading());
-        telemetry.addData("Target X", xFinal);
-        telemetry.addData("Target Y", yFinal);
-        telemetry.addData("Target Heading", thetaFinal);
-        telemetry.update();
-
         moveGlobalPartialPinPoint( ex, ey, etheta);
+
     }
 
     /**
@@ -127,16 +113,11 @@ public class MecanumCommand {
      * @param rotational Rotation command.
      */
     public void moveGlobalPartialPinPoint(double vertical, double horizontal, double rotational) {
+
             //might have to change this because Gobilda Odommetry strafing left is POSITIVE while this works for strafing right is Positive
             double angle = Math.PI / 2 - pinPointOdoSubsystem.getHeading();
             double localVertical = vertical * Math.cos(pinPointOdoSubsystem.getHeading()) - horizontal * Math.cos(angle);
             double localHorizontal = vertical * Math.sin(pinPointOdoSubsystem.getHeading()) + horizontal * Math.sin(angle);
-
-            //telemetry.addData("heading", heading);
-            telemetry.addData("input vertical", vertical);
-            telemetry.addData("input horizontal", horizontal);
-            telemetry.addData("localV", localVertical);
-            telemetry.addData("localH", localHorizontal);
             mecanumSubsystem.partialMove(localVertical, localHorizontal, rotational);
     }
 
@@ -146,8 +127,8 @@ public class MecanumCommand {
 
     public boolean moveToPos(double x, double y, double theta) {
         elapsedTime.reset();
-        setFinalPosition( 0.5, x, y, theta);
-        return !(positionNotReachedYet());
+        setFinalPosition( 30, x, y, theta);
+        return positionNotReachedYet();
     }
 
     public void setFinalPosition(double velocity, double x, double y, double theta) {
@@ -156,10 +137,11 @@ public class MecanumCommand {
             this.yFinal = y;
             this.thetaFinal = theta;
             this.velocity = velocity;
+
     }
 
     public boolean positionNotReachedYet() {
-        return !(isXReached() && isYReached() && isThetaReached());
+        return (isXReached() && isYReached() && isThetaReached());
     }
 
     public double getXDifferencePinPoint() {
@@ -216,7 +198,7 @@ public class MecanumCommand {
      * @param rotational Rotation input (-1 to 1).
      */
     public double fieldOrientedMove(double vertical, double horizontal, double rotational) {
-        mecanumSubsystem.fieldOrientedMove(vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
+        mecanumSubsystem.fieldOrientedMove(-vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
         return pinPointOdoSubsystem.getHeading();
     }
 
@@ -225,7 +207,7 @@ public class MecanumCommand {
         mecanumSubsystem.motorProcessNoEncoder();
     }
 
-    public void processOdometry(){
+    public void processOdometry() {
         pinPointOdoSubsystem.processOdometry();
     }
 }

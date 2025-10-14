@@ -43,7 +43,7 @@ public class PinPointOdometrySubsystem {
 
     /**
      * Constructor initializes the PinPointOdo with hardware mapping, sets encoder parameters and resets sensor.
-     * @param hw Hardware to access sensors
+     * @param hw Hwardware to access sensors
      */
     public PinPointOdometrySubsystem(Hardware hw){
         // Get the GoBildaPinpointDriver from hardware map with configured name
@@ -51,7 +51,6 @@ public class PinPointOdometrySubsystem {
 
         // TODO: Tune these offsets for accurate positioning
         // odo.setOffsets(0, 865);
-        //120, -48
         pinpointDriver.setOffsets(120, -48);
 
         // Set the encoder resolution to the 4-bar pod type
@@ -59,7 +58,7 @@ public class PinPointOdometrySubsystem {
 
         // Set encoder directions to FORWARD for both encoders
         // This means x increases when moving forward, y increases when strafing left
-        pinpointDriver.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+        pinpointDriver.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
         // Initialize and reset control loop timer
         controllerLoopTime = new ElapsedTime();
@@ -93,10 +92,10 @@ public class PinPointOdometrySubsystem {
      * Adjusts y-axis sign to fit coordinate convention (positive y when strafing right).
      */
     public void processOdometry(){
-        x =  pinpointDriver.getPosX();           // Convert mm or encoder units to cm for x
-        y = pinpointDriver.getPosY();           // Convert and invert y to match coordinate system
+        pinpointDriver.update();        // Update internal odometry data
+        x = (pinpointDriver.getPosX() / 10);           // Convert mm or encoder units to cm for x
+        y = (pinpointDriver.getPosY() / 10);           // Convert and invert y to match coordinate system
         heading = pinpointDriver.getHeading();          // Get current heading in degrees
-        pinpointDriver.update();                        // Update internal odometry data
     }
 
     /**
