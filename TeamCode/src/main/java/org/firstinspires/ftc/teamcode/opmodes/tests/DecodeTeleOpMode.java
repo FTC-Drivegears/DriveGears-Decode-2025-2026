@@ -117,10 +117,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             if (gamepad1.a) {
                 motorIntake.setPower(-0.3);
+            } else {
+                motorTurret.setPower(0);
+                motorIntake.setPower(0);
             }
-
-            motorTurret.setPower(0);
-            motorIntake.setPower(0);
         }
     }
     public void processTelemetry(){

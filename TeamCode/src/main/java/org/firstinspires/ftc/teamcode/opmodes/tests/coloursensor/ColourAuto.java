@@ -34,6 +34,7 @@ public class ColourAuto extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+
             red = colourSensor.red();
             green = colourSensor.green();
             blue = colourSensor.blue();
@@ -74,7 +75,7 @@ public class ColourAuto extends LinearOpMode {
         }
 
         // Purple ball is detected
-        if (blue > green && alpha < 350) {
+        if (blue > green && alpha < 700) {
             if (detectedColor == false) {
                 detectedColor = true;
                 sorter.add(new Artifact("Purple", servo.getPosition()));
@@ -97,7 +98,8 @@ public class ColourAuto extends LinearOpMode {
 
     public void turnSorter(Servo servo) {
         //If the sorter is full it stops
-        if (sorter.size() == 3) {
+        //if (sorter.size() == 3) {
+            if (sorter.size() == 3) {
             return;
         }
 
@@ -123,20 +125,20 @@ public class ColourAuto extends LinearOpMode {
         servo.setPosition(pos);
     }
 
-    public void quickFire(Servo servo) {
-        servo.setPosition(sorter.get(0).getPosition());
-        sleep(500);
-        //launch
-        sorter.remove(0);
-
-        servo.setPosition(sorter.get(0).getPosition());
-        sleep(500);
-        //launch
-        sorter.remove(0);
-
-        servo.setPosition(sorter.get(0).getPosition());
-        sleep(500);
-        //launch
-        sorter.remove(0);
-    }
+//    public void quickFire(Servo servo) {
+//        servo.setPosition(sorter.get(0).getPosition());
+//        sleep(800);
+//        //launch
+//        sorter.remove(0);
+//
+//        servo.setPosition(sorter.get(0).getPosition());
+//        sleep(500);
+//        //launch
+//        sorter.remove(0);
+//
+//        servo.setPosition(sorter.get(0).getPosition());
+//        sleep(500);
+//        //launch
+//        sorter.remove(0);
+//    }
 }
