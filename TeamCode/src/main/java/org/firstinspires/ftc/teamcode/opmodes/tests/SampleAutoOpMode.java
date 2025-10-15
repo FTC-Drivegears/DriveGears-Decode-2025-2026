@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
 import android.util.Size;
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -18,32 +17,33 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 public class SampleAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private DcMotorEx motorIntake;
+
     enum AUTO_STATE {
         SCAN_OBELISK,
-        BALL_PICKUP,
-
-        //SORTER
+        BALL_PICKUP1,
+        BALL_PICKUP2,
         FINISH
+    }
+
+    enum AUTO_PATTERN {
+        GPP,
+        PGP,
+        PPG,
 
     }
 
-//    enum OBELISK_SORTER {
-//        GPP,
-//        PGP,
-//        PPG
-//
-//    }
 
     @Override
     public void runOpMode() throws InterruptedException {
         Hardware hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         motorIntake = hardwareMap.get(DcMotorEx.class, "externalIntake");
-        motorIntake.setDirection(DcMotorEx.Direction.FORWARD);
+        motorIntake.setDirection(DcMotorEx.Direction.REVERSE);
         motorIntake.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
                 .build();
+
 
         VisionPortal visionPortal = new VisionPortal.Builder()
                 .addProcessor(tagProcessor)
@@ -63,20 +63,21 @@ public class SampleAutoOpMode extends LinearOpMode {
                 case SCAN_OBELISK:
                     if (tagProcessor.getDetections().size() > 0) {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                        sleep(3000);
                     }
 
-                    if (mecanumCommand.positionNotReachedYet()) {
-                        autoState = AUTO_STATE.BALL_PICKUP;
+                case BALL_PICKUP1:
+                    if (mecanumCommand.moveToPos(30, 0, 0)) {
+                        motorIntake.setPower(1);
+                        sleep(800);
+                        autoState = AUTO_STATE.BALL_PICKUP2;
                     }
                     break;
 
-                case BALL_PICKUP:
-                    if (mecanumCommand.moveToPos(30, 0, 0)) {
+                case BALL_PICKUP2:
+                    if (mecanumCommand.moveToPos(30, 10, 0)) {
+                        motorIntake.setPower(1);
+                        sleep(800);
                         autoState = AUTO_STATE.FINISH;
-                        motorIntake.setPower(0.5);
-                        sleep(3000);
-                        motorIntake.setPower(0);
                     }
                     break;
 
@@ -86,9 +87,9 @@ public class SampleAutoOpMode extends LinearOpMode {
                     break;
             }
         }
-    }
 
-    private void stopRobot() {
-        mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
+        private void stopRobot () {
+            mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
+        }
     }
 }

@@ -67,7 +67,7 @@ public class Specifications {
 
 //    public static final String LED = "led";
 
-    public static final String COLOUR_SENSOR = "colourSensor";
+    public static final String COLOUR_SENSOR = "colour";
 
     public static final String SORTER = "sorter";
 
