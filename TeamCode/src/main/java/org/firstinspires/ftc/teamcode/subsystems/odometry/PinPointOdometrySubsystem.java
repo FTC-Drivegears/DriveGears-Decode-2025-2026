@@ -92,10 +92,10 @@ public class PinPointOdometrySubsystem {
      * Adjusts y-axis sign to fit coordinate convention (positive y when strafing right).
      */
     public void processOdometry(){
-        x =  (pinpointDriver.getPosX() / 10);           // Convert mm or encoder units to cm for x
-        y = -(pinpointDriver.getPosY() / 10);           // Convert and invert y to match coordinate system
+        pinpointDriver.update();        // Update internal odometry data
+        x = (pinpointDriver.getPosX() / 10);           // Convert mm or encoder units to cm for x
+        y = (pinpointDriver.getPosY() / 10);           // Convert and invert y to match coordinate system
         heading = pinpointDriver.getHeading();          // Get current heading in degrees
-        pinpointDriver.update();                        // Update internal odometry data
     }
 
     /**
