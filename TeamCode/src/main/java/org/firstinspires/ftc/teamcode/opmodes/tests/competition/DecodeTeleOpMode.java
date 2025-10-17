@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 
@@ -11,18 +12,24 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 public class DecodeTeleOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
 
+    private SorterSubsystem sorterSubsystem;
+
     private Hardware hw;
     private double theta;
     private DcMotor intakeMotor;
+    private DcMotor outtakeMotor;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
         this.intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+        this.outtakeMotor = hardwareMap.get(DcMotor.class, "outtakeMotor");
 
         boolean isIntakeMotorOn = false;
+        boolean isOuttakeMotorOn = false;
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
+        sorterSubsystem = new SorterSubsystem(hw, this,telemetry);
 
         while (opModeInInit()){
             telemetry.update();
@@ -44,8 +51,25 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isIntakeMotorOn = true;
             }
 
+            if (gamepad1.b){
+                sorterSubsystem.detectColour();
+            }
+
+            if (gamepad1.x && isOuttakeMotorOn){
+                isOuttakeMotorOn = false;
+            } else if (gamepad1.x){
+                isOuttakeMotorOn = true;
+            }
+
+            //Press the button once to activate
+            if(isOuttakeMotorOn){
+                outtakeMotor.setPower(1);
+            } else{
+                outtakeMotor.setPower(0);
+            }
+
             if (isIntakeMotorOn){
-                intakeMotor.setPower(-0.4);
+                intakeMotor.setPower(0.8);
             } else{
                 intakeMotor.setPower(0);
             }
