@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
@@ -19,18 +22,29 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private DcMotor intakeMotor;
     private DcMotor outtakeMotor;
 
+    private Servo pusher;
+
+
+
     @Override
     public void runOpMode() throws InterruptedException {
 
         this.intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         this.outtakeMotor = hardwareMap.get(DcMotor.class, "outtakeMotor");
+        pusher = hardwareMap.get(Servo.class,"pusher");
+        pusher.setPosition(1);
 
         boolean previousAState = false;
-        boolean isIntakeMotorOn = false;
         boolean previousXState = false;
+        boolean previousYState = false;
+        boolean currentAState;
+        boolean currentXState;
+        boolean currentYState;
+
+        boolean isIntakeMotorOn = false;
+
         boolean isOuttakeMotorOn = false;
-        boolean currentAState = gamepad1.a;
-        boolean currentXState = gamepad1.x;
+        boolean togglePusher = false;
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
@@ -50,6 +64,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
+            currentAState = gamepad1.a;
             if (currentAState && !previousAState){
                 isIntakeMotorOn = !isIntakeMotorOn;
 
@@ -62,18 +77,36 @@ public class DecodeTeleOpMode extends LinearOpMode {
             previousAState = currentAState;
 
             if (gamepad1.b){
+                telemetry.addData("Start color detection", gamepad1.b);
+                telemetry.update();
                 sorterSubsystem.detectColour();
+                telemetry.addData("End color detection", gamepad1.b);
+                telemetry.update();
             }
 
+            currentYState = gamepad1.y;
+            if (currentYState && !previousYState){
+                togglePusher = !togglePusher;
+
+                if (togglePusher){
+                    pusher.setPosition(0.4);
+                }else{
+                    pusher.setPosition(1);
+                }
+            }
+            previousYState = currentYState;
+
+            currentXState = gamepad1.x;
             if (currentXState && !previousXState){
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                    outtakeMotor.setPower(0.8);
+                    outtakeMotor.setPower(1);
                 }else{
                     outtakeMotor.setPower(0);
                 }
             }
+            previousXState = currentXState;
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);

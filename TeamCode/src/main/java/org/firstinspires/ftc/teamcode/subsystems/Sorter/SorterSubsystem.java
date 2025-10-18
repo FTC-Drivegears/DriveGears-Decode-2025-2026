@@ -41,6 +41,9 @@ public class SorterSubsystem {
     }
 
     public void detectColour() {
+        telemetry.addData("Detecting color", sorterList);
+        telemetry.update();
+
         red = colourSensor.red();
         green = colourSensor.green();
         blue = colourSensor.blue();
@@ -71,6 +74,8 @@ public class SorterSubsystem {
             }
 
         } else {
+            telemetry.addData("Waiting... remove sleep later", detectedColor);
+            telemetry.update();
             opMode.sleep(300);
             detectedColor = false;
         }
@@ -78,14 +83,14 @@ public class SorterSubsystem {
 
     public void turnsorter() {
         //If the sorterList is full it stops
-        if (sorterList.size() == 3) {
-            return;
-        }
-
-        if (sorter.getPosition() != 1) {
-            //make sure the sorter doesn't break
-            sorter.setPosition(sorterList.size() * 0.45 );
-        }
+//        if (sorterList.size() == 3) {
+//            return;
+//        }
+//
+//        if (sorter.getPosition() != 1) {
+//            //make sure the sorter doesn't break
+//            sorter.setPosition(sorterList.size() * 0.45 );
+//        }
     }
 
     public void turnToColour(String color, Servo sorter) {
@@ -101,21 +106,21 @@ public class SorterSubsystem {
         }
 
         //move sorter
-        sorter.setPosition(pos);
+//        sorter.setPosition(pos);
     }
 
     public void quickFire(Servo sorter) {
-        sorter.setPosition(sorterList.get(0).getPosition());
+//        sorter.setPosition(sorterList.get(0).getPosition());
         opMode.sleep(500);
         //launch
         sorterList.remove(0);
 
-        sorter.setPosition(sorterList.get(0).getPosition());
+//        sorter.setPosition(sorterList.get(0).getPosition());
         opMode.sleep(500);
         //launch
         sorterList.remove(0);
 
-        sorter.setPosition(sorterList.get(0).getPosition());
+//        sorter.setPosition(sorterList.get(0).getPosition());
         opMode.sleep(500);
         //launch
         sorterList.remove(0);
