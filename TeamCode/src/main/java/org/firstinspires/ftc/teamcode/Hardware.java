@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -17,6 +17,8 @@ public class Hardware {
     public final DcMotorEx rf;
     public final DcMotorEx lb;
     public final DcMotorEx rb;
+    public final Servo sorter;
+    public final ColorSensor colour;
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
