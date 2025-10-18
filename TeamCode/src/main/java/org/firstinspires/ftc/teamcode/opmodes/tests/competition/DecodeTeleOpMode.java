@@ -25,8 +25,13 @@ public class DecodeTeleOpMode extends LinearOpMode {
         this.intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         this.outtakeMotor = hardwareMap.get(DcMotor.class, "outtakeMotor");
 
+        boolean previousAState = false;
         boolean isIntakeMotorOn = false;
+        boolean previousXState = false;
         boolean isOuttakeMotorOn = false;
+        boolean currentAState = gamepad1.a;
+        boolean currentXState = gamepad1.x;
+
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         sorterSubsystem = new SorterSubsystem(hw, this,telemetry);
@@ -45,45 +50,34 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
-            if(gamepad1.a && isIntakeMotorOn){
-                isIntakeMotorOn = false;
-            } else if (gamepad1.a){
-                isIntakeMotorOn = true;
+            if (currentAState && !previousAState){
+                isIntakeMotorOn = !isIntakeMotorOn;
+
+                if (isIntakeMotorOn){
+                    intakeMotor.setPower(0.8);
+                }else {
+                    intakeMotor.setPower(0);
+                }
             }
+            previousAState = currentAState;
 
             if (gamepad1.b){
                 sorterSubsystem.detectColour();
             }
 
-            if (gamepad1.x && isOuttakeMotorOn){
-                isOuttakeMotorOn = false;
-            } else if (gamepad1.x){
-                isOuttakeMotorOn = true;
-            }
+            if (currentXState && !previousXState){
+                isOuttakeMotorOn = !isOuttakeMotorOn;
 
-            //Press the button once to activate
-            if(isOuttakeMotorOn){
-                outtakeMotor.setPower(1);
-            } else{
-                outtakeMotor.setPower(0);
-            }
-
-            if (isIntakeMotorOn){
-                intakeMotor.setPower(0.8);
-            } else{
-                intakeMotor.setPower(0);
+                if (isOuttakeMotorOn){
+                    outtakeMotor.setPower(0.8);
+                }else{
+                    outtakeMotor.setPower(0);
+                }
             }
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.update();
-//            isIntakeMotorOn = gamepad1.a;
-//            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-//            telemetry.update();
-//            if (isIntakeMotorOn){
-//                intakeMotor.setPower(-0.5);
-//            } else{
-//                intakeMotor.setPower(0);
-//            }
         }
     }
 }
