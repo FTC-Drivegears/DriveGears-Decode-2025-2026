@@ -19,7 +19,7 @@ public class SorterSubsystem {
 
     private ArrayList<String> pattern;
 
-    private ArrayList<Artifact> sorterList = new ArrayList<Artifact>();
+    private ArrayList<Artifact> sorterList;
 
     private int red;
 
@@ -31,15 +31,13 @@ public class SorterSubsystem {
 
     boolean detectedColor = false;
 
-
-
-
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
         this.sorter = hw.sorter;
         this.colourSensor = hw.colour;
         this.opMode = opMode;
         this.telemetry = telemetry;
         pattern = new ArrayList<>();
+        sorterList = new ArrayList<>();
     }
 
     public void detectColour() {
@@ -47,6 +45,8 @@ public class SorterSubsystem {
         green = colourSensor.green();
         blue = colourSensor.blue();
         alpha = colourSensor.alpha();
+        colourSensor.enableLed(true);
+
         //If the sorter is full it stops
         if (sorterList.size() == 3) {
             return;
