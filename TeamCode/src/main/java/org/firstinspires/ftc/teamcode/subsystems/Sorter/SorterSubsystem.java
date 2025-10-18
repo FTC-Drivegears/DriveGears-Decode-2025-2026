@@ -27,7 +27,9 @@ public class SorterSubsystem {
 
     private int alpha;
 
-    boolean detectedColor = false;
+    private long lastColourDetectionTime;
+
+    boolean detectedColour = false;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
         this.sorter = hw.sorter;
@@ -52,8 +54,8 @@ public class SorterSubsystem {
         if (red > 50 && red < 65 && green < 95 && green > 80 && blue < 95 && blue > 78 && alpha < 85 && alpha > 70) {
             telemetry.addLine("Purple Detected");
             telemetry.update();
-            if (!detectedColor) {
-                detectedColor = true;
+            if (!detectedColour) {
+                detectedColour = true;
                 sorterList.add(new Artifact("Purple", sorter.getPosition()));
                 turnSorter();
             }
@@ -63,16 +65,21 @@ public class SorterSubsystem {
         else if (red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65) {
             telemetry.addLine("Green Detected");
             telemetry.update();
-            if (!detectedColor) {
-                detectedColor = true;
+            if (!detectedColour) {
+                detectedColour = true;
                 sorterList.add(new Artifact("Green", sorter.getPosition()));
                 turnSorter();
             }
         }
 
         else {
-            opMode.sleep(300);
-            detectedColor = false;
+            if (System.currentTimeMillis() - lastColourDetectionTime > 300) {
+                detectedColour = false;
+            }
+        }
+
+        if (detectedColour) {
+            lastColourDetectionTime = System.currentTimeMillis();
         }
     }
 
