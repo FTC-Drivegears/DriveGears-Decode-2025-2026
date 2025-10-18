@@ -31,9 +31,6 @@ public class SorterSubsystem {
 
     boolean detectedColor = false;
 
-
-
-
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
         this.sorter = hw.sorter;
         this.colourSensor = hw.colour;
@@ -129,5 +126,29 @@ public class SorterSubsystem {
         pattern.add(art1);
         pattern.add(art2);
         pattern.add(art3);
+    }
+
+    public int getRed(){
+        return red;
+    }
+
+    public int getGreen(){
+        return green;
+    }
+
+    public int getBlue(){
+        return blue;
+    }
+
+    public int getAlpha(){
+        return alpha;
+    }
+
+    public double getPosition() {
+        return sorter.getPosition();
+    }
+
+    public String getSorterIndex(int index) {
+        return sorterList.get(index).getColour();
     }
 }
