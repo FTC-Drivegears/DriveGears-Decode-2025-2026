@@ -42,7 +42,8 @@ public class SorterSubsystem {
         green = colourSensor.green();
         blue = colourSensor.blue();
         alpha = colourSensor.alpha();
-        //If the sorter is full it stops
+
+        // If the sorter is full it stops
         if (sorterList.size() == 3) {
             return;
         }
@@ -54,31 +55,35 @@ public class SorterSubsystem {
             if (!detectedColor) {
                 detectedColor = true;
                 sorterList.add(new Artifact("Purple", sorter.getPosition()));
-                turnsorter();
-            } //green detected
-        } else if (red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65) {
+                turnSorter();
+            }
+        }
+
+        // Green ball is detected
+        else if (red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65) {
             telemetry.addLine("Green Detected");
             telemetry.update();
             if (!detectedColor) {
                 detectedColor = true;
                 sorterList.add(new Artifact("Green", sorter.getPosition()));
-                turnsorter();
+                turnSorter();
             }
+        }
 
-        } else {
+        else {
             opMode.sleep(300);
             detectedColor = false;
         }
     }
 
-    public void turnsorter() {
-        //If the sorterList is full it stops
+    public void turnSorter() {
+        // If the sorterList is full it stops
         if (sorterList.size() == 3) {
             return;
         }
 
         if (sorter.getPosition() != 1) {
-            //make sure the sorter doesn't break
+            // Ensures the sorter doesn't break
             sorter.setPosition(sorterList.size() * 0.45 );
         }
     }
@@ -86,16 +91,16 @@ public class SorterSubsystem {
     public void turnToColour(String color, Servo sorter) {
         double pos = 0;
         if (color.equals("Green")) {
-            //gets position of the first green it finds
+            // Gets position of the first green it finds
             pos = sorterList.get(sorterList.indexOf("Green")).getPosition();
         }
 
         if (color.equals("Purple")) {
-            //gets position of the first purple it finds
+            // Gets position of the first purple it finds
             pos = sorterList.get(sorterList.indexOf("Purple")).getPosition();
         }
 
-        //move sorter
+        // Turn sorter
         sorter.setPosition(pos);
     }
 
