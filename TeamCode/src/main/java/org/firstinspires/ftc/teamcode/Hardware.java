@@ -18,6 +18,12 @@ public class Hardware {
     public final DcMotorEx lb;
     public final DcMotorEx rb;
 
+    public final DcMotorEx shooter;
+
+    public final Servo sorting;
+
+    public final Servo pusher;
+
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
 
@@ -26,6 +32,11 @@ public class Hardware {
         this.lf = hwMap.get(DcMotorEx.class, Specifications.FTLF_MOTOR); //leftforward
         this.lb = hwMap.get(DcMotorEx.class, Specifications.BKLF_MOTOR); //leftback
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
+
+        this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER); //shooter
+
+        this.sorting = hwMap.get(Servo.class, Specifications.SORTING); //sorting
+        this.pusher = hwMap.get(Servo.class, Specifications.PUSHER); //pusher
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
     }
