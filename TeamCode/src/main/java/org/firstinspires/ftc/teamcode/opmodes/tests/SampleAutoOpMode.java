@@ -83,13 +83,13 @@ public class SampleAutoOpMode extends LinearOpMode {
 
                 case FINISH:
                     motorIntake.setPower(0);  // Ensure intake is stopped
-                    stopRobot();
+                 //   stopRobot();
                     break;
             }
         }
 
-        private void stopRobot () {
-            mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
-        }
+//        private void stopRobot () {
+//            mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
+//        }
     }
 }
