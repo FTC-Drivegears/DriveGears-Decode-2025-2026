@@ -43,17 +43,17 @@ public class Specifications {
 
     public static final String PIN_POINT_ODOMETRY = "odo";
 
-    public static final String INTAKE_MOTOR = "intakeMotor";
+    public static final String INTAKE = "intake";
 
-    public static final String OUTTAKE_MOTOR = "outtakeMotor";
+    public static final String OUTTAKE = "outtake";
 
-    public static final String OUTTAKE_SERVO = "outtakeServo";
+    public static final String HOOD = "hood";
 
     public static final String SORTER = "sorter";
 
     public static final String PUSHER = "pusher";
 
-    public static final String TURRET = "turretMotor";
+    public static final String TURRET = "turret";
 
 
 
