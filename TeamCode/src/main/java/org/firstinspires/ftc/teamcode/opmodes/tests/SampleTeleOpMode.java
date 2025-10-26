@@ -7,16 +7,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
-
 @TeleOp(name = "TeleopSample", group = "TeleOp")
 public class SampleTeleOpMode extends LinearOpMode {
 
     // opmodes should only own commands
     private MecanumCommand mecanumCommand;
     private ElapsedTime timer;
-
     private ElapsedTime resetTimer;
-
     private Hardware hw;
     private double theta;
 
@@ -25,7 +22,6 @@ public class SampleTeleOpMode extends LinearOpMode {
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
-
 
         // Wait for start button to be pressed
         waitForStart();
