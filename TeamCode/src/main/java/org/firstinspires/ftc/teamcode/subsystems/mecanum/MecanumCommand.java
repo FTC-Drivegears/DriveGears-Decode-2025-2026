@@ -210,6 +210,12 @@ public class MecanumCommand {
     public void processOdometry() {
         pinPointOdoSubsystem.processOdometry();
     }
+    public double getX(){
+        return pinPointOdoSubsystem.getX();
+    }
+    public double getY(){
+        return pinPointOdoSubsystem.getY();
+    }
 }
 
 

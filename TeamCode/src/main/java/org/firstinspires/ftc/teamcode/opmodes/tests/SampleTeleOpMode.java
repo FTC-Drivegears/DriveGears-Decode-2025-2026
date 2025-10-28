@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometrySubsystem;
 
 
 @TeleOp(name = "TeleopSample", group = "TeleOp")
@@ -26,12 +27,12 @@ public class SampleTeleOpMode extends LinearOpMode {
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
 
-
         // Wait for start button to be pressed
         waitForStart();
 
         // Loop while OpMode is running
         while (opModeIsActive()) {
+            mecanumCommand.processOdometry();
             theta = mecanumCommand.fieldOrientedMove(
                     gamepad1.left_stick_y,
                     gamepad1.left_stick_x,
@@ -51,6 +52,8 @@ public class SampleTeleOpMode extends LinearOpMode {
         telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
         telemetry.addData("theta", theta);
+        telemetry.addData("X", mecanumCommand.getX());
+        telemetry.addData("Y", mecanumCommand.getY());
         telemetry.update();
     }
 }

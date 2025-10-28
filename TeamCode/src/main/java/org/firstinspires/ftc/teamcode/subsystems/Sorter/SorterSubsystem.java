@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.Artifact;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SorterSubsystem {
     private final Servo sorter;
@@ -31,13 +32,18 @@ public class SorterSubsystem {
 
     boolean detectedColor = false;
 
-    public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
+    public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern){
         this.sorter = hw.sorter;
         this.colourSensor = hw.colour;
         this.opMode = opMode;
         this.telemetry = telemetry;
-        pattern = new ArrayList<>();
+        this.pattern = new ArrayList<>();
         sorterList = new ArrayList<>();
+        if (pattern == "PPG") {
+            this.pattern.add("purple");
+            this.pattern.add("purple");
+            this.pattern.add("green");
+        }
     }
 
     public void detectColour() {
@@ -76,55 +82,59 @@ public class SorterSubsystem {
         } else {
             telemetry.addData("Waiting... remove sleep later", detectedColor);
             telemetry.update();
-            opMode.sleep(300);
             detectedColor = false;
         }
     }
 
     public void turnsorter() {
         //If the sorterList is full it stops
-//        if (sorterList.size() == 3) {
-//            return;
-//        }
-//
-//        if (sorter.getPosition() != 1) {
-//            //make sure the sorter doesn't break
-//            sorter.setPosition(sorterList.size() * 0.45 );
-//        }
-    }
-
-    public void turnToColour(String color, Servo sorter) {
-        double pos = 0;
-        if (color.equals("Green")) {
-            //gets position of the first green it finds
-            pos = sorterList.get(sorterList.indexOf("Green")).getPosition();
+        if (sorterList.size() == 3) {
+            return;
         }
 
-        if (color.equals("Purple")) {
-            //gets position of the first purple it finds
-            pos = sorterList.get(sorterList.indexOf("Purple")).getPosition();
+        if (sorter.getPosition() != 1) {
+            //make sure the sorter doesn't break
+            sorter.setPosition(sorterList.size() * 0.45 );
+        }
+    }
+
+    public void turnToColour(String color) {
+        double pos = 0;
+
+        if (pattern.contains("purple")){
+            turnsorter();
+                int index = sorterList.indexOf("Purple");
+                pos = sorterList.get(index).getPosition();
+                sorterList.remove(index);
+        }
+
+        if (pattern.contains("green")){
+            turnsorter();
+                int index = sorterList.indexOf("Green");
+                pos = sorterList.get(index).getPosition();
+                sorterList.remove(index);
         }
 
         //move sorter
-//        sorter.setPosition(pos);
+        sorter.setPosition(pos);
     }
 
-    public void quickFire(Servo sorter) {
-//        sorter.setPosition(sorterList.get(0).getPosition());
-        opMode.sleep(500);
-        //launch
-        sorterList.remove(0);
-
-//        sorter.setPosition(sorterList.get(0).getPosition());
-        opMode.sleep(500);
-        //launch
-        sorterList.remove(0);
-
-//        sorter.setPosition(sorterList.get(0).getPosition());
-        opMode.sleep(500);
-        //launch
-        sorterList.remove(0);
-    }
+//    public void quickFire(Servo sorter) {
+////        sorter.setPosition(sorterList.get(0).getPosition());
+//        opMode.sleep(500);
+//        //launch
+//        sorterList.remove(0);
+//
+////        sorter.setPosition(sorterList.get(0).getPosition());
+//        opMode.sleep(500);
+//        //launch
+//        sorterList.remove(0);
+//
+////        sorter.setPosition(sorterList.get(0).getPosition());
+//        opMode.sleep(500);
+//        //launch
+//        sorterList.remove(0);
+//    }
 
     public int getNumBalls() {
         return sorterList.size();

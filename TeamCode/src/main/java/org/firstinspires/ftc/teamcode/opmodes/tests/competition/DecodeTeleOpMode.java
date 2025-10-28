@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Hardware;
@@ -35,9 +34,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
         pusher.setPosition(1);
 
         boolean previousAState = false;
+        boolean previousBState = false;
         boolean previousXState = false;
         boolean previousYState = false;
         boolean currentAState;
+        boolean currentBState;
         boolean currentXState;
         boolean currentYState;
 
@@ -45,10 +46,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         boolean isOuttakeMotorOn = false;
         boolean togglePusher = false;
+        boolean toggleSorter = false;
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
-        sorterSubsystem = new SorterSubsystem(hw, this,telemetry);
+        sorterSubsystem = new SorterSubsystem(hw, this,telemetry, "PPG");
 
         while (opModeInInit()){
             telemetry.update();
@@ -77,12 +79,25 @@ public class DecodeTeleOpMode extends LinearOpMode {
             previousAState = currentAState;
 
             if (gamepad1.b){
-                telemetry.addData("Start color detection", gamepad1.b);
-                telemetry.update();
+                telemetry.addLine("I see color");
                 sorterSubsystem.detectColour();
-                telemetry.addData("End color detection", gamepad1.b);
                 telemetry.update();
             }
+
+//            currentBState = gamepad1.b;
+//            if (currentBState && !previousBState) {
+//                toggleSorter = !toggleSorter;
+//
+//                if (toggleSorter) {
+//                    telemetry.addLine("I SEE COLOR!!!");
+//                    sorterSubsystem.detectColour();
+//                    telemetry.update();
+//                }else{
+//                    telemetry.addLine("BUTTON IS OFF!!!");
+//                    telemetry.update();
+//                }
+//            }
+//            previousBState = currentBState;
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState){
