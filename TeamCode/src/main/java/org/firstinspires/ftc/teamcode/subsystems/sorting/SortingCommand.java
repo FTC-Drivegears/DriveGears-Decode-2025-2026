@@ -18,5 +18,8 @@ public class SortingCommand {
     public void changePosition(double degree){
         sortingSubsystem.changePosition(degree);
     }
+    public void setPosition(double degree){
+         sortingSubsystem.setPosition(degree);
+    }
 }
 

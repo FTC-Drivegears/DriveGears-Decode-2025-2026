@@ -15,7 +15,14 @@ public class ShooterCommand {
         this.shooterSubsystem = new ShooterSubsystem(hw);
         elapsedTime = new ElapsedTime();
     }
-    public void shoot() throws InterruptedException {
-        shooterSubsystem.shoot();
+    public void shoot(int seconds) throws InterruptedException {
+        shooterSubsystem.shoot(seconds);
+    }
+    public void stopShoot(int seconds) throws InterruptedException {
+        shooterSubsystem.stopShoot(seconds);
+    }
+
+    public void eject(){
+
     }
 }

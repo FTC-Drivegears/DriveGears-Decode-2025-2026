@@ -11,15 +11,14 @@ public class SortingSubsystem {
 
     public SortingSubsystem(Hardware hw) {
         this.hw = hw;
-
-        hw.sorting.setPosition(0.0);
     }
     public void changePosition(double degree){
         position += degree;
-        if (position >= 1.0){
-            position = 0.0;
-        }
         hw.sorting.setPosition(position);
+    }
+    public void setPosition(double degree){
+        position = degree;
+        hw.sorting.setPosition(degree);
     }
 
 }

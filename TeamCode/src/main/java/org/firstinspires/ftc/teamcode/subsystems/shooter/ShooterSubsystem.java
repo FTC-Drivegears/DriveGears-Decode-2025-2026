@@ -13,13 +13,16 @@ public class ShooterSubsystem {
 
 
     }
-    public void shoot() throws InterruptedException {
-        hw.pusher.setPosition(0.33);
-        hw.shooter.setPower(0.6);
-        Thread.sleep(2000);
-        hw.shooter.setPower(0.0);
-        hw.pusher.setPosition(0.0);
-
+    public void shoot(int seconds) throws InterruptedException {
+        hw.pusher.setPosition(1);
+        //hw.shooter.setPower(1.0);
+        Thread.sleep(seconds * 1000);
 
     }
+    public void stopShoot(int seconds) throws InterruptedException {
+        hw.pusher.setPosition(0);
+        //hw.shooter.setPower(0.0);
+        Thread.sleep(seconds * 1000);
+    }
+
 }

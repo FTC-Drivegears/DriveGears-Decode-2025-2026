@@ -12,11 +12,15 @@ import org.firstinspires.ftc.teamcode.subsystems.sorting.SortingCommand;
 import org.firstinspires.ftc.teamcode.subsystems.sorting.SortingConstants;
 
 
-@Autonomous (name = "Sample Auto")
-public class SampleAutoOpMode extends LinearOpMode {
+@Autonomous (name = "Movement Test")
+public class AutoOpMovementTest extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private SortingCommand sortingCommand;
     private ShooterCommand shooterCommand;
+
+    private double theta;
+    private double x;
+    private double y;
 
 
 
@@ -33,8 +37,8 @@ public class SampleAutoOpMode extends LinearOpMode {
 
     public void unload() throws InterruptedException {
 
-       shooterCommand.shoot(3);
-       shooterCommand.stopShoot(3);
+        shooterCommand.shoot(3);
+        shooterCommand.stopShoot(3);
 //       shooterCommand.shoot(3);
 //       shooterCommand.stopShoot(3);
 //       shooterCommand.shoot(3);
@@ -51,12 +55,17 @@ public class SampleAutoOpMode extends LinearOpMode {
         shooterCommand = new ShooterCommand(hw);
 
         SORTING_STATE sortingState = SORTING_STATE.PPG_1;
-        unload();
 
+        waitForStart();
         //unload();
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
+            mecanumCommand.moveToPos(30, 20, 30);
+
+            x = mecanumCommand.getOdoX();
+            y = mecanumCommand.getOdoY();
+            theta = mecanumCommand.getOdoHeading();
             //processPinPoint();
 
 
@@ -98,6 +107,16 @@ public class SampleAutoOpMode extends LinearOpMode {
 //            }
         }
 
+    }
+
+    public void processTelemetry(){
+        //add telemetry messages here
+
+        telemetry.addLine("---------------------------------");
+        telemetry.addData("theta", theta);
+        telemetry.addData("x", x);
+        telemetry.addData("y", y);
+        telemetry.update();
     }
 
     private void stopRobot() {
