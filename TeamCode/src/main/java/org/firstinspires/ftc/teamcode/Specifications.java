@@ -32,25 +32,6 @@ package org.firstinspires.ftc.teamcode;
 //laser is in i2c control hub 2 and imu is in 0
 
 public class Specifications {
-
-    public static final String EXTENSION_MOTOR_MAIN = "lift1";
-    public static final String EXTENSION_MOTOR_AUX1 = "lift2";
-    public static final String EXTENSION_MOTOR_AUX2 = "lift3";
-
-
-    // subsystem name
-
-    public static final String CLAW_SERVO = "claw";
-    public static final String LEFT_OUTPUT_ARM = "larm";
-    public static final String RIGHT_OUTPUT_ARM = "rarm";
-
-    public static final String EXTENSION_ARM_LEFT = "llinkage";
-    public static final String EXTENSION_ARM_RIGHT = "rlinkage";
-    public static final String ROLL = "roll";
-    public static final String PITCH = "pitch";
-
-
-
     public static final String FTLF_MOTOR = "lf";
     public static final String FTRT_MOTOR = "rf";
     public static final String BKLF_MOTOR = "lb";
@@ -62,22 +43,19 @@ public class Specifications {
 
     public static final String PIN_POINT_ODOMETRY = "odo";
 
-    public static final String HANGING_MOTOR = "hangingMotor";
-    public static final String HANGING_MOTOR_AUX = "hangingMotorAux";
+    public static final String INTAKE = "intake";
 
-//    public static final String LED = "led";
+    public static final String OUTTAKE = "outtake";
 
-    public static final String COLOUR_SENSOR = "colour";
+    public static final String HOOD = "hood";
 
     public static final String SORTER = "sorter";
 
+    public static final String PUSHER = "pusher";
 
-    public static final int CVSmoothing = 30;
+    public static final String TURRET = "turret";
 
-    public enum NavSystem{
-        IMU,
-        ODOMETRY,
-        MIXED
-    }
-    public NavSystem navSystem = NavSystem.ODOMETRY;
+
+
+
 }

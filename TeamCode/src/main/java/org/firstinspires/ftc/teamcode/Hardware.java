@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -18,9 +20,17 @@ public class Hardware {
     public final DcMotorEx lb;
     public final DcMotorEx rb;
 
+    public final DcMotorEx intake;
+
+    public final DcMotorEx outtake;
+
+    public final Servo hood;
+
     public final Servo sorter;
 
-    public final ColorSensor colour;
+    public final Servo pusher;
+
+    public final CRServo turret;
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
@@ -31,11 +41,17 @@ public class Hardware {
         this.lb = hwMap.get(DcMotorEx.class, Specifications.BKLF_MOTOR); //leftback
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
 
-        this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
-
-        this.colour = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
-
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
+
+        this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
+        this.outtake = hwMap.get(DcMotorEx.class, Specifications.OUTTAKE);
+
+        this.hood = hwMap.get(Servo.class, Specifications.HOOD);
+        this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
+        this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
+        this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
+
+        this.intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {
