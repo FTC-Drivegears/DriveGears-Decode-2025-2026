@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -32,6 +32,8 @@ public class Hardware {
 
     public final CRServo turret;
 
+    public final AnalogInput encoder;
+
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
 
@@ -50,6 +52,8 @@ public class Hardware {
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
         this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
+
+        this.encoder = hwMap.get(AnalogInput.class, Specifications.ENCODER);
 
         this.intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
