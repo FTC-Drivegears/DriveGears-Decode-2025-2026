@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -49,6 +50,8 @@ public class Hardware {
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
         this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
+
+        this.intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {
