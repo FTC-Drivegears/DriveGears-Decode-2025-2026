@@ -45,6 +45,8 @@ public class Specifications {
 
     public static final String INTAKE = "intake";
 
+    public static final String COLOUR_SENSOR = "colourSensor";
+
     public static final String OUTTAKE = "outtake";
 
     public static final String HOOD = "hood";
@@ -54,8 +56,4 @@ public class Specifications {
     public static final String PUSHER = "pusher";
 
     public static final String TURRET = "turret";
-
-
-
-
 }
