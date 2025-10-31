@@ -6,11 +6,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumSubsystem;
 
 @TeleOp(name = "MotorCode", group = "TeleOp")
 public class MotorCode extends LinearOpMode {
-    private MecanumCommand mecanumCommand;
+    private MecanumSubsystem mecanumSubsystem;
     private ElapsedTime resetTimer;
     private Hardware hw;
     private double theta;
@@ -21,7 +21,7 @@ public class MotorCode extends LinearOpMode {
         boolean buttonCondition;
         hw = Hardware.getInstance(hardwareMap);
         CRServo servo = hardwareMap.get(CRServo.class, "servo");
-        mecanumCommand = new MecanumCommand(hw);
+        mecanumSubsystem = new MecanumSubsystem(hw);
         resetTimer = new ElapsedTime();
 
         // Wait for start button to be pressed
@@ -29,8 +29,8 @@ public class MotorCode extends LinearOpMode {
 
         // Loop while OpMode is running
         while (opModeIsActive()) {
-            theta = mecanumCommand.fieldOrientedMove(
-                    gamepad1.left_stick_y,
+            theta = mecanumSubsystem.fieldOrientedMove(
+                    -gamepad1.left_stick_y,
                     gamepad1.left_stick_x,
                     gamepad1.right_stick_x
             );
@@ -58,7 +58,7 @@ public class MotorCode extends LinearOpMode {
             processTelemetry();
 
             if (gamepad1.start) {
-                mecanumCommand.resetPinPointOdometry();
+                mecanumSubsystem.resetPinPointOdometry();
             }
         }
     }

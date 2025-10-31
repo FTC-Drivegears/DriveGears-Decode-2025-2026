@@ -2,20 +2,17 @@ package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
-import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometrySubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumSubsystem;
 
 
 @TeleOp(name = "TeleopSample", group = "TeleOp")
 public class SampleTeleOpMode extends LinearOpMode {
 
     // opmodes should only own commands
-    private MecanumCommand mecanumCommand;
+    private MecanumSubsystem mecanumSubsystem;
     private ElapsedTime timer;
     private Hardware hw;
     private ElapsedTime resetTimer;
@@ -41,7 +38,7 @@ public class SampleTeleOpMode extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         hw = Hardware.getInstance(hardwareMap);
-        mecanumCommand = new MecanumCommand(hw);
+        mecanumSubsystem = new MecanumSubsystem(hw);
         resetTimer = new ElapsedTime();
         hw.pusher.setPosition(PUSHER_DOWN);
 
@@ -50,8 +47,8 @@ public class SampleTeleOpMode extends LinearOpMode {
 
         // Loop while OpMode is running
         while (opModeIsActive()) {
-            mecanumCommand.processOdometry();
-            mecanumCommand.fieldOrientedMove(
+            mecanumSubsystem.processOdometry();
+            mecanumSubsystem.fieldOrientedMove(
                     gamepad1.left_stick_y,
                     gamepad1.left_stick_x,
                     gamepad1.right_stick_x
@@ -60,7 +57,7 @@ public class SampleTeleOpMode extends LinearOpMode {
             processTelemetry();
 
             if (gamepad1.start){
-                mecanumCommand.resetPinPointOdometry();
+                mecanumSubsystem.resetPinPointOdometry();
             }
 
             // --- Intake toggle on A (edge) ---
@@ -105,8 +102,8 @@ public class SampleTeleOpMode extends LinearOpMode {
         //add telemetry messages here
         telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
-        telemetry.addData("X", mecanumCommand.getX());
-        telemetry.addData("Y", mecanumCommand.getY());
+        telemetry.addData("X", mecanumSubsystem.getX());
+        telemetry.addData("Y", mecanumSubsystem.getY());
         telemetry.addData("Pusher ON", isPusherUp);
         telemetry.update();
     }

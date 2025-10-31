@@ -199,6 +199,22 @@ public class PIDCore {
         return (error * Kp) + (derivative * Kd);
     }
 
+    public double outputPositional(double setPoint, double feedback) {
+        timer.reset();
+        error = setPoint - feedback;
+        timeChange = timer.milliseconds();
+        if(activateIntegral){
+            integralSum += error * timer.seconds();
+        }
+        else{
+            integralSum = 0;
+        }
+        errorChange = (error - lastError);
+        derivative = (error - lastError) / timer.milliseconds();
+        lastError = error;
+        return (error * Kp) + (derivative * Kd) + (integralSum * Ki);
+    }
+
     /**
      * Calculate PID output including feedforward terms.
      * @param setPoint target value

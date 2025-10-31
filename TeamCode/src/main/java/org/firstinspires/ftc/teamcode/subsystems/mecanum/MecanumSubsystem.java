@@ -3,12 +3,15 @@ package org.firstinspires.ftc.teamcode.subsystems.mecanum;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import static org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumConstants.*;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.util.pidcore.PIDCore;
 
-class MecanumSubsystem {
+public class MecanumSubsystem {
     //rf: right front/forward
     //rb: right back
     //lb: left back
@@ -44,14 +47,30 @@ class MecanumSubsystem {
     private double rfVelMain = 0;
     private double rbVelMain = 0;
 
-    // Layer 1: First adjustment layer (e.g., heading correction, sensor-based adjustment)
-    private double lfVelAdjustment1 = 0;
-    private double lbVelAdjustment1 = 0;
-    private double rfVelAdjustment1 = 0;
-    private double rbVelAdjustment1 = 0;
+    private PinPointOdometrySubsystem pinPointOdoSubsystem;
+
+    // hardware is owned by test and pass down to subsystems
+
+    private ElapsedTime elapsedTime;
+    public double xFinal, yFinal, thetaFinal;
+    public double velocity;
+
+
+    private double ex = 0;
+    private double ey = 0;
+    private double etheta = 0;
+
 
     public MecanumSubsystem(Hardware hw) {
         this.hw = hw;
+        this.pinPointOdoSubsystem = new PinPointOdometrySubsystem(hw);
+        elapsedTime = new ElapsedTime();
+        xFinal = pinPointOdoSubsystem.getX();
+        yFinal = pinPointOdoSubsystem.getY();
+        thetaFinal = pinPointOdoSubsystem.getHeading();
+        velocity = 0;
+        turnOffInternalPID();
+
 
         // initialize PID controllers
         globalXController = new PIDCore(kpx, kdx, kix);
@@ -82,49 +101,17 @@ class MecanumSubsystem {
         hw.rf.setPower(0);
     }
 
-    // provides more control at lower speeds
-    public void fieldOrientedMoveExponential(double x, double y, double z, double theta) {
-        double newX = x * Math.cos(theta) - y * Math.sin(theta);
-        double newY = x * Math.sin(theta) + y * Math.cos(theta);
-
-        rightFrontMotorOutput = -newY + newX - z;
-        leftFrontMotorOutput = newY + newX + z;
-        rightBackMotorOutput = newY + newX - z;
-        leftBackMotorOutput = -newY + newX + z;
-
-        double largest = Math.max(
-                Math.max(Math.abs(rightFrontMotorOutput), Math.abs(leftFrontMotorOutput)),
-                Math.max(Math.abs(rightBackMotorOutput), Math.abs(leftBackMotorOutput)));
-
-        if (largest > 1) {
-            rightFrontMotorOutput /= largest;
-            leftFrontMotorOutput /= largest;
-            rightBackMotorOutput /= largest;
-            leftBackMotorOutput /= largest;
-        }
-        rightFrontMotorOutput *= POWER_SCALE_FACTOR;
-        leftFrontMotorOutput *= POWER_SCALE_FACTOR;
-        rightBackMotorOutput *= POWER_SCALE_FACTOR;
-        leftBackMotorOutput *= POWER_SCALE_FACTOR;
-
-        hw.rf.setPower(normalizedFunction(rightFrontMotorOutput));
-        hw.lf.setPower(normalizedFunction(leftFrontMotorOutput));
-        hw.rb.setPower(normalizedFunction(rightBackMotorOutput));
-        hw.lb.setPower(normalizedFunction(leftBackMotorOutput));
-    }
-
-    public static double normalizedFunction(double t) {
-        double x = 128 * Math.abs(t);
-        // Updated parameters: increased base (1.05), reduced linear term (0.1)
-        double numerator = 1.2 * Math.pow(1.02, x) - 1.2 + 0.2 * x;
-        double denominator = 1.2 * Math.pow(1.02, 128) - 1.2 + 0.2 * 128;
-        double result;
-        if (t < 0) {
-            result = numerator * -1 / denominator;
-        } else {
-            result = numerator / denominator;
-        }
-        return result;
+    public void setConstants(double kpx, double kdx, double kix, double kpy, double kdy, double kiy, double kptheta, double kdtheta, double kitheta) {
+        MecanumConstants.kpx = kpx;
+        MecanumConstants.kdx = kdx;
+        MecanumConstants.kix = kix;
+        MecanumConstants.kpy = kpy;
+        MecanumConstants.kdy = kdy;
+        MecanumConstants.kiy = kiy;
+        MecanumConstants.kptheta = kptheta;
+        MecanumConstants.kdtheta = kdtheta;
+        MecanumConstants.kitheta = kitheta;
+        updatePIDConstants();
     }
 
     // resets all motor encoders
@@ -139,37 +126,12 @@ class MecanumSubsystem {
         hw.lb.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    // motorProcess(sets the powers)
-    public void motorProcess() {
-        // combine main and adjustment velocities
-        lfvel = lfVelMain + lfVelAdjustment1;
-        lbvel = lbVelMain + lbVelAdjustment1;
-        rfvel = rfVelMain + rfVelAdjustment1;
-        rbvel = rbVelMain + rbVelAdjustment1;
-
-        // limit velocities to maximum allowed
-        double max = Math.max(Math.abs(lfvel), Math.max(Math.abs(lbvel), Math.max(Math.abs(rfvel), Math.abs(rbvel))));
-        if (max > MAX_ANGULAR_VEL) {
-            double scalar = MAX_ANGULAR_VEL / max;
-            lfvel *= scalar;
-            lbvel *= scalar;
-            rfvel *= scalar;
-            rbvel *= scalar;
-        }
-
-        // set motor velocities (radian/s) uses encoders to determine the velocity
-        hw.rf.setVelocity(rfvel, AngleUnit.RADIANS);
-        hw.lb.setVelocity(lbvel, AngleUnit.RADIANS);
-        hw.rb.setVelocity(rbvel, AngleUnit.RADIANS);
-        hw.lf.setVelocity(lfvel, AngleUnit.RADIANS);
-    }
-
     // processes velocity control with no encoder feedback
     public void motorProcessNoEncoder() {
-        double lfVelTemp = lfVelMain + lfVelAdjustment1;
-        double lbVelTemp = lbVelMain + lbVelAdjustment1;
-        double rfVelTemp = rfVelMain + rfVelAdjustment1;
-        double rbVelTemp = rbVelMain + rbVelAdjustment1;
+        double lfVelTemp = lfVelMain;
+        double lbVelTemp = lbVelMain;
+        double rfVelTemp = rfVelMain;
+        double rbVelTemp = rbVelMain;
 
         // normalize vectors (between 0 to 1)
         double max = maxDouble(Math.abs(lfVelTemp), Math.abs(lbVelTemp), Math.abs(rfVelTemp), Math.abs(rbVelTemp));
@@ -207,17 +169,6 @@ class MecanumSubsystem {
         lbVelMain = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45))) * (1.41421356237);
     }
 
-
-    //PartialMoveAdjustment is used in GridAutoCentering, it allows the robot to auto center to the grid
-    public void partialMoveAdjustment(boolean run, double verticalVel, double horizontalVel, double rotationalVel){
-        if (run){
-            rbVelAdjustment1 = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            rfVelAdjustment1 = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) + rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            lfVelAdjustment1 = (verticalVel * Math.cos(Math.toRadians(45)) + horizontalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-            lbVelAdjustment1 = (-horizontalVel * Math.cos(Math.toRadians(45)) + verticalVel * Math.sin(Math.toRadians(45)) - rotationalVel * Math.sin(Math.toRadians(45)))*(1.41421356237);
-        }
-    }
-
     public void turnOffInternalPID() {
         hw.rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         hw.lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -226,28 +177,13 @@ class MecanumSubsystem {
     }
 
     // Basic Mecanum robot movement
-    public void move(boolean run, double vertical, double horizontal, double rotational){
-        if (run){
+    public void move( double vertical, double horizontal, double rotational){
             rightFrontMotorOutput = (-horizontal * Math.cos(Math.toRadians(45)) + vertical * Math.sin(Math.toRadians(45)) + rotational * Math.sin(Math.toRadians(45)))*(1.41421356237);
             leftFrontMotorOutput = (vertical * Math.cos(Math.toRadians(45)) + horizontal * Math.sin(Math.toRadians(45)) - rotational * Math.sin(Math.toRadians(45)))*(1.41421356237);
             rightBackMotorOutput = (vertical * Math.cos(Math.toRadians(45)) + horizontal * Math.sin(Math.toRadians(45)) + rotational * Math.sin(Math.toRadians(45)))*(1.41421356237);
             leftBackMotorOutput = (-horizontal * Math.cos(Math.toRadians(45)) + vertical * Math.sin(Math.toRadians(45)) - rotational * Math.sin(Math.toRadians(45)))*(1.41421356237);
 
             setPowers(rightBackMotorOutput,leftBackMotorOutput,rightFrontMotorOutput,leftFrontMotorOutput);
-        }
-    }
-
-    public void moveToPosition(boolean run, double power, double degree, int position){
-        if (run){
-            double y1 = power * Math.sin(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) - power * Math.cos(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            double x1 = power * Math.cos(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) + power * Math.sin(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            double y2 = power * Math.sin(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) - power * Math.cos(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            double x2 = power * Math.cos(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) + power * Math.sin(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            while (hw.rf.getCurrentPosition()<position){
-                setPowers(0,0,0,0);
-            }
-        setPowers(0,0,0,0);
-        }
     }
 
     //Update PID controllers with new constants
@@ -269,19 +205,110 @@ class MecanumSubsystem {
     }
 
     // stop all motors
-    public void stop(boolean run){
-        if (run){
+    public void stop(){
             setPowers(0,0,0,0);
-        }
     }
 
-    // TeleOp functions
-    // movement control
-    // input x - side to side (-1 to 1)
-    // input y - front to back (-1 to 1)
-    // input z - rotation (-1 to 1)
-    // input theta - current heading (radians)
-    public void fieldOrientedMove(double x, double y, double z, double theta) {
+    public void processPID() {
+        ex = globalXControllerOutputPositional(xFinal, pinPointOdoSubsystem.getX());
+        ey = globalYControllerOutputPositional(yFinal, pinPointOdoSubsystem.getY());
+        etheta = globalThetaControllerOutputPositional(thetaFinal, pinPointOdoSubsystem.getHeading());
+
+
+        double max = Math.max(Math.abs(ex), Math.abs(ey));
+        if (max > velocity) {
+            double scalar = velocity / max;
+            ex *= scalar;
+            ey *= scalar;
+            etheta *= scalar;
+        }
+
+        double angle = Math.PI / 2 - pinPointOdoSubsystem.getHeading();
+        double localVertical = ex * Math.cos(pinPointOdoSubsystem.getHeading()) - ey * Math.cos(angle);
+        double localHorizontal = ex * Math.sin(pinPointOdoSubsystem.getHeading()) + ey * Math.sin(angle);
+        partialMove(localVertical, localHorizontal, etheta);
+    }
+
+
+    public void resetPinPointOdometry() {
+        pinPointOdoSubsystem.reset();
+    }
+
+
+    public void setPowers (double rightFront, double leftFront, double rightBack, double leftBack){
+        hw.rf.setPower(rightFront);
+        hw.lb.setPower(leftFront);
+        hw.rb.setPower(rightBack);
+        hw.lf.setPower(leftBack);
+    }
+
+    public boolean moveToPos(double x, double y, double theta) {
+        elapsedTime.reset();
+        setFinalPosition( 30, x, y, theta);
+        return positionNotReachedYet();
+    }
+
+    public void setFinalPosition(double velocity, double x, double y, double theta) {
+        this.xFinal = x;
+        this.yFinal = y;
+        this.thetaFinal = theta;
+        this.velocity = velocity;
+
+    }
+
+    public boolean positionNotReachedYet() {
+        return (isXReached() && isYReached() && isThetaReached());
+    }
+
+    public double getXDifferencePinPoint() {
+        return Math.abs(this.xFinal - pinPointOdoSubsystem.getX());
+    }
+
+    public double getYDifferencePinPoint() {
+        return Math.abs(this.yFinal - pinPointOdoSubsystem.getY());
+    }
+
+    public double getThetaDifferencePinPoint() {
+        return Math.abs(this.thetaFinal - pinPointOdoSubsystem.getHeading());
+    }
+
+    public boolean isYReached() {
+        return getYDifferencePinPoint() < 2.5;
+    }
+
+    public boolean isXReached() {
+        return getXDifferencePinPoint() < 2.5;
+    }
+
+    public boolean isThetaReached() {
+        return getThetaDifferencePinPoint() < 0.07;
+    }
+
+    public double getOdoX(){
+        return pinPointOdoSubsystem.getX();
+    }
+    public double getOdoY(){
+        return pinPointOdoSubsystem.getY();
+    }
+    public double getOdoHeading(){
+        return pinPointOdoSubsystem.getHeading();
+    }
+    public boolean isThetaPassed(){
+        return getThetaDifferencePinPoint() < 0.22;
+    }
+
+    public boolean isXPassed(){
+        return getXDifferencePinPoint() < 10;
+    }
+    public boolean isYPassed(){
+        return getYDifferencePinPoint() < 10;
+    }
+
+
+    //teleop
+
+    public double fieldOrientedMove(double y, double x, double z) {
+        double theta = pinPointOdoSubsystem.getHeading();
         // translate the field relative movement (joystick) into the robot relative movement
         //changed all 3 lines below
         double newX = x * Math.cos(theta) - y * Math.sin(theta);
@@ -312,13 +339,23 @@ class MecanumSubsystem {
         leftBackMotorOutput *= POWER_SCALE_FACTOR;
 
         setPowers(rightFrontMotorOutput,leftBackMotorOutput,rightBackMotorOutput,leftFrontMotorOutput);
+
+        return pinPointOdoSubsystem.getHeading();
     }
 
-    public void setPowers (double rightFront, double leftFront, double rightBack, double leftBack){
-        hw.rf.setPower(rightFront);
-        hw.lb.setPower(leftFront);
-        hw.rb.setPower(rightBack);
-        hw.lf.setPower(leftBack);
+    public void motorProcess() {
+        processPID();
+        motorProcessNoEncoder();
+    }
+
+    public void processOdometry() {
+        pinPointOdoSubsystem.processOdometry();
+    }
+    public double getX(){
+        return pinPointOdoSubsystem.getX();
+    }
+    public double getY(){
+        return pinPointOdoSubsystem.getY();
     }
 }
 
