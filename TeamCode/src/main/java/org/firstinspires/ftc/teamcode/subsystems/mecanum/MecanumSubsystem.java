@@ -77,10 +77,17 @@ public class MecanumSubsystem {
         globalYController = new PIDCore(kpy, kdy, kiy);
         globalThetaController = new PIDCore(kptheta, kdtheta, kitheta);
 
+        //DriveGears
+//        hw.lf.setDirection(DcMotorSimple.Direction.REVERSE);
+//        hw.rf.setDirection(DcMotorSimple.Direction.FORWARD);
+//        hw.lb.setDirection(DcMotorSimple.Direction.REVERSE);
+//        hw.rb.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        //Pr0Teens
+        hw.lb.setDirection(DcMotorSimple.Direction.FORWARD);
         hw.lf.setDirection(DcMotorSimple.Direction.REVERSE);
-        hw.rf.setDirection(DcMotorSimple.Direction.FORWARD);
-        hw.lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        hw.rb.setDirection(DcMotorSimple.Direction.FORWARD);
+        hw.rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        hw.rb.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // set motor behaviour
         hw.lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

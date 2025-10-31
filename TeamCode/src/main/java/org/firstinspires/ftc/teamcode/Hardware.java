@@ -52,6 +52,18 @@ public class Hardware {
         this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
 
         this.intake.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        //DriveGears
+//        lf.setDirection(DcMotorSimple.Direction.REVERSE);
+//        rf.setDirection(DcMotorSimple.Direction.FORWARD);
+//        lb.setDirection(DcMotorSimple.Direction.REVERSE);
+//        rb.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        //Pr0Teens
+        lb.setDirection(DcMotorSimple.Direction.FORWARD);
+        lf.setDirection(DcMotorSimple.Direction.REVERSE);
+        rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        rb.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {

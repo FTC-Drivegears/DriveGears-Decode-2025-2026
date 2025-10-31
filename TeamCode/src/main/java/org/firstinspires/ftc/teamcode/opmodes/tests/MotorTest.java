@@ -4,41 +4,43 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumSubsystem;
+
 @TeleOp
 public class MotorTest extends LinearOpMode {
-
+    Hardware hw;
+    MecanumSubsystem mecanumSubsystem;
     @Override
     public void runOpMode() throws InterruptedException {
-        DcMotorEx lf = hardwareMap.get(DcMotorEx.class, "lf");
-        DcMotorEx rf = hardwareMap.get(DcMotorEx.class, "rf");
-        DcMotorEx lb = hardwareMap.get(DcMotorEx.class, "lb");
-        DcMotorEx rb = hardwareMap.get(DcMotorEx.class, "rb");
+        hw = Hardware.getInstance(hardwareMap);
+        mecanumSubsystem = new MecanumSubsystem(hw);
 
         waitForStart();
 
         while (opModeIsActive()) {
             if (gamepad1.a) {
-                lf.setPower(1);
+                hw.lf.setPower(1);
             } else {
-                lf.setPower(0);
+                hw.lf.setPower(0);
             }
 
             if (gamepad1.b) {
-                rf.setPower(1);
+                hw.rf.setPower(1);
             } else {
-                rf.setPower(0);
+                hw.rf.setPower(0);
             }
 
             if (gamepad1.x) {
-                lb.setPower(1);
+                hw.lb.setPower(1);
             } else {
-                lb.setPower(0);
+                hw.lb.setPower(0);
             }
 
             if (gamepad1.y) {
-                rb.setPower(1);
+                hw.rb.setPower(1);
             } else {
-                rb.setPower(0);
+                hw.rb.setPower(0);
             }
 //            if (gamepad1.a) {
 //                lf.setPower(gamepad1.a ? 1.0 : 0.0);  // A -> LF
@@ -46,10 +48,10 @@ public class MotorTest extends LinearOpMode {
 //                lb.setPower(gamepad1.x ? 1.0 : 0.0);  // X -> LB
 //                rb.setPower(gamepad1.y ? 1.0 : 0.0);  // Y -> RB
 //            }
-            telemetry.addData("LF Power", lf.getPower());
-            telemetry.addData("RF Power", rf.getPower());
-            telemetry.addData("LB Power", lb.getPower());
-            telemetry.addData("RB Power", rb.getPower());
+            telemetry.addData("LF Power", hw.lf.getPower());
+            telemetry.addData("RF Power", hw.rf.getPower());
+            telemetry.addData("LB Power", hw.lb.getPower());
+            telemetry.addData("RB Power", hw.rb.getPower());
             telemetry.update();
         }
     }
