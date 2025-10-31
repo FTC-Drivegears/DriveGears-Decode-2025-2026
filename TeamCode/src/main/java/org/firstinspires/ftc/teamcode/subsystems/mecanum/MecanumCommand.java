@@ -37,8 +37,8 @@ public class MecanumCommand {
      */
     public MecanumCommand( Hardware hw) {
         this.hw = hw;
-        this.mecanumSubsystem = new MecanumSubsystem(hw);
-        this.pinPointOdoSubsystem = new PinPointOdometrySubsystem(hw);
+        this.mecanumSubsystem = new MecanumSubsystem(this.hw);
+        this.pinPointOdoSubsystem = new PinPointOdometrySubsystem(this.hw);
         elapsedTime = new ElapsedTime();
         xFinal = pinPointOdoSubsystem.getX();
         yFinal = pinPointOdoSubsystem.getY();
@@ -127,7 +127,7 @@ public class MecanumCommand {
 
     public boolean moveToPos(double x, double y, double theta) {
         elapsedTime.reset();
-        setFinalPosition( 30, x, y, theta);
+        setFinalPosition( 1, x, y, theta);
         return positionNotReachedYet();
     }
 
@@ -198,7 +198,7 @@ public class MecanumCommand {
      * @param rotational Rotation input (-1 to 1).
      */
     public double fieldOrientedMove(double vertical, double horizontal, double rotational) {
-        mecanumSubsystem.fieldOrientedMove(-vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
+        mecanumSubsystem.fieldOrientedMove(vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
         return pinPointOdoSubsystem.getHeading();
     }
 

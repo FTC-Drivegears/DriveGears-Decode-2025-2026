@@ -58,28 +58,27 @@ class MecanumSubsystem {
         globalYController = new PIDCore(kpy, kdy, kiy);
         globalThetaController = new PIDCore(kptheta, kdtheta, kitheta);
 
-        hw.lf.setDirection(DcMotorSimple.Direction.REVERSE);
-        hw.rf.setDirection(DcMotorSimple.Direction.FORWARD);
-        hw.lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        hw.rb.setDirection(DcMotorSimple.Direction.FORWARD);
-
         // set motor behaviour
-        hw.lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hw.lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hw.rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hw.rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.hw.lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.hw.lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.hw.rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.hw.rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+       this.hw.lf.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.hw.rf.setDirection(DcMotorSimple.Direction.FORWARD);
+        this.hw.lb.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.hw.rb.setDirection(DcMotorSimple.Direction.FORWARD);
         // set motor modes
-        hw.lb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        hw.lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        hw.rb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        hw.rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.hw.lb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.hw.lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.hw.rb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.hw.rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // stop all motors
-        hw.lb.setPower(0);
-        hw.lf.setPower(0);
-        hw.rb.setPower(0);
-        hw.rf.setPower(0);
+        this.hw.lb.setPower(0);
+        this.hw.lf.setPower(0);
+        this.hw.rb.setPower(0);
+        this.hw.rf.setPower(0);
     }
 
     // provides more control at lower speeds
