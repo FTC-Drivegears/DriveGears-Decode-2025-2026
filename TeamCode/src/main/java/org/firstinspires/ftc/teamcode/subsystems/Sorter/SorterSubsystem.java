@@ -50,7 +50,22 @@ public class SorterSubsystem {
 ////        }
 //    }
 
-    public void turnToOuttake() {
+    public void quickFire(){
+        if (this.sorterList.isEmpty()){
+            telemetry.addLine("Nothing in sorter");
+            telemetry.update();
+            return;
+        }
+
+        sorter.setPosition(PUSHER_POSITION);
+
+        // push(); // TODO pusher
+
+        this.sorterList.remove(0);
+
+    }
+
+    public void outtakeBall() {
         if (this.pattern.isEmpty()){
             telemetry.addLine("Pattern is empty");
             telemetry.update();
@@ -75,13 +90,14 @@ public class SorterSubsystem {
         // push(); // TODO pusher
 
         if (ballIndexToRemoveFromSorter == -1){
-            telemetry.addLine("No balls to outtake");
+            telemetry.addData("Color not found:", colorToRemove);
             telemetry.update();
             return;
         }
         this.sorterList.remove(ballIndexToRemoveFromSorter);
         this.pattern.remove(0);
     }
+
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -100,14 +116,17 @@ public class SorterSubsystem {
             return;
         }
 
+        turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
+
+        // when color sensor is in, read the color and add this later
+
         sorterList.add(color);
-        turnToIntake();
     }
 
     public void turnToIntake() {
         if (sorter.getPosition() != 1) {
             //make sure the sorter doesn't break
-            sorter.setPosition(sorterList.size() * 0.45 );
+            sorter.setPosition(sorterList.size() * 0.45);
         }
     }
 

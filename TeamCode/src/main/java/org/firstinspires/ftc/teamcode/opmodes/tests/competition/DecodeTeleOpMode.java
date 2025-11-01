@@ -55,7 +55,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
-        sorterSubsystem = new SorterSubsystem(hw, this,telemetry, "purplepurplegreen");
 
         while (opModeInInit()){
             telemetry.update();
@@ -83,44 +82,20 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             previousAState = currentAState;
 
+            // Once camera can understand output patter, revise this initalization.
             sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
-            // Mock intaking a purple ball
-            if (gamepad1.dpad_up) {
-                sorterSubsystem.intakeBall('p');
+            String mockInputBalls = "gpg"; //pretend I inputted these balls
+            for (char c: mockInputBalls.toCharArray()) {
+                sorterSubsystem.intakeBall(c);
             }
-            // Mock intaking a green ball
-            if (gamepad1.dpad_down) {
-                sorterSubsystem.intakeBall('g');
-            }
+
             // Outtake ball
             if (gamepad1.dpad_left) {
-                sorterSubsystem.turnToOuttake();
+                sorterSubsystem.outtakeBall();
             }
 
-
-                    currentDpadUpState = gamepad1.dpad_up; //purple artifact
-            if (currentDpadUpState && !previousDpadUpState) {
-                mockPurple = !mockPurple;
-
-                if (mockPurple) {
-                    thisIsPurple = true;
-                    if (thisIsPurple) {
-                        sorterSubsystem.detectColour();
-                    }
-                }else return;
-            }
-            previousDpadUpState = currentDpadUpState;
-
-            currentDpadDownState = gamepad1.dpad_down; //green artifact
-            if (currentDpadDownState && !previousDpadDownState){
-                mockGreen = !mockGreen;
-
-                if (mockGreen) {
-                    thisIsGreen = true;
-                    if (thisIsGreen){
-                        sorterSubsystem.detectColour();
-                    }
-                }else return;
+            if (gamepad1.dpad_right){
+                sorterSubsystem.quickFire();
             }
 
             currentYState = gamepad1.y;
