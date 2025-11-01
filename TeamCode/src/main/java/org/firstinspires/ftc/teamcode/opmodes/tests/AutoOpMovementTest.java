@@ -28,21 +28,19 @@ public class AutoOpMovementTest extends LinearOpMode {
 
     private int stage1 = 0;
 
+    enum AUTO_STATE{
+        INITIAL_POS,
+        FIRST_LAUNCH,
+        COLLECTION,
+        SECOND_LAUNCH,
+
+        FINISH
+    }
+
     enum SORTING_STATE {
         PPG_1,
         PGP_2,
         GPP_3
-
-    }
-
-    public void unload() throws InterruptedException {
-
-        shooterCommand.shoot(3);
-        shooterCommand.stopShoot(3);
-//       shooterCommand.shoot(3);
-//       shooterCommand.stopShoot(3);
-//       shooterCommand.shoot(3);
-//       shooterCommand.stopShoot(3);\
 
     }
 
@@ -54,57 +52,80 @@ public class AutoOpMovementTest extends LinearOpMode {
         sortingCommand = new SortingCommand(hw);
         shooterCommand = new ShooterCommand(hw);
 
-        SORTING_STATE sortingState = SORTING_STATE.PPG_1;
+
 
         waitForStart();
         //unload();
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
-            mecanumCommand.moveToPos(30, 20, 30);
+
 
             x = mecanumCommand.getOdoX();
             y = mecanumCommand.getOdoY();
             theta = mecanumCommand.getOdoHeading();
-            //processPinPoint();
 
+            AUTO_STATE autoState = AUTO_STATE.INITIAL_POS;
+            SORTING_STATE sortingState = SORTING_STATE.PPG_1;
 
-//            switch(sortingState){
-//                case PPG_1:
-//                    sortingCommand.changePosition(SortingConstants.rotation);
-//                    unload();
-//                    break;
-//
-//                case PGP_2:
-//                    sortingCommand.changePosition(-SortingConstants.rotation);
-//                    unload();
-//                    break;
-//
-//                case GPP_3:
-//                    sortingCommand.changePosition(-SortingConstants.rotation);
-//                    unload();
-//                    break;
-//
-//            }
+            switch(autoState){
+                case INITIAL_POS:
+                    //robot scans april tag and does the magic mumbo jumbo april tag stuff
 
+                    //sets sortingState
+                    sortingState = SORTING_STATE.PPG_1;
 
+                    mecanumCommand.moveToPos(0, 0, Math.PI/6);
+                    autoState = AUTO_STATE.FIRST_LAUNCH;
+                case FIRST_LAUNCH:
+                    switch(sortingState){
+                        case PPG_1:
+                            //sort to purple, purple, green
+                            break;
+                        case PGP_2:
+                            //sort to purple, green, purple
+                            break;
+                        case GPP_3:
+                            //sort to green, purple, purple
+                            break;
+                    }
+                    //robot pushes
+                    //robot launches
+                    //retract pusher
+                    //power off launcher
+                    autoState = AUTO_STATE.COLLECTION;
+                case COLLECTION:
+                    mecanumCommand.moveToPos(95.55, 90, Math.PI/2);
+                    //turn intake on, somehow find a way to collect all 3
+                    mecanumCommand.moveToPos(95.55, 145, Math.PI/2);
+                    mecanumCommand.moveToPos(95.55, 145, 0.815);
+                    //scan obelisk
+                    sortingState = SORTING_STATE.PPG_1;
+                    autoState = AUTO_STATE.SECOND_LAUNCH;
 
-//            switch (autoState) {
-//                case FIRST_BUCKET:
-//                    mecanumCommand.moveToPos(30, 0, 0);
-//                    if (mecanumCommand.positionNotReachedYet()) {
-//                        autoState = AUTO_STATE.SUB_PICKUP;
-//                    }
-//                    break;
-//                case SUB_PICKUP:
-//                    if (mecanumCommand.moveToPos(30, -20, 0)) {
-//                        autoState = AUTO_STATE.FINISH;
-//                    }
-//                    break;
-//                case FINISH:
-//                    stopRobot();
-//                    break;
-//            }
+                case SECOND_LAUNCH:
+                    switch(sortingState){
+                        case PPG_1:
+                            //sort to purple, purple, green
+                            break;
+                        case PGP_2:
+                            //sort to purple, green, purple
+                            break;
+                        case GPP_3:
+                            //sort to green, purple, purple
+                            break;
+                    }
+                    //robot pushes
+                    //robot launches
+                    //retract pusher
+                    //power off launcher
+                    autoState = AUTO_STATE.FINISH;
+
+                case FINISH:
+                    stopRobot();
+                    break;
+
+            }
         }
 
     }
