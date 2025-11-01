@@ -58,8 +58,9 @@ public class SorterSubsystem {
         }
 
         sorter.setPosition(PUSHER_POSITION);
-
         // push(); // TODO pusher
+        telemetry.addData("Pushing this ball",this.sorterList.get(0));
+        telemetry.update();
 
         this.sorterList.remove(0);
 
@@ -86,8 +87,9 @@ public class SorterSubsystem {
         }
 
         sorter.setPosition(PUSHER_POSITION);
-
-        // push(); // TODO pusher
+        // push(); // TODO
+        telemetry.addData("Pushing this ball", colorToRemove);
+        telemetry.update();
 
         if (ballIndexToRemoveFromSorter == -1){
             telemetry.addData("Color not found:", colorToRemove);
