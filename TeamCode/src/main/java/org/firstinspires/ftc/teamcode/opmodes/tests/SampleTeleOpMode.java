@@ -51,7 +51,11 @@ public class SampleTeleOpMode extends LinearOpMode {
         // Loop while OpMode is running
         while (opModeIsActive()) {
             mecanumCommand.processOdometry();
+<<<<<<< Updated upstream
             mecanumCommand.fieldOrientedMove(
+=======
+            theta = mecanumCommand.fieldOrientedMove(
+>>>>>>> Stashed changes
                     gamepad1.left_stick_y,
                     gamepad1.left_stick_x,
                     gamepad1.right_stick_x
@@ -105,9 +109,14 @@ public class SampleTeleOpMode extends LinearOpMode {
         //add telemetry messages here
         telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
+<<<<<<< Updated upstream
         telemetry.addData("X", mecanumCommand.getX());
         telemetry.addData("Y", mecanumCommand.getY());
         telemetry.addData("Pusher ON", isPusherUp);
+=======
+        telemetry.addData("theta", theta);
+        telemetry.addData("x", meca)
+>>>>>>> Stashed changes
         telemetry.update();
     }
 }
