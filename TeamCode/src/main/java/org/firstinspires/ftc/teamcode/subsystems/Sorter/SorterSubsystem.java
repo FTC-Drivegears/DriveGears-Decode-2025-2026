@@ -1,148 +1,134 @@
 package org.firstinspires.ftc.teamcode.subsystems.Sorter;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.util.Artifact;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class SorterSubsystem {
+    public static final int MAX_NUM_BALLS = 3;
+
+    private static final double PUSHER_POSITION = 0;
+
     private final Servo sorter;
 
-    private final ColorSensor colourSensor;
+    //  private final ColorSensor colour;
     private final Telemetry telemetry;
-    private final LinearOpMode opMode;
+    public final LinearOpMode opMode;
+    private ArrayList<Character> pattern;
+    private int countRemovedBalls;
 
-    private ArrayList<String> pattern;
-
-    private ArrayList<Artifact> sorterList;
-
+    private ArrayList<Character> sorterList;
     private int red;
-
     private int blue;
-
     private int green;
-
     private int alpha;
 
-    boolean detectedColor = false;
+//    public void detectColour() {
+//        Telemetry.Item detectingColor = telemetry.addData("Detecting color", sorterList.get(0));
+//        telemetry.addLine(String.valueOf(detectingColor));
+//        telemetry.update();
+//
+////        // Purple ball is detected
+////        if (isPurple) {
+////            telemetry.addLine("Purple Detected");
+////            telemetry.update();
+////            sorterList.add(new Artifact("purple", sorter.getPosition()));
+////            pattern.add("purple");
+////            turnSorter();
+////        } else if (isGreen) {
+////            telemetry.addLine("Green Detected");
+////            telemetry.update();
+////            sorterList.add(new Artifact("green", sorter.getPosition()));
+////            pattern.add("green");
+////            turnSorter();
+////        } else {
+////            telemetry.addLine("No color");
+////            telemetry.update();
+////        }
+//    }
 
-    public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern){
+    public void turnToOuttake() {
+        if (this.pattern.isEmpty()){
+            telemetry.addLine("Pattern is empty");
+            telemetry.update();
+            return;
+        }
+
+        char colorToRemove = this.pattern.get(0);
+
+        int ballIndexToRemoveFromSorter = -1;
+
+        for (int i = 0; i <= this.sorterList.size(); i++){
+
+            if (this.sorterList.get(i) == colorToRemove){
+
+                ballIndexToRemoveFromSorter = i;
+                break;
+            }
+        }
+
+        sorter.setPosition(PUSHER_POSITION);
+
+        // push(); // TODO pusher
+
+        if (ballIndexToRemoveFromSorter == -1){
+            telemetry.addLine("No balls to outtake");
+            telemetry.update();
+            return;
+        }
+        this.sorterList.remove(ballIndexToRemoveFromSorter);
+        this.pattern.remove(0);
+    }
+
+    public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
-        this.colourSensor = hw.colour;
         this.opMode = opMode;
         this.telemetry = telemetry;
         this.pattern = new ArrayList<>();
         sorterList = new ArrayList<>();
-        if (pattern == "PPG") {
-            this.pattern.add("purple");
-            this.pattern.add("purple");
-            this.pattern.add("green");
-        }
+
     }
 
-    public void detectColour() {
-        telemetry.addData("Detecting color", sorterList);
-        telemetry.update();
-
-        red = colourSensor.red();
-        green = colourSensor.green();
-        blue = colourSensor.blue();
-        alpha = colourSensor.alpha();
-        colourSensor.enableLed(true);
-
-        //If the sorter is full it stops
-        if (sorterList.size() == 3) {
+    public void intakeBall(char color){
+        // fail-safe
+        if (sorterList.size() == MAX_NUM_BALLS){
+            telemetry.addLine("Cannot intake any more balls, max capacity");
+            telemetry.update();
             return;
         }
 
-        // Purple ball is detected
-        if (red > 50 && red < 65 && green < 95 && green > 80 && blue < 95 && blue > 78 && alpha < 85 && alpha > 70) {
-            telemetry.addLine("Purple Detected");
-            telemetry.update();
-            if (!detectedColor) {
-                detectedColor = true;
-                sorterList.add(new Artifact("Purple", sorter.getPosition()));
-                turnsorter();
-            } //green detected
-        } else if (red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65) {
-            telemetry.addLine("Green Detected");
-            telemetry.update();
-            if (!detectedColor) {
-                detectedColor = true;
-                sorterList.add(new Artifact("Green", sorter.getPosition()));
-                turnsorter();
-            }
-
-        } else {
-            telemetry.addData("Waiting... remove sleep later", detectedColor);
-            telemetry.update();
-            detectedColor = false;
-        }
+        sorterList.add(color);
+        turnToIntake();
     }
 
-    public void turnsorter() {
-        //If the sorterList is full it stops
-        if (sorterList.size() == 3) {
-            return;
-        }
-
+    public void turnToIntake() {
         if (sorter.getPosition() != 1) {
             //make sure the sorter doesn't break
             sorter.setPosition(sorterList.size() * 0.45 );
         }
     }
 
-    public void turnToColour(String color) {
-        double pos = 0;
-
-        if (pattern.contains("purple")){
-            turnsorter();
-                int index = sorterList.indexOf("Purple");
-                pos = sorterList.get(index).getPosition();
-                sorterList.remove(index);
-        }
-
-        if (pattern.contains("green")){
-            turnsorter();
-                int index = sorterList.indexOf("Green");
-                pos = sorterList.get(index).getPosition();
-                sorterList.remove(index);
-        }
-
-        //move sorter
-        sorter.setPosition(pos);
-    }
-
-//    public void quickFire(Servo sorter) {
-////        sorter.setPosition(sorterList.get(0).getPosition());
-//        opMode.sleep(500);
-//        //launch
-//        sorterList.remove(0);
+////    public void quickFire(Servo sorter) {
+//////        sorter.setPosition(sorterList.get(0).getPosition());
+////        opMode.sleep(500);
+////        //launch
+////        sorterList.remove(0);
+////
+//////        sorter.setPosition(sorterList.get(0).getPosition());
+////        opMode.sleep(500);
+////        //launch
+////        sorterList.remove(0);
+////
+//////        sorter.setPosition(sorterList.get(0).getPosition());
+////        opMode.sleep(500);
+////        //launch
+////        sorterList.remove(0);
+////    }
 //
-////        sorter.setPosition(sorterList.get(0).getPosition());
-//        opMode.sleep(500);
-//        //launch
-//        sorterList.remove(0);
-//
-////        sorter.setPosition(sorterList.get(0).getPosition());
-//        opMode.sleep(500);
-//        //launch
-//        sorterList.remove(0);
+//    public int getNumBalls() {
+//        return sorterList.size();
 //    }
-
-    public int getNumBalls() {
-        return sorterList.size();
-    }
-
-    public void setPattern(String art1, String art2, String art3){
-        pattern.add(art1);
-        pattern.add(art2);
-        pattern.add(art3);
-    }
 }

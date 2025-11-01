@@ -18,8 +18,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     private Hardware hw;
     private double theta;
-    private DcMotor intakeMotor;
-    private DcMotor outtakeMotor;
+    private DcMotor intake;
+    private DcMotor outtake;
 
     private Servo pusher;
 
@@ -28,29 +28,34 @@ public class DecodeTeleOpMode extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        this.intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
-        this.outtakeMotor = hardwareMap.get(DcMotor.class, "outtakeMotor");
+        this.intake = hardwareMap.get(DcMotor.class, "intake");
+        this.outtake = hardwareMap.get(DcMotor.class, "outtake");
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setPosition(1);
 
         boolean previousAState = false;
-        boolean previousBState = false;
+        boolean previousDpadUpState = false;
+        boolean previousDpadDownState = false;
         boolean previousXState = false;
         boolean previousYState = false;
         boolean currentAState;
-        boolean currentBState;
+        boolean currentDpadUpState;
+        boolean currentDpadDownState;
         boolean currentXState;
         boolean currentYState;
 
         boolean isIntakeMotorOn = false;
-
         boolean isOuttakeMotorOn = false;
         boolean togglePusher = false;
-        boolean toggleSorter = false;
+        boolean mockPurple = false;
+        boolean mockGreen = false;
+
+        boolean thisIsPurple = false;
+        boolean thisIsGreen = false;
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
-        sorterSubsystem = new SorterSubsystem(hw, this,telemetry, "PPG");
+        sorterSubsystem = new SorterSubsystem(hw, this,telemetry, "purplepurplegreen");
 
         while (opModeInInit()){
             telemetry.update();
@@ -71,33 +76,52 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
                 if (isIntakeMotorOn){
-                    intakeMotor.setPower(0.8);
+                    intake.setPower(0.8);
                 }else {
-                    intakeMotor.setPower(0);
+                    intake.setPower(0);
                 }
             }
             previousAState = currentAState;
 
-            if (gamepad1.b){
-                telemetry.addLine("I see color");
-                sorterSubsystem.detectColour();
-                telemetry.update();
+            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
+            // Mock intaking a purple ball
+            if (gamepad1.dpad_up) {
+                sorterSubsystem.intakeBall('p');
+            }
+            // Mock intaking a green ball
+            if (gamepad1.dpad_down) {
+                sorterSubsystem.intakeBall('g');
+            }
+            // Outtake ball
+            if (gamepad1.dpad_left) {
+                sorterSubsystem.turnToOuttake();
             }
 
-//            currentBState = gamepad1.b;
-//            if (currentBState && !previousBState) {
-//                toggleSorter = !toggleSorter;
-//
-//                if (toggleSorter) {
-//                    telemetry.addLine("I SEE COLOR!!!");
-//                    sorterSubsystem.detectColour();
-//                    telemetry.update();
-//                }else{
-//                    telemetry.addLine("BUTTON IS OFF!!!");
-//                    telemetry.update();
-//                }
-//            }
-//            previousBState = currentBState;
+
+                    currentDpadUpState = gamepad1.dpad_up; //purple artifact
+            if (currentDpadUpState && !previousDpadUpState) {
+                mockPurple = !mockPurple;
+
+                if (mockPurple) {
+                    thisIsPurple = true;
+                    if (thisIsPurple) {
+                        sorterSubsystem.detectColour();
+                    }
+                }else return;
+            }
+            previousDpadUpState = currentDpadUpState;
+
+            currentDpadDownState = gamepad1.dpad_down; //green artifact
+            if (currentDpadDownState && !previousDpadDownState){
+                mockGreen = !mockGreen;
+
+                if (mockGreen) {
+                    thisIsGreen = true;
+                    if (thisIsGreen){
+                        sorterSubsystem.detectColour();
+                    }
+                }else return;
+            }
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState){
@@ -116,9 +140,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                    outtakeMotor.setPower(1);
+                    outtake.setPower(1);
                 }else{
-                    outtakeMotor.setPower(0);
+                    outtake.setPower(0);
                 }
             }
             previousXState = currentXState;
