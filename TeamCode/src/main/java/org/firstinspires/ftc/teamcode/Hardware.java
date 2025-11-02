@@ -51,7 +51,7 @@ public class Hardware {
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
         this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
 
-        this.intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.intake.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {
