@@ -74,7 +74,7 @@ public class AutoOpMovementTest extends LinearOpMode {
             SORTING_STATE sortingState = SORTING_STATE.PPG_1;
             TEST_STATE testState = TEST_STATE.MOVE;
 
-            mecanumCommand.moveToPos(100, 100, 0);
+
 
 //            switch(testState) {
 //                case MOVE:
