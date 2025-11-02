@@ -21,6 +21,8 @@ public class MecanumCommand {
     private Hardware hw;
 
     private ElapsedTime elapsedTime;
+
+    public double xPrevious, yPrevious, thetaPrevious;
     public double xFinal, yFinal, thetaFinal;
     public double velocity;
 
@@ -88,9 +90,21 @@ public class MecanumCommand {
      * Limits motion based on the configured {@code velocity}.
      */
     public void processPIDUsingPinpoint() {
+
         ex = mecanumSubsystem.globalXControllerOutputPositional(xFinal, pinPointOdoSubsystem.getX());
         ey = mecanumSubsystem.globalYControllerOutputPositional(yFinal, pinPointOdoSubsystem.getY());
         etheta = mecanumSubsystem.globalThetaControllerOutputPositional(thetaFinal, pinPointOdoSubsystem.getHeading());
+
+        if(xFinal - xPrevious < 1.0 && yFinal - yPrevious < 1.0){
+            ex = 0;
+            ey = 0;
+        }
+        else if(xFinal - xPrevious < 1.0){
+            ex = 0;
+        }
+        else if (yFinal - yPrevious < 1.0){
+            ey = 0;
+        }
 
 
         double max = Math.max(Math.abs(ex), Math.abs(ey));
@@ -127,6 +141,9 @@ public class MecanumCommand {
 
     public boolean moveToPos(double x, double y, double theta) {
         elapsedTime.reset();
+        xPrevious = getOdoX();
+        yPrevious = getOdoY();
+        thetaPrevious = getOdoHeading();
         setFinalPosition( 30, x, y, theta);
         return positionNotReachedYet();
     }

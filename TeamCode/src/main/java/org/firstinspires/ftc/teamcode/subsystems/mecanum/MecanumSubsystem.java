@@ -315,10 +315,10 @@ class MecanumSubsystem {
     }
 
     public void setPowers (double rightFront, double leftFront, double rightBack, double leftBack){
-        hw.rf.setPower(rightFront);
-        hw.lb.setPower(leftFront);
-        hw.rb.setPower(rightBack);
-        hw.lf.setPower(leftBack);
+        hw.rf.setPower(rightFront * 0.33);
+        hw.lb.setPower(leftFront * 0.33);
+        hw.rb.setPower(rightBack * 0.33);
+        hw.lf.setPower(leftBack * 0.33);
     }
 }
 

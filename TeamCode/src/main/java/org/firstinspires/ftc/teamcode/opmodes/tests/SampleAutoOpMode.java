@@ -33,8 +33,7 @@ public class SampleAutoOpMode extends LinearOpMode {
 
     public void unload() throws InterruptedException {
 
-       shooterCommand.shoot(3);
-       shooterCommand.stopShoot(3);
+
 //       shooterCommand.shoot(3);
 //       shooterCommand.stopShoot(3);
 //       shooterCommand.shoot(3);
@@ -51,12 +50,17 @@ public class SampleAutoOpMode extends LinearOpMode {
         shooterCommand = new ShooterCommand(hw);
 
         SORTING_STATE sortingState = SORTING_STATE.PPG_1;
-        unload();
+
+        hw.pusher.setPosition(0);
+
+        waitForStart();
 
         //unload();
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
+            hw.pusher.setPosition(1);
+
             //processPinPoint();
 
 

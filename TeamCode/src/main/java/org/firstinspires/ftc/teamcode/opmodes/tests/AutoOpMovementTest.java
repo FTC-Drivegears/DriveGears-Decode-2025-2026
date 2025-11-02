@@ -37,6 +37,11 @@ public class AutoOpMovementTest extends LinearOpMode {
         FINISH
     }
 
+    enum TEST_STATE{
+        MOVE,
+        TURN
+    }
+
     enum SORTING_STATE {
         PPG_1,
         PGP_2,
@@ -67,65 +72,78 @@ public class AutoOpMovementTest extends LinearOpMode {
 
             AUTO_STATE autoState = AUTO_STATE.INITIAL_POS;
             SORTING_STATE sortingState = SORTING_STATE.PPG_1;
+            TEST_STATE testState = TEST_STATE.MOVE;
 
-            switch(autoState){
-                case INITIAL_POS:
-                    //robot scans april tag and does the magic mumbo jumbo april tag stuff
+            mecanumCommand.moveToPos(100, 100, 0);
 
-                    //sets sortingState
-                    sortingState = SORTING_STATE.PPG_1;
+//            switch(testState) {
+//                case MOVE:
+//                    mecanumCommand.moveToPos(100, 0, 0);
+//                    break;
+//            }
 
-                    mecanumCommand.moveToPos(0, 0, Math.PI/6);
-                    autoState = AUTO_STATE.FIRST_LAUNCH;
-                case FIRST_LAUNCH:
-                    switch(sortingState){
-                        case PPG_1:
-                            //sort to purple, purple, green
-                            break;
-                        case PGP_2:
-                            //sort to purple, green, purple
-                            break;
-                        case GPP_3:
-                            //sort to green, purple, purple
-                            break;
-                    }
-                    //robot pushes
-                    //robot launches
-                    //retract pusher
-                    //power off launcher
-                    autoState = AUTO_STATE.COLLECTION;
-                case COLLECTION:
-                    mecanumCommand.moveToPos(95.55, 90, Math.PI/2);
-                    //turn intake on, somehow find a way to collect all 3
-                    mecanumCommand.moveToPos(95.55, 145, Math.PI/2);
-                    mecanumCommand.moveToPos(95.55, 145, 0.815);
-                    //scan obelisk
-                    sortingState = SORTING_STATE.PPG_1;
-                    autoState = AUTO_STATE.SECOND_LAUNCH;
 
-                case SECOND_LAUNCH:
-                    switch(sortingState){
-                        case PPG_1:
-                            //sort to purple, purple, green
-                            break;
-                        case PGP_2:
-                            //sort to purple, green, purple
-                            break;
-                        case GPP_3:
-                            //sort to green, purple, purple
-                            break;
-                    }
-                    //robot pushes
-                    //robot launches
-                    //retract pusher
-                    //power off launcher
-                    autoState = AUTO_STATE.FINISH;
 
-                case FINISH:
-                    stopRobot();
-                    break;
-
-            }
+            processTelemetry();
+//
+//            switch(autoState){
+//                case INITIAL_POS:
+//                    //robot scans april tag and does the magic mumbo jumbo april tag stuff
+//
+//                    //sets sortingState
+//                    sortingState = SORTING_STATE.PPG_1;
+//
+//                    mecanumCommand.moveToPos(0, 0, Math.PI/6);
+//                    autoState = AUTO_STATE.FIRST_LAUNCH;
+//                case FIRST_LAUNCH:
+//                    switch(sortingState){
+//                        case PPG_1:
+//                            //sort to purple, purple, green
+//                            break;
+//                        case PGP_2:
+//                            //sort to purple, green, purple
+//                            break;
+//                        case GPP_3:
+//                            //sort to green, purple, purple
+//                            break;
+//                    }
+//                    //robot pushes
+//                    //robot launches
+//                    //retract pusher
+//                    //power off launcher
+//                    autoState = AUTO_STATE.COLLECTION;
+//                case COLLECTION:
+//                    mecanumCommand.moveToPos(95.55, 90, Math.PI/2);
+//                    //turn intake on, somehow find a way to collect all 3
+//                    mecanumCommand.moveToPos(95.55, 145, Math.PI/2);
+//                    mecanumCommand.moveToPos(95.55, 145, 0.815);
+//                    //scan obelisk
+//                    sortingState = SORTING_STATE.PPG_1;
+//                    autoState = AUTO_STATE.SECOND_LAUNCH;
+//
+//                case SECOND_LAUNCH:
+//                    switch(sortingState){
+//                        case PPG_1:
+//                            //sort to purple, purple, green
+//                            break;
+//                        case PGP_2:
+//                            //sort to purple, green, purple
+//                            break;
+//                        case GPP_3:
+//                            //sort to green, purple, purple
+//                            break;
+//                    }
+//                    //robot pushes
+//                    //robot launches
+//                    //retract pusher
+//                    //power off launcher
+//                    autoState = AUTO_STATE.FINISH;
+//
+//                case FINISH:
+//                    stopRobot();
+//                    break;
+//
+//            }
         }
 
     }
