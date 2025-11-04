@@ -25,10 +25,15 @@ public class SampleTeleOpMode extends LinearOpMode {
     private static final double PUSHER_DOWN = 1.0;
     private static final long PUSHER_TIME = 500;
 
+    private static final double SORTER_START = 0.0;
+
     // --- Button edge detection ---
     private boolean previousAState = false;
     private boolean previousXState = false;
     private boolean previousYState = false;
+    private boolean previousRightBumperState = false;
+
+    private boolean previousLeftBumperState = false;
 
     // --- Toggles/states ---
     private boolean isIntakeMotorOn = false;
@@ -38,6 +43,10 @@ public class SampleTeleOpMode extends LinearOpMode {
     private final ElapsedTime pusherTimer = new ElapsedTime();
     private boolean isPusherUp = false;
 
+    private double sorterPosition = SORTER_START;
+
+
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -45,6 +54,7 @@ public class SampleTeleOpMode extends LinearOpMode {
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
         hw.pusher.setPosition(PUSHER_DOWN);
+        hw.sorter.setPosition(sorterPosition);
 
         hw.intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -100,6 +110,22 @@ public class SampleTeleOpMode extends LinearOpMode {
                 hw.outtake.setPower(isOuttakeMotorOn ? 1.0 : 0.0);
             }
             previousXState = currentXState;
+
+            //Manual Sorting
+            boolean currentRightBumperState = gamepad1.right_bumper;
+            if(currentRightBumperState && !previousRightBumperState){
+                sorterPosition += 0.01;
+                hw.sorter.setPosition(sorterPosition);
+            }
+            previousRightBumperState = currentRightBumperState;
+
+            boolean currentLeftBumperState = gamepad1.left_bumper;
+            if(currentLeftBumperState && !previousLeftBumperState){
+                sorterPosition -= 0.01;
+                hw.sorter.setPosition(sorterPosition);
+            }
+            previousLeftBumperState = currentLeftBumperState;
+
 
 
 
