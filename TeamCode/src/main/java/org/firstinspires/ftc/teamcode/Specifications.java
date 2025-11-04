@@ -45,9 +45,9 @@ public class Specifications {
 
     public static final String INTAKE = "intake";
 
-    public static final String COLOUR_SENSOR = "colourSensor";
+//    public static final String COLOUR_SENSOR = "colourSensor";
 
-    public static final String OUTTAKE = "outtake";
+    public static final String SHOOTER = "shooter";
 
     public static final String HOOD = "hood";
 

@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 public class DecodeTeleOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
 
-    private SorterSubsystem sorterSubsystem;
+
 
     private Hardware hw;
     private double theta;
@@ -23,38 +23,36 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     private Servo pusher;
 
+    private SorterSubsystem sorterSubsystem;
 
+    private long lastIntakeTime;
+    private long lastFireTime;
+    private long lastOuttakeTime;
 
     @Override
     public void runOpMode() throws InterruptedException {
-
-        this.intake = hardwareMap.get(DcMotor.class, "intake");
-        this.outtake = hardwareMap.get(DcMotor.class, "outtake");
-        pusher = hardwareMap.get(Servo.class,"pusher");
-        pusher.setPosition(1);
-
         boolean previousAState = false;
-        boolean previousDpadUpState = false;
-        boolean previousDpadDownState = false;
         boolean previousXState = false;
         boolean previousYState = false;
         boolean currentAState;
-        boolean currentDpadUpState;
-        boolean currentDpadDownState;
         boolean currentXState;
         boolean currentYState;
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
         boolean togglePusher = false;
-        boolean mockPurple = false;
-        boolean mockGreen = false;
 
-        boolean thisIsPurple = false;
-        boolean thisIsGreen = false;
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
+        pusher = hw.pusher;
+        intake = hw.intake;
+        outtake = hw.intake;
+
+        // pusher.setPosition(1);
+        if (sorterSubsystem == null) { // sorterSubsystem is only set once
+            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
+        }
 
         while (opModeInInit()){
             telemetry.update();
@@ -82,20 +80,35 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             previousAState = currentAState;
 
-            // Once camera can understand output patter, revise this initalization.
-            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
-            String mockInputBalls = "gpg"; //pretend I inputted these balls
-            for (char c: mockInputBalls.toCharArray()) {
-                sorterSubsystem.intakeBall(c);
+            boolean up = gamepad1.dpad_up;
+            boolean down = gamepad1.dpad_down;
+            if (up || down) { // Press up to intake g, down to intake p.
+                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
+                char curColor = 'g';
+                if (down) {
+                    curColor = 'p';
+                }
+                if (durationIntake >= 2) {
+                    telemetry.addData("mockInputBall", curColor);
+                    sorterSubsystem.intakeBall(curColor);
+                    lastIntakeTime = System.nanoTime();
+                }
             }
-
-            // Outtake ball
-            if (gamepad1.dpad_left) {
-                sorterSubsystem.outtakeBall();
+            if (gamepad1.dpad_right){ // Press right to quick fire.
+                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
+                if (durationFire >= 1) {
+                    telemetry.addLine("quick firing");
+                    sorterSubsystem.quickFire();
+                    lastFireTime = System.nanoTime();
+                }
             }
-
-            if (gamepad1.dpad_right){
-                sorterSubsystem.quickFire();
+            if (gamepad1.dpad_left){ // Press left to outtake;
+                double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
+                if (durationOuttake >= 1) {
+                    telemetry.addLine("outtake");
+                    sorterSubsystem.outtakeBall();
+                    lastOuttakeTime = System.nanoTime();
+                }
             }
 
             currentYState = gamepad1.y;
@@ -103,7 +116,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 togglePusher = !togglePusher;
 
                 if (togglePusher){
-                    pusher.setPosition(0.4);
+                    pusher.setPosition(0);
                 }else{
                     pusher.setPosition(1);
                 }
