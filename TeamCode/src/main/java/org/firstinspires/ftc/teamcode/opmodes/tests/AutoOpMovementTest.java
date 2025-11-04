@@ -76,11 +76,14 @@ public class AutoOpMovementTest extends LinearOpMode {
 
 
 
-//            switch(testState) {
-//                case MOVE:
-//                    mecanumCommand.moveToPos(100, 0, 0);
-//                    break;
-//            }
+            switch(testState) {
+                case MOVE:
+                    mecanumCommand.moveToPos(100, 0, 0);
+                    testState = TEST_STATE.TURN;
+                case TURN:
+                    mecanumCommand.moveToPos(100, 0, Math.PI/2);
+
+            }
 
 
 
