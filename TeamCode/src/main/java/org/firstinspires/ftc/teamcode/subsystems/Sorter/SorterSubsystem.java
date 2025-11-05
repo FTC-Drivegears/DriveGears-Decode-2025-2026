@@ -10,9 +10,11 @@ import java.util.ArrayList;
 public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
 
-    private static final double PUSHER_POSITION = 0;
+    private static final double PUSHER_POSITION = 0.85;
 
     private final Servo sorter;
+
+    private Servo pusher;
 
     //  private final ColorSensor colour;
     private final Telemetry telemetry;
@@ -21,6 +23,8 @@ public class SorterSubsystem {
 
     private ArrayList<Artifact> sorterList;
     private int numIntakeBalls = 0;
+
+    private long lastPushTime;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -44,23 +48,6 @@ public class SorterSubsystem {
 //        telemetry.addLine(String.valueOf(detectingColor));
 //        telemetry.update();
 //
-////        // Purple ball is detected
-////        if (isPurple) {
-////            telemetry.addLine("Purple Detected");
-////            telemetry.update();
-////            sorterList.add(new Artifact("purple", sorter.getPosition()));
-////            pattern.add("purple");
-////            turnSorter();
-////        } else if (isGreen) {
-////            telemetry.addLine("Green Detected");
-////            telemetry.update();
-////            sorterList.add(new Artifact("green", sorter.getPosition()));
-////            pattern.add("green");
-////            turnSorter();
-////        } else {
-////            telemetry.addLine("No color");
-////            telemetry.update();
-////        }
 //    }
 
     public void intakeBall(char color){
@@ -91,6 +78,15 @@ public class SorterSubsystem {
         telemetry.update();
     }
 
+    public void push(){
+        double pusherTime = (System.nanoTime() - lastPushTime)/1E9;
+        pusher.setPosition(1);
+        if (pusherTime >= 1) {
+            pusher.setPosition(PUSHER_POSITION);
+            lastPushTime = System.nanoTime();
+        }
+    }
+
     // quickFire fires a random ball
     public void quickFire() {
         if (this.sorterList.isEmpty()){
@@ -98,9 +94,8 @@ public class SorterSubsystem {
             telemetry.update();
             return;
         }
-
         sorter.setPosition(this.sorterList.get(0).getPosition());
-        // push(); // TODO pusher
+//        push();
         telemetry.addData("Pushing out this ball", this.sorterList.get(0));
         telemetry.update();
 

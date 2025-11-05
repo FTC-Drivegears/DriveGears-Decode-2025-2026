@@ -13,18 +13,12 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
-
-
-
     private Hardware hw;
     private double theta;
     private DcMotor intake;
     private DcMotor outtake;
-
     private Servo pusher;
-
     private SorterSubsystem sorterSubsystem;
-
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
@@ -116,9 +110,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 togglePusher = !togglePusher;
 
                 if (togglePusher){
-                    pusher.setPosition(0);
-                }else{
                     pusher.setPosition(1);
+                }else{
+                    pusher.setPosition(0.85);
                 }
             }
             previousYState = currentYState;
