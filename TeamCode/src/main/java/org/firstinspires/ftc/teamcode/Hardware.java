@@ -22,7 +22,7 @@ public class Hardware {
 
     public final DcMotorEx intake;
 
-    public final DcMotorEx outtake;
+    public final DcMotorEx shooter;
 
     public final Servo hood;
 
@@ -44,7 +44,7 @@ public class Hardware {
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
 
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
-        this.outtake = hwMap.get(DcMotorEx.class, Specifications.OUTTAKE);
+        this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);

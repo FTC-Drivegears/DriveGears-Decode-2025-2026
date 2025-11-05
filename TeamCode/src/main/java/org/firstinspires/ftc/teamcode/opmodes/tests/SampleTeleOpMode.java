@@ -107,7 +107,7 @@ public class SampleTeleOpMode extends LinearOpMode {
             boolean currentXState = gamepad1.x;
             if (currentXState && !previousXState) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
-                hw.outtake.setPower(isOuttakeMotorOn ? 1.0 : 0.0);
+                hw.shooter.setPower(isOuttakeMotorOn ? 1.0 : 0.0);
             }
             previousXState = currentXState;
 
