@@ -38,7 +38,7 @@ public class Specifications {
 
     public static final String SHOOTER = "shooter";
 
-    public static final String SORTING = "sorting";
+    public static final String SORTER = "sorter";
 
     public static final String PUSHER = "pusher";
 

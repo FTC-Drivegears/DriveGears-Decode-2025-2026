@@ -20,7 +20,7 @@ public class Hardware {
 
     public final DcMotorEx shooter;
 
-    public final Servo sorting;
+    public final Servo sorter;
 
     public final Servo pusher;
 
@@ -36,7 +36,7 @@ public class Hardware {
 
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER); //shooter
 
-        this.sorting = hwMap.get(Servo.class, Specifications.SORTING); //sorting
+        this.sorter = hwMap.get(Servo.class, Specifications.SORTER); //sorting
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER); //pusher
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);

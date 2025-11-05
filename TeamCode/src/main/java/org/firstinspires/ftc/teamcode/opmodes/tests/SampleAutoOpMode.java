@@ -87,7 +87,7 @@ public class SampleAutoOpMode extends LinearOpMode {
 //            switch (autoState) {
 //                case FIRST_BUCKET:
 //                    mecanumCommand.moveToPos(30, 0, 0);
-//                    if (mecanumCommand.positionNotReachedYet()) {
+//                    if (mecanumCommand.isPositionReached()) {
 //                        autoState = AUTO_STATE.SUB_PICKUP;
 //                    }
 //                    break;

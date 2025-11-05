@@ -78,11 +78,10 @@ public class AutoOpMovementTest extends LinearOpMode {
 
             switch(testState) {
                 case MOVE:
-                    mecanumCommand.moveToPos(100, 0, 0);
-                    testState = TEST_STATE.TURN;
-                case TURN:
-                    mecanumCommand.moveToPos(100, 0, Math.PI/2);
-
+                    mecanumCommand.moveToPos(0, 0, Math.PI/2);
+                    break;
+                //case TURN:
+                    //mecanumCommand.moveToPos(100, 0, Math.PI/2);
             }
 
 
@@ -158,6 +157,7 @@ public class AutoOpMovementTest extends LinearOpMode {
         telemetry.addData("theta", theta);
         telemetry.addData("x", x);
         telemetry.addData("y", y);
+        telemetry.addLine(String.valueOf(mecanumCommand.isPositionReached()));
         telemetry.update();
     }
 

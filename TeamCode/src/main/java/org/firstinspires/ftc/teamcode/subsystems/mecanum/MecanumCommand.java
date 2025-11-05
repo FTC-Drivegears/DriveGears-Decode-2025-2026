@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.subsystems.mecanum;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometrySubsystem;
-import org.firstinspires.ftc.teamcode.util.pidcore.PIDCore;
 
 
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -95,16 +94,7 @@ public class MecanumCommand {
         ey = mecanumSubsystem.globalYControllerOutputPositional(yFinal, pinPointOdoSubsystem.getY());
         etheta = mecanumSubsystem.globalThetaControllerOutputPositional(thetaFinal, pinPointOdoSubsystem.getHeading());
 
-        if(xFinal - xPrevious < 1.0 && yFinal - yPrevious < 1.0){
-            ex = 0;
-            ey = 0;
-        }
-        else if(xFinal - xPrevious < 1.0){
-            ex = 0;
-        }
-        else if (yFinal - yPrevious < 1.0){
-            ey = 0;
-        }
+
 
 
         double max = Math.max(Math.abs(ex), Math.abs(ey));
@@ -145,7 +135,7 @@ public class MecanumCommand {
         yPrevious = getOdoY();
         thetaPrevious = getOdoHeading();
         setFinalPosition( 30, x, y, theta);
-        return positionNotReachedYet();
+        return isPositionReached();
     }
 
     public void setFinalPosition(double velocity, double x, double y, double theta) {
@@ -157,7 +147,7 @@ public class MecanumCommand {
 
     }
 
-    public boolean positionNotReachedYet() {
+    public boolean isPositionReached() {
         return (isXReached() && isYReached() && isThetaReached());
     }
 

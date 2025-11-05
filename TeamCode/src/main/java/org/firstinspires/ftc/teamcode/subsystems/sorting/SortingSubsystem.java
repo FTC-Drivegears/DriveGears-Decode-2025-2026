@@ -14,11 +14,11 @@ public class SortingSubsystem {
     }
     public void changePosition(double degree){
         position += degree;
-        hw.sorting.setPosition(position);
+        hw.sorter.setPosition(position);
     }
     public void setPosition(double degree){
         position = degree;
-        hw.sorting.setPosition(degree);
+        hw.sorter.setPosition(degree);
     }
 
 }
