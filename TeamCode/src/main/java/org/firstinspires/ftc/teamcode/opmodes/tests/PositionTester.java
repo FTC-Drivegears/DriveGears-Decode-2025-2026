@@ -9,9 +9,10 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 
 
-@Autonomous (name = "Sample Auto")
-public class SampleAutoOpMode extends LinearOpMode {
+@Autonomous (name = "Position Tester")
+public class PositionTester extends LinearOpMode {
     private MecanumCommand mecanumCommand;
+
 
     private ElapsedTime resetTimer;
 
