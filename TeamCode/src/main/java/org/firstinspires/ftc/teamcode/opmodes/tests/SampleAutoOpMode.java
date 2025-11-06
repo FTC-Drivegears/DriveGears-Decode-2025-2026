@@ -23,6 +23,17 @@ public class SampleAutoOpMode extends LinearOpMode {
 
     }
 
+    private static final double PUSHER_UP = 0.85;
+    private static final double PUSHER_DOWN = 1.0;
+    private static final long PUSHER_TIME = 500;
+
+    private final ElapsedTime pusherTimer = new ElapsedTime();
+
+    static void push(){
+        hw.pusher.setPosition(PUSHER_UP);
+        pusherTimer.reset();
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
         // create Hardware using hardwareMap
