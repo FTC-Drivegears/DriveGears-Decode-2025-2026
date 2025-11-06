@@ -49,7 +49,6 @@ public class SampleAutoOpMode extends LinearOpMode {
 //                    if (mecanumCommand.moveToPos(30, -20, 0)) {
 //                        autoState = AUTO_STATE.FINISH;
 //                    }
-//banana
 //                    break
                 case FINISH:
                     stopRobot();

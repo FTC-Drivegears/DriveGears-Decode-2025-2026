@@ -45,8 +45,6 @@ public class SampleTeleOpMode extends LinearOpMode {
     //--- Sorter States ---
     private final ElapsedTime sorterTimer = new ElapsedTime();
     private static final double SORTER_FIRST_POS = 0.0;
-    private static final double SORTER_SECOND_POS = 0.0;
-    private static final double SOTERT_THIRD_POS = 0.0;
     private double sorterPosition = SORTER_FIRST_POS;
     ;
 
@@ -124,10 +122,10 @@ public class SampleTeleOpMode extends LinearOpMode {
                     hw.sorter.setPosition(0);//60 degrees
                 }
                 else if (sorterPosition == 1) {
-                    hw.sorter.setPosition(0.5);//60 degrees
+                    hw.sorter.setPosition(0.43);//60 degrees
                 }
                 else if (sorterPosition == 2) {
-                    hw.sorter.setPosition(1);//60 degrees
+                    hw.sorter.setPosition(0.875);//60 degrees
                 }
             }
         }
