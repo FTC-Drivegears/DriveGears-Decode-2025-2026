@@ -25,7 +25,6 @@ public class SampleTeleOpMode extends LinearOpMode {
     private static final double PUSHER_DOWN = 1.0;
     private static final long PUSHER_TIME = 500;
 
-    private static final double SORTER_START = 0.0;
 
     // --- Button edge detection ---
     private boolean previousAState = false;
@@ -35,16 +34,21 @@ public class SampleTeleOpMode extends LinearOpMode {
 
     private boolean previousLeftBumperState = false;
 
-    // --- Toggles/states ---
+    // --- Intake Outtake states ---
     private boolean isIntakeMotorOn = false;
     private boolean isOuttakeMotorOn = false;
 
-    // --- Pusher pulse state ---
+    // --- Pusher states ---
     private final ElapsedTime pusherTimer = new ElapsedTime();
     private boolean isPusherUp = false;
 
-    private double sorterPosition = SORTER_START;
-
+    //--- Sorter States ---
+    private final ElapsedTime sorterTimer = new ElapsedTime();
+    private static final double SORTER_FIRST_POS = 0.0;
+    private static final double SORTER_SECOND_POS = 0.0;
+    private static final double SOTERT_THIRD_POS = 0.0;
+    private double sorterPosition = SORTER_FIRST_POS;
+    ;
 
 
 
@@ -57,6 +61,7 @@ public class SampleTeleOpMode extends LinearOpMode {
         hw.sorter.setPosition(sorterPosition);
 
         hw.intake.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         // Wait for start button to be pressed
         waitForStart();
@@ -111,24 +116,20 @@ public class SampleTeleOpMode extends LinearOpMode {
             }
             previousXState = currentXState;
 
-            //Manual Sorting
-            boolean currentRightBumperState = gamepad1.right_bumper;
-            if(currentRightBumperState && !previousRightBumperState){
-                sorterPosition += 0.01;
-                hw.sorter.setPosition(sorterPosition);
+
+            if (gamepad1.b && sorterTimer.milliseconds() > 1000){
+                sorterPosition = (sorterPosition+1)%3;
+                sorterTimer.reset();
+                if (sorterPosition == 0) {
+                    hw.sorter.setPosition(0);//60 degrees
+                }
+                else if (sorterPosition == 1) {
+                    hw.sorter.setPosition(0.5);//60 degrees
+                }
+                else if (sorterPosition == 2) {
+                    hw.sorter.setPosition(1);//60 degrees
+                }
             }
-            previousRightBumperState = currentRightBumperState;
-
-            boolean currentLeftBumperState = gamepad1.left_bumper;
-            if(currentLeftBumperState && !previousLeftBumperState){
-                sorterPosition -= 0.01;
-                hw.sorter.setPosition(sorterPosition);
-            }
-            previousLeftBumperState = currentLeftBumperState;
-
-
-
-
         }
 
     }
