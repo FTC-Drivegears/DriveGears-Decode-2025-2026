@@ -16,7 +16,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Hardware hw;
     private double theta;
     private DcMotor intake;
-    private DcMotor outtake;
+    private DcMotor shooter;
     private Servo pusher;
     private SorterSubsystem sorterSubsystem;
     private long lastIntakeTime;
@@ -28,20 +28,23 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean previousAState = false;
         boolean previousXState = false;
         boolean previousYState = false;
+        boolean previousDpadLeft = false;
         boolean currentAState;
         boolean currentXState;
         boolean currentYState;
+        boolean currentDpadLeft;
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
         boolean togglePusher = false;
+        boolean toggleOuttakeSorter = false;
 
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         pusher = hw.pusher;
         intake = hw.intake;
-        outtake = hw.intake;
+        shooter = hw.intake;
 
         // pusher.setPosition(1);
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
@@ -86,6 +89,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     telemetry.addData("mockInputBall", curColor);
                     sorterSubsystem.intakeBall(curColor);
                     lastIntakeTime = System.nanoTime();
+                    telemetry.update();
                 }
             }
             if (gamepad1.dpad_right){ // Press right to quick fire.
@@ -94,14 +98,25 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     telemetry.addLine("quick firing");
                     sorterSubsystem.quickFire();
                     lastFireTime = System.nanoTime();
+                    telemetry.update();
                 }
             }
-            if (gamepad1.dpad_left){ // Press left to outtake;
-                double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
-                if (durationOuttake >= 1) {
-                    telemetry.addLine("outtake");
-                    sorterSubsystem.outtakeBall();
-                    lastOuttakeTime = System.nanoTime();
+
+            currentDpadLeft = gamepad1.dpad_left;
+            if (currentDpadLeft && !previousDpadLeft){ // Press left to outtake;
+                toggleOuttakeSorter = !toggleOuttakeSorter;
+
+                if (toggleOuttakeSorter){
+                    double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
+                    if (durationOuttake >= 1) {
+                        telemetry.addLine("outtake");
+                        sorterSubsystem.outtakeBall();
+                        lastOuttakeTime = System.nanoTime();
+                        telemetry.update();
+                    }
+                }
+                else{
+                    return;
                 }
             }
 
@@ -122,9 +137,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                    outtake.setPower(1);
+                    shooter.setPower(1);
                 }else{
-                    outtake.setPower(0);
+                    shooter.setPower(0);
                 }
             }
             previousXState = currentXState;

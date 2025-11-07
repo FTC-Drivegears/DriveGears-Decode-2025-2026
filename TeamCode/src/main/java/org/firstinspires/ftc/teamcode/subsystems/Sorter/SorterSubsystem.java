@@ -9,21 +9,15 @@ import java.util.ArrayList;
 
 public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
-
     private static final double PUSHER_POSITION = 0.85;
-
     private final Servo sorter;
-
     private Servo pusher;
-
-    //  private final ColorSensor colour;
     private final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
-
-    private ArrayList<Artifact> sorterList;
+    private final ArrayList<Artifact> sorterList;
+    private double[] sorterPositions = new double[]{0, 0.5, 1};
     private int numIntakeBalls = 0;
-
     private long lastPushTime;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
@@ -61,31 +55,33 @@ public class SorterSubsystem {
         telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
         turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
         numIntakeBalls++;
+        telemetry.update();
 
         this.sorterList.add(new Artifact(color, sorter.getPosition()));
     }
 
     public void turnToIntake() { // turn sorter before intaking a ball
+        sorter.setPosition(0);
         telemetry.addData("current position", sorter.getPosition());
 
         if (sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
-            double pos = this.sorterList.size() * 0.45;
             telemetry.addData("how many balls?", this.sorterList.size());
-            sorter.setPosition(pos);
-            telemetry.addData("turning to position", pos);
+            sorter.setPosition(this.sorterPositions[0]);
+            telemetry.addLine("turning to position");
+            telemetry.update();
         }
-
         telemetry.update();
     }
-
-    public void push(){
-        double pusherTime = (System.nanoTime() - lastPushTime)/1E9;
-        pusher.setPosition(1);
-        if (pusherTime >= 1) {
-            pusher.setPosition(PUSHER_POSITION);
-            lastPushTime = System.nanoTime();
-        }
-    }
+// TODO
+//    public void push(){
+//        pusher.setPosition(0);
+//        double pusherTime = (System.nanoTime() - lastPushTime)/1E9;
+//        pusher.setPosition(1);
+//        if (pusherTime >= 1) {
+//            pusher.setPosition(PUSHER_POSITION);
+//            lastPushTime = System.nanoTime();
+//        }
+//    }
 
     // quickFire fires a random ball
     public void quickFire() {
@@ -119,6 +115,7 @@ public class SorterSubsystem {
         telemetry.addData("current pattern", this.pattern);
         char colorToRemove = this.pattern.get(0);
         telemetry.addData("color to remove", colorToRemove);
+        telemetry.update();
 
         int ballIndexToRemoveFromSorter = -1;
         telemetry.addData("num balls left", this.sorterList.size());
@@ -128,6 +125,7 @@ public class SorterSubsystem {
                 break;
             }
         }
+        telemetry.update();
 
         if (ballIndexToRemoveFromSorter == -1){
             telemetry.addData("color not found: ", colorToRemove);
@@ -135,9 +133,15 @@ public class SorterSubsystem {
             return;
         }
 
-        sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
-        // push(); // TODO
+        for(int i = 0; i <= MAX_NUM_BALLS; i++){
+            sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
+            telemetry.addLine("sorter moving" + i);
+            // push(); // TODO
+            telemetry.addLine("pusher moved" + i);
+            telemetry.update();
+        }
         telemetry.addData("pushing this ball", colorToRemove);
+        telemetry.update();
 
         this.sorterList.remove(ballIndexToRemoveFromSorter);
         this.pattern.remove(0);
