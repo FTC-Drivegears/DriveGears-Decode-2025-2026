@@ -54,24 +54,24 @@ public class SampleAutoOpMode extends LinearOpMode {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
                         mecanumCommand.moveToPos(0, 0, 0);
 
-                    if (mecanumCommand.positionNotReachedYet()) {
-                        autoState = AUTO_STATE.FINISH;
+                        if (mecanumCommand.positionNotReachedYet()) {
+                            autoState = AUTO_STATE.FINISH;
+                        }
+                        break;
+                        case FINISH:
+                            stopRobot();
+                            break;
                     }
-                    break;
-                case FINISH:
-                    stopRobot();
-                    break;
             }
+        public void updateTelemetry () {
+            telemetry.addData("ID", tag.id);
+            telemetry.addData("x: ", mecanumCommand.getOdoX());
+            telemetry.addData("y: ", mecanumCommand.getOdoY());
+            telemetry.addData("Theta: ", mecanumCommand.getOdoHeading());
+            telemetry.update();
         }
-    }
-    public void updateTelemetry () {
-        telemetry.addData("ID", tag.id);
-        telemetry.addData("x: ", mecanumCommand.getOdoX());
-        telemetry.addData("y: ", mecanumCommand.getOdoY());
-        telemetry.addData("Theta: ", mecanumCommand.getOdoHeading());
-        telemetry.update();
-    }
-    private void stopRobot() {
-        mecanumCommand.stop();
+        private void stopRobot () {
+            mecanumCommand.stop();
+        }
     }
 }
