@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.subsystems.mecanum;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.odometry.PinPointOdometrySubsystem;
-import org.firstinspires.ftc.teamcode.util.pidcore.PIDCore;
 
 
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -128,7 +127,7 @@ public class MecanumCommand {
     public boolean moveToPos(double x, double y, double theta) {
         elapsedTime.reset();
         setFinalPosition( 30, x, y, theta);
-        return positionNotReachedYet();
+        return isPositionReached();
     }
 
     public void setFinalPosition(double velocity, double x, double y, double theta) {
@@ -140,7 +139,7 @@ public class MecanumCommand {
 
     }
 
-    public boolean positionNotReachedYet() {
+    public boolean isPositionReached() {
         return (isXReached() && isYReached() && isThetaReached());
     }
 

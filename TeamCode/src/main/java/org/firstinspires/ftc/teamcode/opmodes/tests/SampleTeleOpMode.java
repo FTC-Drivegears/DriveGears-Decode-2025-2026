@@ -21,7 +21,7 @@ public class SampleTeleOpMode extends LinearOpMode {
     private Hardware hw;
     private ElapsedTime resetTimer;
 
-    private static final double PUSHER_UP = 0.85;
+    private static final double PUSHER_UP = 0.75;
     private static final double PUSHER_DOWN = 1.0;
     private static final long PUSHER_TIME = 500;
 

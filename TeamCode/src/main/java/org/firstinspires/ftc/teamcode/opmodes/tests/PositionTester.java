@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -43,7 +42,7 @@ public class PositionTester extends LinearOpMode {
             switch (autoState) {
                 case START_POSITION:
                     mecanumCommand.moveToPos(30, 30, Math.PI/8);
-                    if (mecanumCommand.positionNotReachedYet()) {
+                    if (mecanumCommand.isPositionReached()) {
                         autoState = AUTO_STATE.FIRST_SHOT;
                     }
                     break;
