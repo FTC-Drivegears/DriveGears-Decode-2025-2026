@@ -89,7 +89,7 @@ public class MecanumCommand {
      */
     public void processPIDUsingPinpoint() {
         ex = mecanumSubsystem.globalXControllerOutputPositional(xFinal, pinPointOdoSubsystem.getX());
-        ey = mecanumSubsystem.globalYControllerOutputPositional(yFinal, pinPointOdoSubsystem.getY());
+        ey = -mecanumSubsystem.globalYControllerOutputPositional(yFinal, pinPointOdoSubsystem.getY());
         etheta = mecanumSubsystem.globalThetaControllerOutputPositional(thetaFinal, pinPointOdoSubsystem.getHeading());
 
 
@@ -165,7 +165,7 @@ public class MecanumCommand {
     }
 
     public boolean isThetaReached() {
-        return getThetaDifferencePinPoint() < 0.07;
+        return getThetaDifferencePinPoint() < 0.1;
     }
 
     public double getOdoX(){
@@ -206,6 +206,11 @@ public class MecanumCommand {
         processPIDUsingPinpoint();
         mecanumSubsystem.motorProcessNoEncoder();
     }
+
+    public void stop(){
+        mecanumSubsystem.stop(true);
+    }
+
 
     public void processOdometry() {
         pinPointOdoSubsystem.processOdometry();

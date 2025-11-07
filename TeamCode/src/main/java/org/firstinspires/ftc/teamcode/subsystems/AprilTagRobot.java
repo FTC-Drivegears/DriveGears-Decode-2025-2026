@@ -23,7 +23,7 @@ public class AprilTagRobot extends LinearOpMode {
                 mecanumCommand.motorProcess();
                 mecanumCommand.processOdometry();
 
-                mecanumCommand.moveToPos(0, 0, 30);
+                mecanumCommand.moveToPos(0, 0, Math.PI);
 
             }
         }
