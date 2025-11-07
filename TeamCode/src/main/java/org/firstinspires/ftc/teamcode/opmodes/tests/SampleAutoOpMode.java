@@ -9,11 +9,12 @@ import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.teamcode.subsystems.turret.TurretSubsystem;
 
 @Autonomous (name = "AutoVision")
 public class SampleAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
-
+    private TurretSubsystem turret;
     private ElapsedTime resetTimer;
 
     enum AUTO_STATE {
@@ -35,6 +36,9 @@ public class SampleAutoOpMode extends LinearOpMode {
                 .build();
 
         Hardware hw = Hardware.getInstance(hardwareMap);
+        turret = new TurretSubsystem(hw, "BLUE");
+
+
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
 
@@ -48,17 +52,26 @@ public class SampleAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case SCAN_OBELISK:
-                    if (mecanumCommand.moveToPos(0, 0, 0)) {
-            }
-            if (mecanumCommand.positionNotReachedYet()) {
-                autoState = AUTO_STATE.PICKUP;
-            }
-            break;
-            case PICKUP:
-                if (mecanumCommand.moveToPos(30, -20, 0)) {
-                    autoState = AUTO_STATE.FINISH;
-                }
-                break;
+                    if (opModeIsActive()) {
+                        this.turret = turret;
+                        turret.setTargetCentered();
+                        double adjustment = turret.tanAdjustment();
+                        telemetry.addData("Turret adjustment (radians)", adjustment);
+                        telemetry.update();
+                        autoState = AUTO_STATE.FINISH;
+                        break;
+                    }
+
+//                    }
+//            if (mecanumCommand.positionNotReachedYet()) {
+//                autoState = AUTO_STATE.PICKUP;
+//            }
+//            break;
+//            case PICKUP:
+//                if (mecanumCommand.moveToPos(30, -20, 0)) {
+//                    autoState = AUTO_STATE.FINISH;
+//                }
+//                break;
             case FINISH:
                 stopRobot();
                 break;
@@ -74,9 +87,11 @@ public class SampleAutoOpMode extends LinearOpMode {
         telemetry.addData("Theta", mecanumCommand.getOdoHeading());
         telemetry.update();
     }
+
     private void stopRobot() {
     mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
     }
 }
+
 
 
