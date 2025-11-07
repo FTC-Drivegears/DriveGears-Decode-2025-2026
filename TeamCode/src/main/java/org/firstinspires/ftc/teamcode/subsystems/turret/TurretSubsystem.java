@@ -28,6 +28,7 @@ public class TurretSubsystem {
 
     public TurretSubsystem(Hardware hw, String alliance) {
         mecanumCommand = new MecanumCommand(hw);
+        mecanumCommand.processOdometry();
         pinPointOdoSubsystem = new PinPointOdometrySubsystem(hw);
         if (alliance == "BLUE") {
             this.alliance = Alliance.BLUE;
