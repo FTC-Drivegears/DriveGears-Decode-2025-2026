@@ -56,10 +56,11 @@ public class SampleAutoOpModeVision extends LinearOpMode {
 
             switch (autoState) {
                 case SCAN_OBELISK:
-                    mecanumCommand.moveToPos(0, 0,0);
-                    if (tagProcessor.getDetections().size() > 0) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(23);
-                        telemetry.addData("ID", tag.id);
+                    if (mecanumCommand.moveToPos(0, 0,0)) {
+                        if (tagProcessor.getDetections().size() > 0) {
+                            AprilTagDetection tag = tagProcessor.getDetections().get(-1);
+                            telemetry.addData("ID", tag.id);
+                        }
                     }
                     telemetry.update();
                     if (mecanumCommand.positionNotReachedYet()) {
@@ -79,7 +80,6 @@ public class SampleAutoOpModeVision extends LinearOpMode {
 
     }
     public void processTelemetry(){
-        //add telemetry messages here
         telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
         telemetry.addData("X", mecanumCommand.getX());
