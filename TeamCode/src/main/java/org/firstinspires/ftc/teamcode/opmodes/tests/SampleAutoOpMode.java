@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
-
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 
 @Autonomous (name = "Sample Auto")
@@ -17,7 +19,7 @@ public class SampleAutoOpMode extends LinearOpMode {
     private ElapsedTime resetTimer;
 
     enum AUTO_STATE {
-        FIRST_BUCKET,
+        SCAN_OBELISK,
         SUB_PICKUP,
         FINISH
 
@@ -25,48 +27,51 @@ public class SampleAutoOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        // create Hardware using hardwareMap
+        AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
+                .build();
+
+        VisionPortal visionPortal = new VisionPortal.Builder()
+                .addProcessor(tagProcessor)
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCameraResolution(new Size(640, 480))
+                .build();
+
         Hardware hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
 
-        AUTO_STATE autoState = AUTO_STATE.FIRST_BUCKET;
+        AUTO_STATE autoState = AUTO_STATE.SCAN_OBELISK;
         waitForStart();
+
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
-
-            processTelemetry();
+            updateTelemetry();
 
             switch (autoState) {
-                case FIRST_BUCKET:
-                    mecanumCommand.moveToPos(50, 50, Math.PI);
+                case SCAN_OBELISK:
+                    if (tagProcessor.getDetections().size() > 0) {
+                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+                        mecanumCommand.moveToPos(0, 0, 0);
+
                     if (mecanumCommand.positionNotReachedYet()) {
-                        autoState = AUTO_STATE.SUB_PICKUP;
+                        autoState = AUTO_STATE.FINISH;
                     }
                     break;
-                case SUB_PICKUP:
-//                    if (mecanumCommand.moveToPos(30, -20, 0)) {
-//                        autoState = AUTO_STATE.FINISH;
-//                    }
-//                    break;
                 case FINISH:
                     stopRobot();
                     break;
             }
         }
-
     }
-    public void processTelemetry(){
-        //add telemetry messages here
-        telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
-        telemetry.addLine("---------------------------------");
-        telemetry.addData("X", mecanumCommand.getX());
-        telemetry.addData("Y", mecanumCommand.getY());
-        telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+    public void updateTelemetry () {
+        telemetry.addData("ID", tag.id);
+        telemetry.addData("x: ", mecanumCommand.getOdoX());
+        telemetry.addData("y: ", mecanumCommand.getOdoY());
+        telemetry.addData("Theta: ", mecanumCommand.getOdoHeading());
         telemetry.update();
     }
     private void stopRobot() {
-        mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
+        mecanumCommand.stop();
     }
 }
