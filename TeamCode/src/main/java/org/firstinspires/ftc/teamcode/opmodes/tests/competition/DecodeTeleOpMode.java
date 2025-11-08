@@ -205,7 +205,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     hoodPos = 1.0;
                 }
                 else{
-                    hoodPos += 0.0001;
+                    hoodPos += 0.01;
                 }
                 hood.setPosition(hoodPos);
             }
@@ -216,7 +216,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     hoodPos = 0.0;
                 }
                 else{
-                    hoodPos -= 0.0001;
+                    hoodPos -= 0.01;
                 }
                 hood.setPosition(hoodPos);
             }
