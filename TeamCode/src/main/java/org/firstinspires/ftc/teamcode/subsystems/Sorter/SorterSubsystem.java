@@ -30,6 +30,7 @@ public class SorterSubsystem {
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
+        this.pusher = hw.pusher;
         this.opMode = opMode;
         this.telemetry = telemetry;
         this.sorterList = new ArrayList<>();
@@ -80,11 +81,12 @@ public class SorterSubsystem {
         telemetry.update();
     }
     public void push(){
+
         pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
         pushTime.reset();
         isPusherUp = true;
 
-        if (isPusherUp && (pushTime.seconds() >= 2)) {
+        if (isPusherUp && pushTime.milliseconds() >= 500) {
             pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             isPusherUp = false;
         }

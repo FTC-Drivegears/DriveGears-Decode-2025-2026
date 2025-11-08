@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
@@ -24,6 +25,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
+
+    private final ElapsedTime sorterTimer = new ElapsedTime();
+
+    private final ElapsedTime pusherTimer = new ElapsedTime();
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -47,6 +53,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean toggleOuttakeSorter = false;
 
         double hoodPos = 0.0;
+        double sorterPosition = 0.0;
+
 
 
         hw = Hardware.getInstance(hardwareMap);
@@ -109,44 +117,75 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-            boolean up = gamepad1.dpad_up;
-            boolean down = gamepad1.dpad_down;
-            if (up || down) { // Press up to intake g, down to intake p.
-                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
-                char curColor = 'g';
-                if (down) {
-                    curColor = 'p';
+//            boolean up = gamepad1.dpad_up;
+//            boolean down = gamepad1.dpad_down;
+//            if (up || down) { // Press up to intake g, down to intake p.
+//                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
+//                char curColor = 'g';
+//                if (down) {
+//                    curColor = 'p';
+//                }
+//                if (durationIntake >= 2) {
+//                    telemetry.addData("mockInputBall", curColor);
+//                    sorterSubsystem.intakeBall(curColor);
+//                    lastIntakeTime = System.nanoTime();
+//                    telemetry.update();
+//                }
+//            }
+//            if (gamepad1.a){ // Press A to quick fire.
+//                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
+//                if (durationFire >= 1) {
+//                    telemetry.addLine("quick firing");
+//                    sorterSubsystem.quickFire();
+//                    lastFireTime = System.nanoTime();
+//                    telemetry.update();
+//                }
+//            }
+
+            if (gamepad1.b && sorterTimer.milliseconds() > 1000){
+                sorterPosition = (sorterPosition+1)%3;
+                sorterTimer.reset();
+                if (sorterPosition == 0.0) {
+                    hw.sorter.setPosition(0.0);//60 degrees
                 }
-                if (durationIntake >= 2) {
-                    telemetry.addData("mockInputBall", curColor);
-                    sorterSubsystem.intakeBall(curColor);
-                    lastIntakeTime = System.nanoTime();
-                    telemetry.update();
+                else if (sorterPosition == 1) {
+                    hw.sorter.setPosition(0.43);//60 degrees
+                }
+                else if (sorterPosition == 2) {
+                    hw.sorter.setPosition(0.875);//60 degrees
                 }
             }
-            if (gamepad1.a){ // Press A to quick fire.
-                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
-                if (durationFire >= 1) {
-                    telemetry.addLine("quick firing");
-                    sorterSubsystem.quickFire();
-                    lastFireTime = System.nanoTime();
-                    telemetry.update();
-                }
-            }
+
+//            currentYState = gamepad1.y;
+//            if (currentYState && !previousYState){
+//                togglePusher = !togglePusher;
+//
+//                if (togglePusher){
+//                    pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+//                    sorterSubsystem.setIsPusherUp(true);
+//                }else{
+//                    pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+//                    sorterSubsystem.setIsPusherUp(false);
+//                }
+//            }
+//            previousYState = currentYState;
 
             currentYState = gamepad1.y;
-            if (currentYState && !previousYState){
-                togglePusher = !togglePusher;
-
-                if (togglePusher){
-                    pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                    sorterSubsystem.setIsPusherUp(true);
-                }else{
-                    pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                    sorterSubsystem.setIsPusherUp(false);
+            if (currentYState && !previousYState) {
+                // Start pulse only if not already pulsing
+                if (!togglePusher) {
+                    hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    pusherTimer.reset();
+                    togglePusher = true;
                 }
             }
             previousYState = currentYState;
+
+            // Pusher
+            if (togglePusher && pusherTimer.milliseconds() >= 500) {
+                hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                togglePusher = false;
+            }
 
             currentXState = gamepad1.x;
             if (currentXState && !previousXState){
@@ -166,7 +205,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     hoodPos = 1.0;
                 }
                 else{
-                    hoodPos += 0.001;
+                    hoodPos += 0.01;
                 }
                 hood.setPosition(hoodPos);
             }
@@ -177,10 +216,17 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     hoodPos = 0.0;
                 }
                 else{
-                    hoodPos -= 0.001;
+                    hoodPos -= 0.01;
                 }
                 hood.setPosition(hoodPos);
             }
+
+            if (gamepad1.start){
+                mecanumCommand.resetPinPointOdometry();
+            }
+
+
+
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
