@@ -28,6 +28,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     private final ElapsedTime sorterTimer = new ElapsedTime();
 
+    private final ElapsedTime pusherTimer = new ElapsedTime();
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -170,7 +172,19 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
-                sorterSubsystem.push();
+                // Start pulse only if not already pulsing
+                if (!togglePusher) {
+                    hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    pusherTimer.reset();
+                    togglePusher = true;
+                }
+            }
+            previousYState = currentYState;
+
+            // Pusher
+            if (togglePusher && pusherTimer.milliseconds() >= 500) {
+                hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                togglePusher = false;
             }
 
             currentXState = gamepad1.x;
@@ -191,7 +205,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     hoodPos = 1.0;
                 }
                 else{
-                    hoodPos += 0.001;
+                    hoodPos += 0.0001;
                 }
                 hood.setPosition(hoodPos);
             }
@@ -202,7 +216,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     hoodPos = 0.0;
                 }
                 else{
-                    hoodPos -= 0.001;
+                    hoodPos -= 0.0001;
                 }
                 hood.setPosition(hoodPos);
             }
