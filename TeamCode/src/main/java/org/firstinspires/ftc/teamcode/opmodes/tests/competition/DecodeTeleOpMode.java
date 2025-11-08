@@ -28,7 +28,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     private final ElapsedTime sorterTimer = new ElapsedTime();
 
-    private final ElapsedTime pusherTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -171,19 +170,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
-                // Start pulse only if not already pulsing
-                if () {
-                    pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                    pusherTimer.reset();
-                    isPusherUp = true;
-                }
-            }
-            previousYState = currentYState;
-
-            // Pusher
-            if (isPusherUp && pusherTimer.milliseconds() >= PUSHER_TIME) {
-                pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                isPusherUp = false;
+                sorterSubsystem.push();
             }
 
             currentXState = gamepad1.x;
