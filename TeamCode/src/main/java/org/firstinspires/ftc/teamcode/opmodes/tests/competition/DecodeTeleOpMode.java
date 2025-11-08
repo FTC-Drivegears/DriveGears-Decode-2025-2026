@@ -201,6 +201,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 hood.setPosition(hoodPos);
             }
 
+            if (gamepad1.start){
+                mecanumCommand.resetPinPointOdometry();
+            }
+
 
 
 
