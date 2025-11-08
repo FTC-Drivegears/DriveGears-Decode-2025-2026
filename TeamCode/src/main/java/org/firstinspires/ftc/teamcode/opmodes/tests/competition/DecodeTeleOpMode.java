@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
-
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
@@ -25,14 +25,14 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        boolean previousAState = false;
         boolean previousXState = false;
         boolean previousYState = false;
-        boolean previousDpadLeft = false;
-        boolean currentAState;
+        boolean prevRightTrigger = false;
+        boolean prevLeftTrigger = false;
         boolean currentXState;
         boolean currentYState;
-        boolean currentDpadLeft;
+        boolean curRightTrigger;
+        boolean curLeftTrigger;
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
@@ -43,10 +43,12 @@ public class DecodeTeleOpMode extends LinearOpMode {
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         pusher = hw.pusher;
+        pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+
         intake = hw.intake;
         shooter = hw.intake;
 
-        // pusher.setPosition(1);
+
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
             sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
         }
@@ -65,8 +67,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
-            currentAState = gamepad1.a;
-            if (currentAState && !previousAState){
+            curRightTrigger = gamepad1.right_trigger > 0;
+            if (curRightTrigger && !prevRightTrigger){
                 isIntakeMotorOn = !isIntakeMotorOn;
 
                 if (isIntakeMotorOn){
@@ -75,7 +77,22 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     intake.setPower(0);
                 }
             }
-            previousAState = currentAState;
+            prevRightTrigger = curRightTrigger;
+
+            curLeftTrigger = gamepad1.left_trigger > 0;
+            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
+                toggleOuttakeSorter = !toggleOuttakeSorter;
+
+                if (toggleOuttakeSorter){
+                    double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
+                    if (durationOuttake >= 1) {
+                        telemetry.addLine("outtake");
+                        sorterSubsystem.outtakeBall();
+                        lastOuttakeTime = System.nanoTime();
+                        telemetry.update();
+                    }
+                }
+            }
 
             boolean up = gamepad1.dpad_up;
             boolean down = gamepad1.dpad_down;
@@ -92,7 +109,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     telemetry.update();
                 }
             }
-            if (gamepad1.dpad_right){ // Press right to quick fire.
+            if (gamepad1.a){ // Press A to quick fire.
                 double durationFire = (System.nanoTime() - lastFireTime)/1E9;
                 if (durationFire >= 1) {
                     telemetry.addLine("quick firing");
@@ -102,32 +119,16 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-            currentDpadLeft = gamepad1.dpad_left;
-            if (currentDpadLeft && !previousDpadLeft){ // Press left to outtake;
-                toggleOuttakeSorter = !toggleOuttakeSorter;
-
-                if (toggleOuttakeSorter){
-                    double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
-                    if (durationOuttake >= 1) {
-                        telemetry.addLine("outtake");
-                        sorterSubsystem.outtakeBall();
-                        lastOuttakeTime = System.nanoTime();
-                        telemetry.update();
-                    }
-                }
-                else{
-                    return;
-                }
-            }
-
             currentYState = gamepad1.y;
             if (currentYState && !previousYState){
                 togglePusher = !togglePusher;
 
                 if (togglePusher){
-                    pusher.setPosition(1);
+                    pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    sorterSubsystem.setIsPusherUp(true);
                 }else{
-                    pusher.setPosition(0.85);
+                    pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                    sorterSubsystem.setIsPusherUp(false);
                 }
             }
             previousYState = currentYState;

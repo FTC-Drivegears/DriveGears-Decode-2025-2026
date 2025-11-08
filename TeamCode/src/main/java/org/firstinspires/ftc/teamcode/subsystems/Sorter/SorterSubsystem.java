@@ -2,8 +2,11 @@ package org.firstinspires.ftc.teamcode.subsystems.Sorter;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.ArrayList;
 
@@ -16,7 +19,13 @@ public class SorterSubsystem {
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
-    private double[] sorterPositions = new double[]{0, 0.5, 1};
+
+    private ElapsedTime pushTime = new ElapsedTime();
+
+    private boolean isPusherUp = false;
+
+    private int curSorterPositionIndex = 0;
+    private final double[] sorterPositions = new double[]{0, 0.42, 0.875};
     private int numIntakeBalls = 0;
     private long lastPushTime;
 
@@ -37,12 +46,9 @@ public class SorterSubsystem {
         }
     }
 
-//    public void detectColour() {
-//        Telemetry.Item detectingColor = telemetry.addData("Detecting color", sorterList.get(0));
-//        telemetry.addLine(String.valueOf(detectingColor));
-//        telemetry.update();
-//
-//    }
+    public void setIsPusherUp(boolean isPusherUp) {
+        this.isPusherUp = isPusherUp;
+    }
 
     public void intakeBall(char color){
         // fail-safe
@@ -52,7 +58,7 @@ public class SorterSubsystem {
             return;
         }
 
-        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
+//        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
         turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
         numIntakeBalls++;
         telemetry.update();
@@ -61,27 +67,29 @@ public class SorterSubsystem {
     }
 
     public void turnToIntake() { // turn sorter before intaking a ball
-        sorter.setPosition(0);
-        telemetry.addData("current position", sorter.getPosition());
 
-        if (sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
+        if (sorter.getPosition() != 1 && !isPusherUp) { // ensure the sorter cannot turn more than max
             telemetry.addData("how many balls?", this.sorterList.size());
-            sorter.setPosition(this.sorterPositions[0]);
+            if (curSorterPositionIndex >= MAX_NUM_BALLS) {
+                curSorterPositionIndex = 0;
+            }
+            sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+            curSorterPositionIndex++;
             telemetry.addLine("turning to position");
             telemetry.update();
         }
         telemetry.update();
     }
-// TODO
-//    public void push(){
-//        pusher.setPosition(0);
-//        double pusherTime = (System.nanoTime() - lastPushTime)/1E9;
-//        pusher.setPosition(1);
-//        if (pusherTime >= 1) {
-//            pusher.setPosition(PUSHER_POSITION);
-//            lastPushTime = System.nanoTime();
-//        }
-//    }
+    public void push(){
+        pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+        pushTime.reset();
+        isPusherUp = true;
+
+        if (isPusherUp && (pushTime.seconds() >= 2)) {
+            pusher.setPosition(PUSHER_POSITION);
+            isPusherUp = false;
+        }
+    }
 
     // quickFire fires a random ball
     public void quickFire() {
@@ -90,10 +98,11 @@ public class SorterSubsystem {
             telemetry.update();
             return;
         }
-        sorter.setPosition(this.sorterList.get(0).getPosition());
-//        push();
-        telemetry.addData("Pushing out this ball", this.sorterList.get(0));
-        telemetry.update();
+        if (!isPusherUp){
+            sorter.setPosition(this.sorterList.get(0).getPosition());
+            telemetry.addData("Pushing out this ball", this.sorterList.get(0));
+            telemetry.update();
+        }
 
         this.sorterList.remove(0);
     }
@@ -134,14 +143,14 @@ public class SorterSubsystem {
         }
 
         for(int i = 0; i <= MAX_NUM_BALLS; i++){
-            sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
-            telemetry.addLine("sorter moving" + i);
-            // push(); // TODO
-            telemetry.addLine("pusher moved" + i);
-            telemetry.update();
+            if (!isPusherUp) {
+                sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
+                telemetry.addLine("sorter moving" + i);
+                push();
+                telemetry.addLine("pusher moved" + i);
+                telemetry.update();
+            }
         }
-        telemetry.addData("pushing this ball", colorToRemove);
-        telemetry.update();
 
         this.sorterList.remove(ballIndexToRemoveFromSorter);
         this.pattern.remove(0);
