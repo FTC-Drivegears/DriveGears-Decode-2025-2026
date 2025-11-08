@@ -72,7 +72,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
                 if (isIntakeMotorOn){
-                    intake.setPower(0.8);
+                    intake.setPower(0.65);
                 }else {
                     intake.setPower(0);
                 }
@@ -87,7 +87,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
                     if (durationOuttake >= 1) {
                         telemetry.addLine("outtake");
-                        sorterSubsystem.outtakeBall();
+                        //sorterSubsystem.outtakeBall();
                         lastOuttakeTime = System.nanoTime();
                         telemetry.update();
                     }

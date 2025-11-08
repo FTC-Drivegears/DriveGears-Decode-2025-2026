@@ -24,7 +24,7 @@ public class SorterSubsystem {
     private boolean isPusherUp = false;
 
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0, 0.42, 0.875};
+    private final double[] sorterPositions = new double[]{0.1, 0.42, 0.875};
     private int numIntakeBalls = 0;
     private long lastPushTime;
 
@@ -108,50 +108,50 @@ public class SorterSubsystem {
 
     // Test outtakeBall after quickFire
     // outtakeBall fires a ball from pattern
-    public void outtakeBall() {
-        if (this.pattern.isEmpty()){
-            telemetry.addLine("Pattern is empty");
-            telemetry.update();
-            return;
-        }
-        if (this.sorterList.isEmpty()) {
-            telemetry.addLine("No ball in sorter");
-            telemetry.update();
-            return;
-        }
-
-        telemetry.addData("current pattern", this.pattern);
-        char colorToRemove = this.pattern.get(0);
-        telemetry.addData("color to remove", colorToRemove);
-        telemetry.update();
-
-        int ballIndexToRemoveFromSorter = -1;
-        telemetry.addData("num balls left", this.sorterList.size());
-        for (int i = 0; i < this.sorterList.size(); i++){
-            if (this.sorterList.get(i).getColor() == colorToRemove){
-                ballIndexToRemoveFromSorter = i;
-                break;
-            }
-        }
-        telemetry.update();
-
-        if (ballIndexToRemoveFromSorter == -1){
-            telemetry.addData("color not found: ", colorToRemove);
-            telemetry.update();
-            return;
-        }
-
-        for(int i = 0; i <= MAX_NUM_BALLS; i++){
-            if (!isPusherUp) {
-                sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
-                telemetry.addLine("sorter moving" + i);
-                push();
-                telemetry.addLine("pusher moved" + i);
-                telemetry.update();
-            }
-        }
-
-        this.sorterList.remove(ballIndexToRemoveFromSorter);
-        this.pattern.remove(0);
-    }
+//    public void outtakeBall() {
+//        if (this.pattern.isEmpty()){
+//            telemetry.addLine("Pattern is empty");
+//            telemetry.update();
+//            return;
+//        }
+//        if (this.sorterList.isEmpty()) {
+//            telemetry.addLine("No ball in sorter");
+//            telemetry.update();
+//            return;
+//        }
+//
+//        telemetry.addData("current pattern", this.pattern);
+//        char colorToRemove = this.pattern.get(0);
+//        telemetry.addData("color to remove", colorToRemove);
+//        telemetry.update();
+//
+//        int ballIndexToRemoveFromSorter = -1;
+//        telemetry.addData("num balls left", this.sorterList.size());
+//        for (int i = 0; i < this.sorterList.size(); i++){
+//            if (this.sorterList.get(i).getColor() == colorToRemove){
+//                ballIndexToRemoveFromSorter = i;
+//                break;
+//            }
+//        }
+//        telemetry.update();
+//
+//        if (ballIndexToRemoveFromSorter == -1){
+//            telemetry.addData("color not found: ", colorToRemove);
+//            telemetry.update();
+//            return;
+//        }
+//
+//        for(int i = 0; i <= MAX_NUM_BALLS; i++){
+//            if (!isPusherUp) {
+//                sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
+//                telemetry.addLine("sorter moving" + i);
+//                push();
+//                telemetry.addLine("pusher moved" + i);
+//                telemetry.update();
+//            }
+//        }
+//
+//        this.sorterList.remove(ballIndexToRemoveFromSorter);
+//        this.pattern.remove(0);
+//    }
 }
