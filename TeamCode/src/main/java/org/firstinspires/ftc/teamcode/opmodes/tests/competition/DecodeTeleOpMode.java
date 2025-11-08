@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Hardware;
@@ -45,8 +46,12 @@ public class DecodeTeleOpMode extends LinearOpMode {
         pusher = hw.pusher;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
 
+        hw.sorter.setPosition(0.0);
+
         intake = hw.intake;
-        shooter = hw.intake;
+        shooter = hw.shooter;
+
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
