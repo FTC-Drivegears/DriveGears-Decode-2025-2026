@@ -70,8 +70,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
                 isIntakeMotorOn = !isIntakeMotorOn;
-
-                if (isIntakeMotorOn || !sorterSubsystem.isMaxBallsReached()){
+//|| !sorterSubsystem.isMaxBallsReached() add later
+                if (isIntakeMotorOn){
                     intake.setPower(0.65);
                 }else {
                     intake.setPower(0);
