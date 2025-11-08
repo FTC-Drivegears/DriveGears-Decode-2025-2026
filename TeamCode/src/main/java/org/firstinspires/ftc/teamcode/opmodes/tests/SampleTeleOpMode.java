@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.opmodes.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -21,19 +20,14 @@ public class SampleTeleOpMode extends LinearOpMode {
     private Hardware hw;
     private ElapsedTime resetTimer;
 
-    private static final double PUSHER_UP = 0.85;
+    private static final double PUSHER_UP = 0.4;
     private static final double PUSHER_DOWN = 1.0;
     private static final long PUSHER_TIME = 500;
-
-    private static final double SORTER_START = 0.0;
 
     // --- Button edge detection ---
     private boolean previousAState = false;
     private boolean previousXState = false;
     private boolean previousYState = false;
-    private boolean previousRightBumperState = false;
-
-    private boolean previousLeftBumperState = false;
 
     // --- Toggles/states ---
     private boolean isIntakeMotorOn = false;
@@ -43,20 +37,13 @@ public class SampleTeleOpMode extends LinearOpMode {
     private final ElapsedTime pusherTimer = new ElapsedTime();
     private boolean isPusherUp = false;
 
-    private double sorterPosition = SORTER_START;
-
-
-
 
     @Override
     public void runOpMode() throws InterruptedException {
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
-        hw.pusher.setPosition(PUSHER_DOWN);
-        hw.sorter.setPosition(sorterPosition);
-
-        hw.intake.setDirection(DcMotorSimple.Direction.REVERSE);
+//        hw.pusher.setPosition(PUSHER_DOWN);
 
         // Wait for start button to be pressed
         waitForStart();
@@ -80,7 +67,7 @@ public class SampleTeleOpMode extends LinearOpMode {
             boolean currentAState = gamepad1.a;
             if (currentAState && !previousAState) {
                 isIntakeMotorOn = !isIntakeMotorOn;
-                hw.intake.setPower(isIntakeMotorOn ? 0.8 : 0.0);
+           //     hw.intake.setPower(isIntakeMotorOn ? 0.8 : 0.0);
             }
             previousAState = currentAState;
 
@@ -90,7 +77,7 @@ public class SampleTeleOpMode extends LinearOpMode {
             if (currentYState && !previousYState) {
                 // Start pulse only if not already pulsing
                 if (!isPusherUp) {
-                    hw.pusher.setPosition(PUSHER_UP);
+             //       hw.pusher.setPosition(PUSHER_UP);
                     pusherTimer.reset();
                     isPusherUp = true;
                 }
@@ -99,7 +86,7 @@ public class SampleTeleOpMode extends LinearOpMode {
 
             // Pusher
             if (isPusherUp && pusherTimer.milliseconds() >= PUSHER_TIME) {
-                hw.pusher.setPosition(PUSHER_DOWN);
+             //   hw.pusher.setPosition(PUSHER_DOWN);
                 isPusherUp = false;
             }
 
@@ -107,27 +94,9 @@ public class SampleTeleOpMode extends LinearOpMode {
             boolean currentXState = gamepad1.x;
             if (currentXState && !previousXState) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
-                hw.shooter.setPower(isOuttakeMotorOn ? 1.0 : 0.0);
+             //   hw.outtake.setPower(isOuttakeMotorOn ? 1.0 : 0.0);
             }
             previousXState = currentXState;
-
-            //Manual Sorting
-            boolean currentRightBumperState = gamepad1.right_bumper;
-            if(currentRightBumperState && !previousRightBumperState){
-                sorterPosition += 0.01;
-                hw.sorter.setPosition(sorterPosition);
-            }
-            previousRightBumperState = currentRightBumperState;
-
-            boolean currentLeftBumperState = gamepad1.left_bumper;
-            if(currentLeftBumperState && !previousLeftBumperState){
-                sorterPosition -= 0.01;
-                hw.sorter.setPosition(sorterPosition);
-            }
-            previousLeftBumperState = currentLeftBumperState;
-
-
-
 
         }
 
@@ -138,7 +107,7 @@ public class SampleTeleOpMode extends LinearOpMode {
         telemetry.addLine("---------------------------------");
         telemetry.addData("X", mecanumCommand.getX());
         telemetry.addData("Y", mecanumCommand.getY());
-        telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+        telemetry.addData("odo", mecanumCommand.getOdoHeading());
         telemetry.addData("Pusher ON", isPusherUp);
         telemetry.update();
     }

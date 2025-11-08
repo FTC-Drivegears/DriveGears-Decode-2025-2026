@@ -86,22 +86,6 @@ public class PIDCore {
         timer.reset();
     }
 
-    /**
-     * Constructor initializing PID gains and feedforward constants for acceleration, velocity, and gravity.
-     */
-    public PIDCore(double kp, double kd, double ki, double ka, double kv, double kg) {
-        this.Kp = kp;
-        this.Kd = kd;
-        this.Ki = ki;
-        this.Ka = ka;
-        this.Kv = kv;
-        this.Kg = kg;
-        timer = new ElapsedTime();
-        integralTimer = new ElapsedTime();
-        integralTimer.startTime();
-        integralTimer.reset();
-        timer.reset();
-    }
 
     /**
      * Constructor initializing PID gains and feedforward gain.
