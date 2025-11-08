@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
@@ -24,6 +25,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
+
+    private final ElapsedTime sorterTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -48,6 +51,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         double hoodPos = 0.0;
         double sorterPosition = 0.0;
+
 
 
         hw = Hardware.getInstance(hardwareMap);
