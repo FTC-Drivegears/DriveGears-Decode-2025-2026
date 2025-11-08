@@ -182,9 +182,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 hood.setPosition(hoodPos);
             }
 
-
-
-
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.addData("Hood pos: ", hoodPos);
