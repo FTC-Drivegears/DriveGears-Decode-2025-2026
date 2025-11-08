@@ -19,6 +19,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private DcMotor intake;
     private DcMotor shooter;
     private Servo pusher;
+    private Servo hood;
     private SorterSubsystem sorterSubsystem;
     private long lastIntakeTime;
     private long lastFireTime;
@@ -30,15 +31,22 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean previousYState = false;
         boolean prevRightTrigger = false;
         boolean prevLeftTrigger = false;
+        boolean prevRB = false;
+        boolean prevLB = false;
+
         boolean currentXState;
         boolean currentYState;
         boolean curRightTrigger;
         boolean curLeftTrigger;
+        boolean curRB;
+        boolean curLB;
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
         boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
+
+        double hoodPos = 0.0;
 
 
         hw = Hardware.getInstance(hardwareMap);
@@ -47,9 +55,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
 
         hw.sorter.setPosition(0.0);
+        hw.hood.setPosition(1.0);
 
         intake = hw.intake;
         shooter = hw.shooter;
+        hood = hw.hood;
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -143,15 +153,41 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                    shooter.setPower(1);
+                    shooter.setPower(0.8);
                 }else{
                     shooter.setPower(0);
                 }
             }
             previousXState = currentXState;
 
+            curRB = gamepad1.right_bumper;
+            if(curRB){
+                if(hoodPos >= 1.0){
+                    hoodPos = 1.0;
+                }
+                else{
+                    hoodPos += 0.001;
+                }
+                hood.setPosition(hoodPos);
+            }
+
+            curLB = gamepad1.left_bumper;
+            if(curLB){
+                if(hoodPos <= 0.0){
+                    hoodPos = 0.0;
+                }
+                else{
+                    hoodPos -= 0.001;
+                }
+                hood.setPosition(hoodPos);
+            }
+
+
+
+
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
+            telemetry.addData("Hood pos: ", hoodPos);
             telemetry.update();
         }
     }
