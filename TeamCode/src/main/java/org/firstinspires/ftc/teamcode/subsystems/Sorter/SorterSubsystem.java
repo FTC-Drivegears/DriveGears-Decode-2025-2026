@@ -12,7 +12,6 @@ import java.util.ArrayList;
 
 public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
-    private static final double PUSHER_POSITION = 0.85;
     private final Servo sorter;
     private Servo pusher;
     private final Telemetry telemetry;
@@ -86,7 +85,7 @@ public class SorterSubsystem {
         isPusherUp = true;
 
         if (isPusherUp && (pushTime.seconds() >= 2)) {
-            pusher.setPosition(PUSHER_POSITION);
+            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             isPusherUp = false;
         }
     }
