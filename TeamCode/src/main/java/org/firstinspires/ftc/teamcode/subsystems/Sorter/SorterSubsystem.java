@@ -21,10 +21,12 @@ public class SorterSubsystem {
 
     private ElapsedTime pushTime = new ElapsedTime();
 
+    private ElapsedTime pushSorterTime = new ElapsedTime(); // delay time between pusher and sorter
+
     private boolean isPusherUp = false;
 
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0.1, 0.42, 0.875};
+    private final double[] sorterPositions = new double[]{0, 0.5, 0.1};
     private int numIntakeBalls = 0;
     private long lastPushTime;
 
@@ -49,11 +51,13 @@ public class SorterSubsystem {
         this.isPusherUp = isPusherUp;
     }
 
+    public boolean isMaxBallsReached() {
+        return this.sorterList.size() == MAX_NUM_BALLS;
+    }
+
     public void intakeBall(char color){
         // fail-safe
         if (this.sorterList.size() == MAX_NUM_BALLS){
-            telemetry.addLine("Cannot intake any more balls, max capacity");
-            telemetry.update();
             return;
         }
 
@@ -68,39 +72,36 @@ public class SorterSubsystem {
     public void turnToIntake() { // turn sorter before intaking a ball
 
         if (sorter.getPosition() != 1 && !isPusherUp) { // ensure the sorter cannot turn more than max
-            telemetry.addData("how many balls?", this.sorterList.size());
             if (curSorterPositionIndex >= MAX_NUM_BALLS) {
                 curSorterPositionIndex = 0;
             }
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
             curSorterPositionIndex++;
-            telemetry.addLine("turning to position");
-            telemetry.update();
         }
         telemetry.update();
     }
     public void push(){
-        pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+        telemetry.addLine("Pusher up");
+//      pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
         pushTime.reset();
         isPusherUp = true;
 
         if (isPusherUp && (pushTime.seconds() >= 2)) {
-            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+            telemetry.addLine("Pusher down");
+            //pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             isPusherUp = false;
         }
+        telemetry.update();
     }
 
     // quickFire fires a random ball
     public void quickFire() {
         if (this.sorterList.isEmpty()){
-            telemetry.addLine("Nothing in sorter");
-            telemetry.update();
             return;
         }
-        if (!isPusherUp){
+        push();
+        if (!isPusherUp){ // means pusher is up
             sorter.setPosition(this.sorterList.get(0).getPosition());
-            telemetry.addData("Pushing out this ball", this.sorterList.get(0));
-            telemetry.update();
         }
 
         this.sorterList.remove(0);

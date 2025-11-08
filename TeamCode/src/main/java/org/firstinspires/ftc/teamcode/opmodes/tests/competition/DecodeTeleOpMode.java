@@ -71,7 +71,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger){
                 isIntakeMotorOn = !isIntakeMotorOn;
 
-                if (isIntakeMotorOn){
+                if (isIntakeMotorOn || !sorterSubsystem.isMaxBallsReached()){
                     intake.setPower(0.65);
                 }else {
                     intake.setPower(0);
@@ -86,10 +86,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 if (toggleOuttakeSorter){
                     double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
                     if (durationOuttake >= 1) {
-                        telemetry.addLine("outtake");
                         //sorterSubsystem.outtakeBall();
                         lastOuttakeTime = System.nanoTime();
-                        telemetry.update();
                     }
                 }
             }
@@ -103,19 +101,15 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     curColor = 'p';
                 }
                 if (durationIntake >= 2) {
-                    telemetry.addData("mockInputBall", curColor);
                     sorterSubsystem.intakeBall(curColor);
                     lastIntakeTime = System.nanoTime();
-                    telemetry.update();
                 }
             }
             if (gamepad1.a){ // Press A to quick fire.
                 double durationFire = (System.nanoTime() - lastFireTime)/1E9;
                 if (durationFire >= 1) {
-                    telemetry.addLine("quick firing");
                     sorterSubsystem.quickFire();
                     lastFireTime = System.nanoTime();
-                    telemetry.update();
                 }
             }
 

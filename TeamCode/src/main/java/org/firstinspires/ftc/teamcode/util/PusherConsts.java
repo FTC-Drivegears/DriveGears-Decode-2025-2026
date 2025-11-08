@@ -7,4 +7,5 @@ public class PusherConsts{
 // 0.2 it will also snap
 // 0.85 is too low
 // this is all with pusher.setPosition(1); as down
+    //0,6 it will bend
 }
