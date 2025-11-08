@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
 import android.util.Size;
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -15,7 +13,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @Autonomous (name = "AutoVision")
-public class SampleAutoOpModeVision extends LinearOpMode {
+public class Obelisk_Auto extends LinearOpMode {
     private MecanumCommand mecanumCommand;
 
     private ElapsedTime resetTimer;
@@ -24,7 +22,6 @@ public class SampleAutoOpModeVision extends LinearOpMode {
         SCAN_OBELISK,
         PICKUP,
         FINISH
-
     }
 
     @Override
@@ -64,7 +61,7 @@ public class SampleAutoOpModeVision extends LinearOpMode {
                     }
                     telemetry.update();
                     if (mecanumCommand.positionNotReachedYet()) {
-                        autoState = AUTO_STATE.PICKUP;
+                        autoState = AUTO_STATE.FINISH;
                     }
                     break;
                 case PICKUP:
