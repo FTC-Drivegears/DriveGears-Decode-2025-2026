@@ -47,6 +47,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean toggleOuttakeSorter = false;
 
         double hoodPos = 0.0;
+        double sorterPosition = 0.0;
 
 
         hw = Hardware.getInstance(hardwareMap);
@@ -109,28 +110,42 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-            boolean up = gamepad1.dpad_up;
-            boolean down = gamepad1.dpad_down;
-            if (up || down) { // Press up to intake g, down to intake p.
-                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
-                char curColor = 'g';
-                if (down) {
-                    curColor = 'p';
+//            boolean up = gamepad1.dpad_up;
+//            boolean down = gamepad1.dpad_down;
+//            if (up || down) { // Press up to intake g, down to intake p.
+//                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
+//                char curColor = 'g';
+//                if (down) {
+//                    curColor = 'p';
+//                }
+//                if (durationIntake >= 2) {
+//                    telemetry.addData("mockInputBall", curColor);
+//                    sorterSubsystem.intakeBall(curColor);
+//                    lastIntakeTime = System.nanoTime();
+//                    telemetry.update();
+//                }
+//            }
+//            if (gamepad1.a){ // Press A to quick fire.
+//                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
+//                if (durationFire >= 1) {
+//                    telemetry.addLine("quick firing");
+//                    sorterSubsystem.quickFire();
+//                    lastFireTime = System.nanoTime();
+//                    telemetry.update();
+//                }
+//            }
+
+            if (gamepad1.b && sorterTimer.milliseconds() > 1000){
+                sorterPosition = (sorterPosition+1)%3;
+                sorterTimer.reset();
+                if (sorterPosition == 0.0) {
+                    hw.sorter.setPosition(0.0);//60 degrees
                 }
-                if (durationIntake >= 2) {
-                    telemetry.addData("mockInputBall", curColor);
-                    sorterSubsystem.intakeBall(curColor);
-                    lastIntakeTime = System.nanoTime();
-                    telemetry.update();
+                else if (sorterPosition == 1) {
+                    hw.sorter.setPosition(0.43);//60 degrees
                 }
-            }
-            if (gamepad1.a){ // Press A to quick fire.
-                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
-                if (durationFire >= 1) {
-                    telemetry.addLine("quick firing");
-                    sorterSubsystem.quickFire();
-                    lastFireTime = System.nanoTime();
-                    telemetry.update();
+                else if (sorterPosition == 2) {
+                    hw.sorter.setPosition(0.875);//60 degrees
                 }
             }
 
