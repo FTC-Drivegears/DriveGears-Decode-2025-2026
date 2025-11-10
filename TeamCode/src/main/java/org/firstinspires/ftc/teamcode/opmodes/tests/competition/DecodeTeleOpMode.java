@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 
+
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
@@ -52,8 +53,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
 
-        double hoodPos = 0.0;
+        double hoodPos = 1.0;
         double sorterPosition = 0.0;
+        double shootSpeed = 0.8;
 
 
 
@@ -63,7 +65,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
 
         hw.sorter.setPosition(0.0);
-        hw.hood.setPosition(1.0);
+        hw.hood.setPosition(hoodPos);
 
         intake = hw.intake;
         shooter = hw.shooter;
@@ -192,7 +194,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                    shooter.setPower(0.8);
+                    shooter.setPower(shootSpeed);
                 }else{
                     shooter.setPower(0);
                 }
@@ -201,37 +203,68 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             curRB = gamepad1.right_bumper;
             if(curRB){
-                if(hoodPos >= 1.0){
-                    hoodPos = 1.0;
+                if(hoodPos <= 0.0){
+                    hoodPos = 0.0;
                 }
                 else{
-                    hoodPos += 0.01;
+                    hoodPos -= 0.001;
                 }
                 hood.setPosition(hoodPos);
             }
 
             curLB = gamepad1.left_bumper;
             if(curLB){
-                if(hoodPos <= 0.0){
-                    hoodPos = 0.0;
+                if(hoodPos >= 1.0){
+                    hoodPos = 1.0;
                 }
                 else{
-                    hoodPos -= 0.01;
+                    hoodPos += 0.001;
                 }
                 hood.setPosition(hoodPos);
             }
+
+            boolean up = gamepad1.dpad_up;
+            boolean down = gamepad1.dpad_down;
+            if(up){
+                if(shootSpeed >= 1.0){
+                    shootSpeed = 1.0;
+                }
+                else {
+                    shootSpeed += 0.0001;
+                }
+            }
+            if(down){
+                if(shootSpeed <= 0.0){
+                    shootSpeed = 0.0;
+                }
+                else {
+                    shootSpeed -= 0.0001;
+                }
+            }
+
+
+
 
             if (gamepad1.start){
                 mecanumCommand.resetPinPointOdometry();
             }
 
+            if (gamepad1.back){
+                mecanumCommand.moveToPos(0, 0,0);
+            }
 
 
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.addData("Hood pos: ", hoodPos);
+            telemetry.addLine("---------------------------------");
+            telemetry.addData("X", mecanumCommand.getX());
+            telemetry.addData("Y", mecanumCommand.getY());
+            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+            telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }
+
     }
 }
