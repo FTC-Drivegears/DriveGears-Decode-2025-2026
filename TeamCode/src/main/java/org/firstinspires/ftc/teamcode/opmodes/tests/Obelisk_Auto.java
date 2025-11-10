@@ -60,7 +60,7 @@ public class Obelisk_Auto extends LinearOpMode {
                         }
                     }
                     telemetry.update();
-                    if (mecanumCommand.positionNotReachedYet()) {
+                    if (mecanumCommand.isPositionReached()) {
                         autoState = AUTO_STATE.FINISH;
                     }
                     break;
