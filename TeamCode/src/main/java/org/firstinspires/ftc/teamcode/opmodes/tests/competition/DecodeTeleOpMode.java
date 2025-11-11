@@ -225,9 +225,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 mecanumCommand.resetPinPointOdometry();
             }
 
-
-
-
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.addData("Hood pos: ", hoodPos);
