@@ -1,13 +1,18 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
-import org.firstinspires.ftc.teamcode.util.PusherConsts;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
 
 
 @Autonomous (name = "New Auto")
@@ -18,6 +23,8 @@ public class NewAutoOpMode extends LinearOpMode {
     private ElapsedTime resetTimer;
 
     enum AUTO_STATE {
+
+        SCAN_OBELISK,
         INITIAL_POSITION,
         FIRST_SHOT,
         COLLECTION,
@@ -137,6 +144,15 @@ public class NewAutoOpMode extends LinearOpMode {
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
 
+        AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
+                .build();
+
+        VisionPortal visionPortal = new VisionPortal.Builder()
+                .addProcessor(tagProcessor)
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCameraResolution(new Size(640, 480))
+                .build();
+
         shooter = hw.shooter;
         pusher = hw.pusher;
         sorter = hw.sorter;
@@ -150,6 +166,7 @@ public class NewAutoOpMode extends LinearOpMode {
 
         AUTO_STATE autoState = AUTO_STATE.INITIAL_POSITION;
         PATTERN pattern = PATTERN.GPP_1;
+
         waitForStart();
 
         push();
@@ -157,6 +174,11 @@ public class NewAutoOpMode extends LinearOpMode {
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
+            if (tagProcessor.getDetections().size() > 0) {
+                AprilTagDetection tag = tagProcessor.getDetections().get(0);
+
+                telemetry.addData("ID", tag.id);
+            }
 
             processTelemetry();
 
