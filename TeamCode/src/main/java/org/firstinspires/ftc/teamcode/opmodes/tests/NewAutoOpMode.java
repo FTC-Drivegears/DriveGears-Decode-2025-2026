@@ -19,7 +19,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 public class NewAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private int stage1 = 0;
-
+    private static final int DESIRED_TAG_ID = 20;
+    private AprilTagDetection desiredTag = null;
     private ElapsedTime resetTimer;
 
     enum AUTO_STATE {
@@ -178,6 +179,11 @@ public class NewAutoOpMode extends LinearOpMode {
                 AprilTagDetection tag = tagProcessor.getDetections().get(0);
 
                 telemetry.addData("ID", tag.id);
+            }
+
+            if ((desiredTag.id == DESIRED_TAG_ID)) {
+                telemetry.addData("Blue Alliance",desiredTag);
+
             }
 
             processTelemetry();
