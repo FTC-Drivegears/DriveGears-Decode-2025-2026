@@ -194,28 +194,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                    while(isOuttakeMotorOn) {
-                        boolean up = gamepad1.dpad_up;
-                        boolean down = gamepad1.dpad_down;
-                        if(up){
-                            if(shootSpeed >= 1.0){
-                                shootSpeed = 1.0;
-                            }
-                            else {
-                                shootSpeed += 0.0001;
-                            }
-                        }
-                        if(down){
-                            if(shootSpeed <= 0.0){
-                                shootSpeed = 0.0;
-                            }
-                            else {
-                                shootSpeed -= 0.0001;
-                            }
-                        }
                         shooter.setPower(shootSpeed);
-                    }
-
                 }else{
                     shooter.setPower(0);
                 }
@@ -245,6 +224,23 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
 
 
+            boolean up = gamepad1.dpad_up;
+            boolean down = gamepad1.dpad_down;
+            if(up){
+                if(shootSpeed >= 1.0){
+                    shootSpeed = 1.0;
+                }
+                else {
+                    shootSpeed += 0.0001;
+                }
+            }
+            if(down) {
+                if (shootSpeed <= 0.0) {
+                    shootSpeed = 0.0;
+                } else {
+                    shootSpeed -= 0.0001;
+                }
+            }
 
 
 
