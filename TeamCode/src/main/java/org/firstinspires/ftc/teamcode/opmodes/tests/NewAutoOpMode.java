@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
-
+import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
 @Autonomous (name = "New Auto")
@@ -42,8 +42,7 @@ public class NewAutoOpMode extends LinearOpMode {
 
     //Sorter variables
     private static final ElapsedTime sorterTimer = new ElapsedTime();
-    private static final double SORTER_FIRST_POS = 0.0;
-    private static double initialPos = SORTER_FIRST_POS;
+    private static double initialPos = 0.0;
 
     private static double hoodPos = 1.0;
 
@@ -53,79 +52,75 @@ public class NewAutoOpMode extends LinearOpMode {
     private static Servo sorter;
     private static DcMotor intake;
 
+    private static boolean previousPushState = false;
+    private static boolean currentPushState;
 
-
-    static boolean push() {
-        if(!isPusherUp){
-            pusher.setPosition(PUSHER_UP);
-            pusherTimer.reset();
-            isPusherUp = true;
+    static boolean push(){
+        currentPushState = true;
+        if (currentPushState && !previousPushState) {
+            // Start pulse only if not already pulsing
+            if (!isPusherUp) {
+                pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                pusherTimer.reset();
+                isPusherUp = true;
+            }
         }
-        if(isPusherUp && pusherTimer.milliseconds() >= 500){
-            pusher.setPosition(PUSHER_DOWN);
+        currentPushState = false;
+        previousPushState = currentPushState;
+
+        if (isPusherUp && pusherTimer.milliseconds() >= 500) {
+            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             isPusherUp = false;
         }
         return isPusherUp;
     }
 
+
     static void sort(int sorterPosition){
-        push();
-        sorterTimer.reset();
-        if(sorterTimer.milliseconds() > 1000) {
-            if (sorterPosition == 0) {
-                sorter.setPosition(0);
-            } else if (sorterPosition == 1) {
-                sorter.setPosition(0.43);
-            } else if (sorterPosition == 2) {
-                sorter.setPosition(0.875);
+
+        if (!isPusherUp && sorterTimer.milliseconds() > 1000){
+            sorterPosition = (sorterPosition+1)%3;
+            sorterTimer.reset();
+            if (sorterPosition == 0.0) {
+                sorter.setPosition(0.0);//60 degrees
+            }
+            else if (sorterPosition == 1) {
+                sorter.setPosition(0.43);//60 degrees
+            }
+            else if (sorterPosition == 2) {
+                sorter.setPosition(0.875);//60 degrees
             }
         }
     }
-//
-//
-//    static void shoot(Hardware hw, boolean isOn){
-//        if(isOn){
-//            shooter.setPower(0.8);
-//        }
-//        else{
-//            shooter.setPower(0.0);
-//        }
-//    }
-//
-//    static void unload(Hardware hw, int firstpos, int secondpos, int thirdpos) throws InterruptedException{
-//        int num = 0;
-//        shoot(hw, true);
-//        switch (num){
-//            case 0:
-//                sort(hw, firstpos);
-//                num++;
-//                break;
-//            case 1:
-//                if(push(hw)){
-//                    num++;
-//                }
-//                break;
-//            case 2:
-//                sort(hw, secondpos);
-//                num++;
-//                break;
-//            case 3:
-//                if(push(hw)){
-//                    num++;
-//                }
-//                break;
-//            case 4:
-//                sort(hw, thirdpos);
-//                break;
-//            case 5:
-//                if (push(hw)){
-//                    num++;
-//                }
-//                break;
-//        }
-//        shoot(hw, false);
-//    }
-//
+    static void shoot(boolean isOn){
+        if(isOn){
+            shooter.setPower(0.8);
+        }
+        else{
+            shooter.setPower(0.0);
+        }
+    }
+
+    static void unload(Hardware hw, int firstpos, int secondpos, int thirdpos) {
+        int num = 0;
+        shoot(true);
+        switch (num) {
+            case 0:
+                sort(firstpos);
+                num++;
+                break;
+            case 1:
+                sort(secondpos);
+                num++;
+                break;
+            case 2:
+                sort(thirdpos);
+                num++;
+                break;
+
+        }
+    }
+
 //    static void intake(Hardware hw, boolean isOn){
 //        if(isOn){
 //            intake.setPower(0.8);
@@ -156,13 +151,19 @@ public class NewAutoOpMode extends LinearOpMode {
         AUTO_STATE autoState = AUTO_STATE.INITIAL_POSITION;
         PATTERN pattern = PATTERN.GPP_1;
         waitForStart();
+
+        push();
+
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
 
             processTelemetry();
 
-            mecanumCommand.moveToPos(0, 0, 0.28447);
+
+
+
+
 
 //            switch (autoState) {
 //                case INITIAL_POSITION:
