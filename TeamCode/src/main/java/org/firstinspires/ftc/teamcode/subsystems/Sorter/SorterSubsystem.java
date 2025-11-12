@@ -21,12 +21,12 @@ public class SorterSubsystem {
 
     private ElapsedTime pushTime = new ElapsedTime();
 
-    private ElapsedTime pushSorterTime = new ElapsedTime(); // delay time between pusher and sorter
+    private ElapsedTime outtakeTime = new ElapsedTime();
 
-    private boolean isPusherUp = false;
+    private boolean isPusherUp = false; // pusher is down
 
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0, 0.5, 0.1};
+    private final double[] sorterPositions = new double[]{0, 0.43, 0.875};
     private int numIntakeBalls = 0;
     private long lastPushTime;
 
@@ -37,6 +37,10 @@ public class SorterSubsystem {
         this.sorterList = new ArrayList<>();
 
         this.reinitPattern(pattern);
+    }
+
+    public void detectColor(){
+
     }
 
     // reinitPattern re-initializes the pattern. Call reinitPattern when reading a new pattern.
@@ -58,13 +62,12 @@ public class SorterSubsystem {
     public void intakeBall(char color){
         // fail-safe
         if (this.sorterList.size() == MAX_NUM_BALLS){
+            telemetry.addLine("Max balls");
+            telemetry.update();
             return;
         }
-
-//        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
         turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
         numIntakeBalls++;
-        telemetry.update();
 
         this.sorterList.add(new Artifact(color, sorter.getPosition()));
     }
@@ -78,7 +81,6 @@ public class SorterSubsystem {
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
             curSorterPositionIndex++;
         }
-        telemetry.update();
     }
     public void push(){
         telemetry.addLine("Pusher up");
@@ -96,15 +98,21 @@ public class SorterSubsystem {
 
     // quickFire fires a random ball
     public void quickFire() {
+        outtakeTime.reset();
+        pushTime.reset();
+
         if (this.sorterList.isEmpty()){
             return;
         }
-        push();
-        if (!isPusherUp){ // means pusher is up
-            sorter.setPosition(this.sorterList.get(0).getPosition());
-        }
 
-        this.sorterList.remove(0);
+        if (!isPusherUp) { // means pusher is down
+            if (outtakeTime.seconds() >= 1){
+                sorter.setPosition(this.sorterList.get(0).getPosition());
+                telemetry.update();
+                this.sorterList.remove(0);
+            }
+        }
+        push();
     }
 
     // Test outtakeBall after quickFire

@@ -9,7 +9,6 @@ import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
-
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
@@ -138,10 +137,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
             previousXState = currentXState;
-
-            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
-            telemetry.update();
         }
     }
 }
