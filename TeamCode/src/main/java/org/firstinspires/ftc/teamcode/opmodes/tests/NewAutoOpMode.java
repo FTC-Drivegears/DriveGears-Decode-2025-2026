@@ -12,8 +12,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-
-
+import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 @Autonomous (name = "New Auto")
 public class NewAutoOpMode extends LinearOpMode {
@@ -63,7 +62,7 @@ public class NewAutoOpMode extends LinearOpMode {
     private static boolean previousPushState = false;
     private static boolean currentPushState;
 
-    static boolean push(){
+    static boolean push() {
         currentPushState = true;
         if (currentPushState && !previousPushState) {
             // Start pulse only if not already pulsing
@@ -175,26 +174,42 @@ public class NewAutoOpMode extends LinearOpMode {
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
-            if (tagProcessor.getDetections().size() > 0) {
-                AprilTagDetection tag = tagProcessor.getDetections().get(0);
-
-                telemetry.addData("ID", tag.id);
-            }
+//            if (tagProcessor.getDetections().size() > 0) {
+//                AprilTagDetection tag = tagProcessor.getDetections().get(0);
+//                telemetry.addData("ID", tag.id);
+//            }
 
             if ((desiredTag.id == DESIRED_TAG_ID)) {
-                telemetry.addData("Blue Alliance",desiredTag);
-
+                telemetry.addData("Blue Alliance", desiredTag);
             }
 
-            processTelemetry();
 
+            switch (pattern) {
+                case GPP_1:
+                    if (desiredTag.id == 21) {
+                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+                        telemetry.addData("GPP", tag.id);;
+                    }
 
+                case PGP_2:
+                    if (desiredTag.id == 22) {
+                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+                        telemetry.addData("PGP", tag.id);
+                    }
 
+                case PPG_3:
+                    if (desiredTag.id == 23) {
+                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+                        telemetry.addData("PPG", tag.id);
+                    }
+            }
 
+            switch (autoState) {
+//                case SCAN_OBELISK:
 
+                case INITIAL_POSITION:
+                    mecanumCommand.moveToPos(0, 0, 0.28447);
 
-//            switch (autoState) {
-//                case INITIAL_POSITION:
 ////                    mecanumCommand.moveToPos(turn to position of obelisk);
 ////                    if(mecanumCommand.isPositionReached()){
 ////                        scan apriltag
@@ -283,10 +298,11 @@ public class NewAutoOpMode extends LinearOpMode {
 //                    break;
 //            }
 
+            }
+            processTelemetry();
         }
-
     }
-    public void processTelemetry(){
+    public void processTelemetry() {
         //add telemetry messages here
         telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
