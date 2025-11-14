@@ -57,8 +57,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
         double sorterPosition = 0.0;
         double shootSpeed = 0.8;
 
-
-
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         pusher = hw.pusher;
@@ -78,9 +76,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
             sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
         }
 
-        while (opModeInInit()){
-            telemetry.update();
-        }
+//        while (opModeInInit()){
+//            telemetry.update();
+//        }
         // Wait for start button to be pressed
         waitForStart();
 
@@ -97,27 +95,37 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
                 if (isIntakeMotorOn){
-                    intake.setPower(0.65);
+                    intake.setPower(0.8);
                 }else {
                     intake.setPower(0);
                 }
             }
-            prevRightTrigger = curRightTrigger;
 
-            curLeftTrigger = gamepad1.left_trigger > 0;
-            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
-                toggleOuttakeSorter = !toggleOuttakeSorter;
+            curLeftTrigger = gamepad1.left_trigger> 0;
+            if (curLeftTrigger && !prevLeftTrigger){
+                isOuttakeMotorOn = !isOuttakeMotorOn;
 
-                if (toggleOuttakeSorter){
-                    double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
-                    if (durationOuttake >= 1) {
-                        telemetry.addLine("outtake");
-                        //sorterSubsystem.outtakeBall();
-                        lastOuttakeTime = System.nanoTime();
-                        telemetry.update();
-                    }
+                if (isOuttakeMotorOn){
+                    intake.setPower(-0.8);
+                }else {
+                    intake.setPower(0);
                 }
             }
+
+//            curLeftTrigger = gamepad1.left_trigger > 0;
+//            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
+//                toggleOuttakeSorter = !toggleOuttakeSorter;
+//
+//                if (toggleOuttakeSorter){
+//                    double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
+//                    if (durationOuttake >= 1) {
+//                        telemetry.addLine("outtake");
+//                        //sorterSubsystem.outtakeBall();
+//                        lastOuttakeTime = System.nanoTime();
+//                        telemetry.update();
+//                    }
+//                }
+//            }
 
 //            boolean up = gamepad1.dpad_up;
 //            boolean down = gamepad1.dpad_down;
@@ -231,19 +239,21 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     shootSpeed = 1.0;
                 }
                 else {
-                    shootSpeed += 0.0001;
+//                    shootSpeed += 0.0001;
+                    shootSpeed += 0.05;
+                    sleep(500);
                 }
             }
             if(down) {
                 if (shootSpeed <= 0.0) {
                     shootSpeed = 0.0;
                 } else {
-                    shootSpeed -= 0.0001;
+//                    shootSpeed -= 0.0001;
+                    shootSpeed -= 0.05;
+                    sleep(500);
+//0.8 default shooter speed
                 }
             }
-
-
-
 
             if (gamepad1.start){
                 mecanumCommand.resetPinPointOdometry();
@@ -252,8 +262,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
             if (gamepad1.back){
                 mecanumCommand.moveToPos(0, 0,0);
             }
-
-
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);

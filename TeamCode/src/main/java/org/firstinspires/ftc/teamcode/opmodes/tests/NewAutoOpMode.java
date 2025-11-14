@@ -13,32 +13,28 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
+import java.util.List;
 
 @Autonomous (name = "New Auto")
 public class NewAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
-    private int stage1 = 0;
-    private static final int DESIRED_TAG_ID = 20;
-    private AprilTagDetection desiredTag = null;
     private ElapsedTime resetTimer;
 
     enum AUTO_STATE {
-
         SCAN_OBELISK,
-        INITIAL_POSITION,
         FIRST_SHOT,
-        COLLECTION,
+        COLLECTION_1,
         SECOND_SHOT,
+        COLLECTION_2,
+        THIRD_SHOT,
         FINISH
-
     }
 
-    enum PATTERN{
-        GPP_1,
-        PGP_2,
-        PPG_3
+    enum PATTERN {
+        GPP_1, //Tag ID 21
+        PGP_2, //Tag ID 22
+        PPG_3 //Tag ID 23
     }
-
 
     //Pusher variables
     private static final double PUSHER_UP = 0.75;
@@ -108,7 +104,7 @@ public class NewAutoOpMode extends LinearOpMode {
         }
     }
 
-    static void unload(Hardware hw, int firstpos, int secondpos, int thirdpos) {
+    static void unload (Hardware hw, int firstpos, int secondpos, int thirdpos) {
         int num = 0;
         shoot(true);
         switch (num) {
@@ -124,7 +120,6 @@ public class NewAutoOpMode extends LinearOpMode {
                 sort(thirdpos);
                 num++;
                 break;
-
         }
     }
 
@@ -144,6 +139,7 @@ public class NewAutoOpMode extends LinearOpMode {
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
 
+        //vision set up
         AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
                 .build();
 
@@ -162,66 +158,96 @@ public class NewAutoOpMode extends LinearOpMode {
         sorter.setPosition(initialPos);
         pusher.setPosition(PUSHER_DOWN);
         hood.setPosition(hoodPos);
+//
+//        PATTERN pattern = PATTERN.GPP_1;
+//        AUTO_STATE autoState = AUTO_STATE.SCAN_OBELISK;
 
-
-        AUTO_STATE autoState = AUTO_STATE.INITIAL_POSITION;
-        PATTERN pattern = PATTERN.GPP_1;
 
         waitForStart();
 
-        push();
+//      push();
 
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
-//            if (tagProcessor.getDetections().size() > 0) {
-//                AprilTagDetection tag = tagProcessor.getDetections().get(0);
-//                telemetry.addData("ID", tag.id);
-//            }
 
-            if ((desiredTag.id == DESIRED_TAG_ID)) {
-                telemetry.addData("Blue Alliance", desiredTag);
-            }
-
-
-            switch (pattern) {
-                case GPP_1:
-                    if (desiredTag.id == 21) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                        telemetry.addData("GPP", tag.id);;
-                    }
-
-                case PGP_2:
-                    if (desiredTag.id == 22) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                        telemetry.addData("PGP", tag.id);
-                    }
-
-                case PPG_3:
-                    if (desiredTag.id == 23) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                        telemetry.addData("PPG", tag.id);
-                    }
-            }
-
-            switch (autoState) {
-//                case SCAN_OBELISK:
-
-                case INITIAL_POSITION:
-                    mecanumCommand.moveToPos(0, 0, 0.28447);
-
-////                    mecanumCommand.moveToPos(turn to position of obelisk);
-////                    if(mecanumCommand.isPositionReached()){
-////                        scan apriltag
-////                        pattern = PATTERN.whatever the pattern is
-////                    }
-//                    mecanumCommand.moveToPos(0, 0, 0.28447);
-//                    if (mecanumCommand.isPositionReached()) {
-//                        autoState = AUTO_STATE.FIRST_SHOT;
+//            switch (pattern) {
+//                case GPP_1:
+//                    if (tagProcessor.getDetections().size() > 0) {
+//                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+//                        telemetry.addData("ID", tag.id);
+//                        processTelemetry();
 //
 //                    }
-//                    break;
-//                case FIRST_SHOT:
+
+
+
+
+            mecanumCommand.moveToPos(50, 75, 0.8); //first intake
+
+
+            processTelemetry();
+                    }
+//                    if (AprilTagDetection.tag == 21) {
+
+//            }
+//                    if (detection.id == 21) {
+////                            pattern = PATTERN.GPP_1;
+//                        telemetry.addData("Pattern GPP", detection.id);
+//                            autoState = AUTO_STATE.FIRST_SHOT;
+//                            break;
+
+
+//switch (PATTERN) {
+////    case GPP_1:
+//        if (detection.id == 21) {
+//            case GPP_1:
+//
+//            pattern = PATTERN.GPP_1;
+//            telemetry.addData("Pattern: ", DESIRED_TAG_ID);
+//            autoState = AUTO_STATE.FIRST_SHOT;
+//            break;
+////            GPP_1, //Tag ID 21
+////            PGP_2, //Tag ID 22
+////            PPG_3 //Tag ID 23
+//
+//}
+//            switch (autoState) {
+//                case SCAN_OBELISK:
+//                    mecanumCommand.moveToPos(0, 0, 0);
+//                    List<AprilTagDetection> currentDetections = tagProcessor.getDetections();
+
+//                    autoState = AUTO_STATE.FINISH;
+
+//                    for (AprilTagDetection detection : currentDetections) {
+//                        if (detection.id == 21) {
+////                            pattern = PATTERN.GPP_1;
+//                            telemetry.addData("Pattern GPP", detection.id);
+//                            autoState = AUTO_STATE.FIRST_SHOT;
+//                            break;
+
+//                        } else if (detection.id == 22) {
+//                            pattern = PATTERN.PGP_2;
+//                            telemetry.addData("Pattern:", " ");
+//                            autoState = AUTO_STATE.FIRST_SHOT;
+//                            break;
+//
+//                        } else if (detection.id == 23) {
+//                            pattern = PATTERN.PPG_3;
+//                            telemetry.addData("Pattern: ", "PPG_3 (ID 23)");
+//                            autoState = AUTO_STATE.FIRST_SHOT;
+//                            break;
+//                        }
+                        }
+
+//                        if (autoState == AUTO_STATE.SCAN_OBELISK) {
+//                            telemetry.addLine("No pattern detected. Default: GPP.");
+//                            break; //can't detect
+//                        }
+
+//                    case FIRST_SHOT:
+//                        mecanumCommand.moveToPos(0, 0, 0); //ROTATE TO SHOOT
+                        //SORT AND OUTTAKE
 //                    shooter.setPower(0.8);
 //                    switch(pattern){
 //                        case GPP_1:
@@ -243,6 +269,13 @@ public class NewAutoOpMode extends LinearOpMode {
 //                    shooter.setPower(0.0);
 //                    autoState = AUTO_STATE.COLLECTION;
 //                    break;
+
+// alliance side  *needs to be fixed*
+//            if ((desiredTag.id == DESIRED_TAG_ID)) {
+//                telemetry.addData("Blue Alliance", desiredTag);
+//            }
+
+
 //                case COLLECTION:
 //                    intake(hw, true);
 //                    int set = 0;
@@ -298,10 +331,10 @@ public class NewAutoOpMode extends LinearOpMode {
 //                    break;
 //            }
 
-            }
-            processTelemetry();
-        }
-    }
+
+
+
+
     public void processTelemetry() {
         //add telemetry messages here
         telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
