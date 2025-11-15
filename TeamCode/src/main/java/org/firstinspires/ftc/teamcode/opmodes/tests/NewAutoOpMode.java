@@ -40,9 +40,9 @@ public class NewAutoOpMode extends LinearOpMode {
     }
 
     enum PATTERN {
-        GPP_1, //Tag ID 21
-        PGP_2, //Tag ID 22
-        PPG_3 //Tag ID 23
+        GPP, //Tag ID 21
+        PGP, //Tag ID 22
+        PPG //Tag ID 23
     }
 
     //Pusher variables
@@ -161,7 +161,7 @@ public class NewAutoOpMode extends LinearOpMode {
         hood.setPosition(hoodPos);
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
-        PATTERN pattern = PATTERN.GPP_1; // default
+        PATTERN pattern = PATTERN.GPP; // default
 
         telemetry.update();
 
@@ -176,19 +176,19 @@ public class NewAutoOpMode extends LinearOpMode {
 
             if (detected != null && !detected.equals("UNKNOWN")) {
                 switch (detected) {
-                    case "GPP_1":
+                    case "GPP":
                     case "21":
-                        pattern = PATTERN.GPP_1;
+                        pattern = PATTERN.GPP;
                         break;
 
-                    case "PGP_2":
+                    case "PGP":
                     case "22":
-                        pattern = PATTERN.PGP_2;
+                        pattern = PATTERN.PGP;
                         break;
 
-                    case "PPG_3":
+                    case "PPG":
                     case "23":
-                        pattern = PATTERN.PPG_3;
+                        pattern = PATTERN.PPG;
                         break;
                 }
             }
@@ -220,17 +220,17 @@ public class NewAutoOpMode extends LinearOpMode {
                         //SORT AND OUTTAKE
 //                    shooter.setPower(0.8);
 //                    switch(pattern){
-//                        case GPP_1:
+//                        case GPP:
 //                            sort(0);
 //                            sort(1);
 //                            sort(2);
 //                            break;
-//                        case PGP_2:
+//                        case PGP:
 //                            sort(1);
 //                            sort(2);
 //                            sort(0);
 //                            break;
-//                        case PPG_3:
+//                        case PPG:
 //                            sort(2);
 //                            sort(0);
 //                            sort(1);
