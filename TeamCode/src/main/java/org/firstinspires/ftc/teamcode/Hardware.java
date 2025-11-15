@@ -6,6 +6,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
 
 public class Hardware {
@@ -31,6 +34,8 @@ public class Hardware {
 
     public final CRServo turret;
 
+    public CameraName Webcam_1;
+
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
 
@@ -46,6 +51,7 @@ public class Hardware {
 
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
+        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
