@@ -6,7 +6,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -19,6 +22,12 @@ import java.util.List;
 public class NewAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private ElapsedTime resetTimer;
+
+    private LogitechVisionSubsystem logitechVisionSubsystem;
+
+
+    private double targetX = Double.NaN; // X position of alliance-specific tag
+
 
     enum AUTO_STATE {
         SCAN_OBELISK,
@@ -54,6 +63,7 @@ public class NewAutoOpMode extends LinearOpMode {
     private static Servo hood;
     private static Servo sorter;
     private static DcMotor intake;
+
 
     private static boolean previousPushState = false;
     private static boolean currentPushState;
@@ -136,18 +146,9 @@ public class NewAutoOpMode extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         // create Hardware using hardwareMap
         Hardware hw = Hardware.getInstance(hardwareMap);
+
         mecanumCommand = new MecanumCommand(hw);
         resetTimer = new ElapsedTime();
-
-        //vision set up
-        AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
-                .build();
-
-        VisionPortal visionPortal = new VisionPortal.Builder()
-                .addProcessor(tagProcessor)
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
-                .setCameraResolution(new Size(640, 480))
-                .build();
 
         shooter = hw.shooter;
         pusher = hw.pusher;
@@ -158,92 +159,61 @@ public class NewAutoOpMode extends LinearOpMode {
         sorter.setPosition(initialPos);
         pusher.setPosition(PUSHER_DOWN);
         hood.setPosition(hoodPos);
-//
-//        PATTERN pattern = PATTERN.GPP_1;
-//        AUTO_STATE autoState = AUTO_STATE.SCAN_OBELISK;
 
+        logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
+        PATTERN pattern = PATTERN.GPP_1; // default
+
+        telemetry.update();
+
+        long scanStart = System.currentTimeMillis();
+        long scanTimeout = 5000;
+
+        while (!isStarted() && !isStopRequested() &&
+                (System.currentTimeMillis() - scanStart < scanTimeout)) {
+
+            // Detect obelisk pattern
+            String detected = logitechVisionSubsystem.pattern();
+
+            if (detected != null && !detected.equals("UNKNOWN")) {
+                switch (detected) {
+                    case "GPP_1":
+                    case "21":
+                        pattern = PATTERN.GPP_1;
+                        break;
+
+                    case "PGP_2":
+                    case "22":
+                        pattern = PATTERN.PGP_2;
+                        break;
+
+                    case "PPG_3":
+                    case "23":
+                        pattern = PATTERN.PPG_3;
+                        break;
+                }
+            }
+            targetX = logitechVisionSubsystem.targetApril(telemetry);
+
+            telemetry.addData("Detected Obelisk", detected);
+//            telemetry.addData("Pattern", pattern);
+            telemetry.addData("Target X", targetX);
+            telemetry.update();
+
+        }
 
         waitForStart();
 
-//      push();
 
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
 
-//            switch (pattern) {
-//                case GPP_1:
-//                    if (tagProcessor.getDetections().size() > 0) {
-//                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-//                        telemetry.addData("ID", tag.id);
-//                        processTelemetry();
-//
-//                    }
-
-
-
-
-            mecanumCommand.moveToPos(50, 75, 0.8); //first intake
-
+//            mecanumCommand.moveToPos(50, 75, 0.8); //first intake
 
             processTelemetry();
-                    }
-//                    if (AprilTagDetection.tag == 21) {
+        }
+    }
 
-//            }
-//                    if (detection.id == 21) {
-////                            pattern = PATTERN.GPP_1;
-//                        telemetry.addData("Pattern GPP", detection.id);
-//                            autoState = AUTO_STATE.FIRST_SHOT;
-//                            break;
-
-
-//switch (PATTERN) {
-////    case GPP_1:
-//        if (detection.id == 21) {
-//            case GPP_1:
-//
-//            pattern = PATTERN.GPP_1;
-//            telemetry.addData("Pattern: ", DESIRED_TAG_ID);
-//            autoState = AUTO_STATE.FIRST_SHOT;
-//            break;
-////            GPP_1, //Tag ID 21
-////            PGP_2, //Tag ID 22
-////            PPG_3 //Tag ID 23
-//
-//}
-//            switch (autoState) {
-//                case SCAN_OBELISK:
-//                    mecanumCommand.moveToPos(0, 0, 0);
-//                    List<AprilTagDetection> currentDetections = tagProcessor.getDetections();
-
-//                    autoState = AUTO_STATE.FINISH;
-
-//                    for (AprilTagDetection detection : currentDetections) {
-//                        if (detection.id == 21) {
-////                            pattern = PATTERN.GPP_1;
-//                            telemetry.addData("Pattern GPP", detection.id);
-//                            autoState = AUTO_STATE.FIRST_SHOT;
-//                            break;
-
-//                        } else if (detection.id == 22) {
-//                            pattern = PATTERN.PGP_2;
-//                            telemetry.addData("Pattern:", " ");
-//                            autoState = AUTO_STATE.FIRST_SHOT;
-//                            break;
-//
-//                        } else if (detection.id == 23) {
-//                            pattern = PATTERN.PPG_3;
-//                            telemetry.addData("Pattern: ", "PPG_3 (ID 23)");
-//                            autoState = AUTO_STATE.FIRST_SHOT;
-//                            break;
-//                        }
-                        }
-
-//                        if (autoState == AUTO_STATE.SCAN_OBELISK) {
-//                            telemetry.addLine("No pattern detected. Default: GPP.");
-//                            break; //can't detect
-//                        }
 
 //                    case FIRST_SHOT:
 //                        mecanumCommand.moveToPos(0, 0, 0); //ROTATE TO SHOOT
