@@ -195,7 +195,7 @@ public class NewAutoOpMode extends LinearOpMode {
             targetX = logitechVisionSubsystem.targetApril(telemetry);
 
             telemetry.addData("Detected Obelisk", detected);
-//            telemetry.addData("Pattern", pattern);
+            telemetry.addData("Pattern", pattern);
             telemetry.addData("Target X", targetX);
             telemetry.update();
 
