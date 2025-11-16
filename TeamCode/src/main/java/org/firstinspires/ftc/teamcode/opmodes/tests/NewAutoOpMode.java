@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
-import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -7,18 +6,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
-import java.util.List;
 
-@Autonomous (name = "New Auto")
+@Autonomous(name = "New Auto")
 public class NewAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private ElapsedTime resetTimer;
@@ -30,31 +23,33 @@ public class NewAutoOpMode extends LinearOpMode {
 
 
     enum AUTO_STATE {
-        SCAN_OBELISK,
-        FIRST_SHOT,
-        COLLECTION_1,
-        SECOND_SHOT,
-        COLLECTION_2,
-        THIRD_SHOT,
-        FINISH
+        FIRST_SHOT, COLLECTION_1, SECOND_SHOT, COLLECTION_2, THIRD_SHOT, FINISH
     }
 
     enum PATTERN {
+        NO_TAG, //default state
         GPP_1, //Tag ID 21
         PGP_2, //Tag ID 22
         PPG_3 //Tag ID 23
     }
 
     //Pusher variables
-    private static final double PUSHER_UP = 0.75;
+    //Pusher variables
+    private static final double PUSHER_UP = 0.65;
     private static final double PUSHER_DOWN = 1.0;
     private static final long PUSHER_TIME = 500;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
 
+    private static final ElapsedTime stageTimer = new ElapsedTime();
+
     //Sorter variables
     private static final ElapsedTime sorterTimer = new ElapsedTime();
-    private static double initialPos = 0.0;
+    private static double pos1 = 0.0;
+    private static double pos2 = 0.43;
+    private static double pos3 = 0.875;
+    private static int standardms = 1000;
+
 
     private static double hoodPos = 1.0;
 
@@ -64,83 +59,80 @@ public class NewAutoOpMode extends LinearOpMode {
     private static Servo sorter;
     private static DcMotor intake;
 
-
     private static boolean previousPushState = false;
     private static boolean currentPushState;
 
-    static boolean push() {
-        currentPushState = true;
-        if (currentPushState && !previousPushState) {
-            // Start pulse only if not already pulsing
-            if (!isPusherUp) {
-                pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                pusherTimer.reset();
-                isPusherUp = true;
-            }
-        }
-        currentPushState = false;
-        previousPushState = currentPushState;
-
-        if (isPusherUp && pusherTimer.milliseconds() >= 500) {
-            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-            isPusherUp = false;
-        }
-        return isPusherUp;
-    }
+    private static int stage;
 
 
-    static void sort(int sorterPosition){
+    int detection;
 
-        if (!isPusherUp && sorterTimer.milliseconds() > 1000){
-            sorterPosition = (sorterPosition+1)%3;
-            sorterTimer.reset();
-            if (sorterPosition == 0.0) {
-                sorter.setPosition(0.0);//60 degrees
-            }
-            else if (sorterPosition == 1) {
-                sorter.setPosition(0.43);//60 degrees
-            }
-            else if (sorterPosition == 2) {
-                sorter.setPosition(0.875);//60 degrees
-            }
-        }
-    }
-    static void shoot(boolean isOn){
-        if(isOn){
-            shooter.setPower(0.8);
+    static boolean halfPush(boolean isUp) {
+        if(isUp){
+            pusher.setPosition(PUSHER_UP);
+            isPusherUp = true;
         }
         else{
+            pusher.setPosition(PUSHER_DOWN);
+            isPusherUp = false;
+        }
+        if(pusherTimer.milliseconds() >= 1500){
+            pusherTimer.reset();
+            return true;
+        }
+        return false;
+    }
+
+
+
+
+    static boolean sort(int sp) {
+        if (!isPusherUp){
+
+            if (sp == 0) {
+                sorter.setPosition(0.0);//60 degrees
+            }
+            else if (sp == 1) {
+                sorter.setPosition(pos2);//60 degrees
+            }
+            else if (sp == 2) {
+                sorter.setPosition(pos3);//60 degrees
+            }
+            if (sorterTimer.milliseconds()>= 1500){
+                sorterTimer.reset();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static void shoot(boolean isOn) {
+        if (isOn) {
+            shooter.setPower(0.8);
+        } else {
             shooter.setPower(0.0);
         }
     }
 
-    static void unload (Hardware hw, int firstpos, int secondpos, int thirdpos) {
+    static boolean unloadOne(int positions, boolean running) {
         int num = 0;
-        shoot(true);
-        switch (num) {
-            case 0:
-                sort(firstpos);
-                num++;
-                break;
-            case 1:
-                sort(secondpos);
-                num++;
-                break;
-            case 2:
-                sort(thirdpos);
-                num++;
-                break;
+        if (!running) {
+            sort(positions);
+            return false;
+        }
+        return true;
+    }
+
+
+    static void intake(boolean isOn) {
+        if (isOn) {
+            intake.setPower(0.8);
+        } else {
+            intake.setPower(0.0);
         }
     }
 
-//    static void intake(Hardware hw, boolean isOn){
-//        if(isOn){
-//            intake.setPower(0.8);
-//        }
-//        else{
-//            intake.setPower(0.0);
-//        }
-//    }
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -156,38 +148,39 @@ public class NewAutoOpMode extends LinearOpMode {
         hood = hw.hood;
         intake = hw.intake;
 
-        sorter.setPosition(initialPos);
+        sorter.setPosition(pos1);
         pusher.setPosition(PUSHER_DOWN);
         hood.setPosition(hoodPos);
+        int position = 0;
+        stage = 0;
+
+        AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
         PATTERN pattern = PATTERN.GPP_1; // default
+        boolean outtakeFlag = false;
 
         telemetry.update();
 
         long scanStart = System.currentTimeMillis();
         long scanTimeout = 5000;
 
-        while (!isStarted() && !isStopRequested() &&
-                (System.currentTimeMillis() - scanStart < scanTimeout)) {
-
+//        while (!isStarted() && !isStopRequested() &&
+//                (System.currentTimeMillis() - scanStart < scanTimeout)) {
+        while (!isStarted() && !isStopRequested()) {
             // Detect obelisk pattern
             String detected = logitechVisionSubsystem.pattern();
-
+            String result = "";
             if (detected != null && !detected.equals("UNKNOWN")) {
-                switch (detected) {
-                    case "GPP_1":
-                    case "21":
+                result = detected.substring(8,11);
+                switch(result){
+                    case "GPP":
                         pattern = PATTERN.GPP_1;
                         break;
-
-                    case "PGP_2":
-                    case "22":
+                    case "PGP":
                         pattern = PATTERN.PGP_2;
                         break;
-
-                    case "PPG_3":
-                    case "23":
+                    case "PPG":
                         pattern = PATTERN.PPG_3;
                         break;
                 }
@@ -204,20 +197,143 @@ public class NewAutoOpMode extends LinearOpMode {
         waitForStart();
 
 
+
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
+            shoot(outtakeFlag);
 
-//            mecanumCommand.moveToPos(50, 75, 0.8); //first intake
+
+            telemetry.addData("stage", stage);
+            telemetry.addData("Pattern", pattern);
+            telemetry.addData("position: ", position);
+            telemetry.addData("sorterTimer: ", sorterTimer.milliseconds());
+            telemetry.addData("stageTimer: ", stageTimer.milliseconds());
 
             processTelemetry();
+
+            switch (autoState) {
+                case FIRST_SHOT:
+                    mecanumCommand.moveToPos(0, 0, Math.PI/9);
+                    switch (pattern) {
+                        case GPP_1:
+                            switch(stage){
+                                case 0: //turn on outtake
+                                    outtakeFlag = true;
+                                    stage++;
+                                case 1: // sort
+                                    if(stageTimer.milliseconds() > 1500){
+                                        sort(0);
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    }
+                                    break;
+                                case 2: //push on
+                                case 5:
+                                case 8:
+                                    if (stageTimer.milliseconds() > 750){
+                                        halfPush(true);
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    }
+                                    break;
+                                case 3: //push off
+                                case 6:
+                                case 9:
+                                    if(stageTimer.milliseconds() > 750){
+                                        halfPush(false);
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    }
+                                    break;
+                                case 4: // sort
+                                    if(stageTimer.milliseconds() > 1500){
+                                        sort(1);
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    }
+                                    break;
+                                case 7: // sort
+                                    if(stageTimer.milliseconds() > 1500){
+                                        sort(2);
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    }
+                                    break;
+                                case 10:
+                                    outtakeFlag = false;
+                            }
+                            break;
+                        case PGP_2:
+                            break;
+                        case PPG_3:
+                            break;
+                    }
+                    autoState = AUTO_STATE.COLLECTION_1;
+                    break;
+//                case COLLECTION_1:
+//                    intake(true);
+//                    int x = 0;
+//                    sort(1);
+//                    switch (x) {
+//                        case 0:
+//                            mecanumCommand.moveToPos(0, 0, 0);
+//                            x++;
+//                            break;
+//                        case 1:
+//                            sort(0);
+//                            mecanumCommand.moveToPos(0, 0, 0);
+//                            x++;
+//                            break;
+//                        case 2:
+//                            sort(2);
+//                            mecanumCommand.moveToPos(0, 0, 0);
+//                            x++;
+//                            break;
+//                        case 3:
+//                            sort(0);
+//                            mecanumCommand.moveToPos(0, 0, 0);
+//                            break;
+//                    }
+//                    intake(false);
+//                    autoState = AUTO_STATE.SECOND_SHOT;
+//                    break;
+//
+//                case SECOND_SHOT:
+//                    mecanumCommand.moveToPos(0, 0, 0);
+//                    switch (pattern) {
+//                        case GPP_1:
+//                            unload(0, 1, 2);
+//                            break;
+//                        case PGP_2:
+//                            unload(1, 2, 0);
+//                            break;
+//                        case PPG_3:
+//                            unload(2, 0, 1);
+//                            break;
+//
+//                    }
+//                    autoState = AUTO_STATE.FINISH;
+//                    break;
+//
+//                case FINISH:
+//                    mecanumCommand.moveToPos(0, 0, 0);
+//                    stopRobot();
+//                    break;
+//
+            }
         }
     }
 
 
 //                    case FIRST_SHOT:
 //                        mecanumCommand.moveToPos(0, 0, 0); //ROTATE TO SHOOT
-                        //SORT AND OUTTAKE
+    //SORT AND OUTTAKE
 //                    shooter.setPower(0.8);
 //                    switch(pattern){
 //                        case GPP_1:
@@ -276,10 +392,11 @@ public class NewAutoOpMode extends LinearOpMode {
 //                    intake(hw, false);
 //                case SECOND_SHOT:
 //                    //mecanumCommand.moveToPos(turn to obelisk);
-////                    if(mecanumCommand.isPositionReached()){
-////                        scan apriltag
-////                        pattern = PATTERN.whatever the pattern is
-////                    }
+
+    /// /                    if(mecanumCommand.isPositionReached()){
+    /// /                        scan apriltag
+    /// /                        pattern = PATTERN.whatever the pattern is
+    /// /                    }
 //                    //mecanumCommand.moveToPos(launch line);
 //
 //                    switch(pattern){
@@ -300,14 +417,9 @@ public class NewAutoOpMode extends LinearOpMode {
 //                    stopRobot();
 //                    break;
 //            }
-
-
-
-
-
     public void processTelemetry() {
         //add telemetry messages here
-        telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
+        telemetry.addData("resetTimer: ", resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
         telemetry.addData("X", mecanumCommand.getX());
         telemetry.addData("Y", mecanumCommand.getY());
@@ -315,6 +427,7 @@ public class NewAutoOpMode extends LinearOpMode {
         telemetry.addData("Position reached: ", mecanumCommand.isPositionReached());
         telemetry.update();
     }
+
     private void stopRobot() {
         mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
     }
