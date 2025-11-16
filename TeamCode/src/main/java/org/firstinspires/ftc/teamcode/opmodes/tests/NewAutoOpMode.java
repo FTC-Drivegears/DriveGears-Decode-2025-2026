@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -21,6 +22,7 @@ import java.util.List;
 @Autonomous (name = "New Auto")
 public class NewAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
+    private static ShooterSubsystem shooterSubsystem;
     private ElapsedTime resetTimer;
 
     private LogitechVisionSubsystem logitechVisionSubsystem;
@@ -115,19 +117,10 @@ public class NewAutoOpMode extends LinearOpMode {
 
     static void shoot(boolean isOn) {
         if (isOn) {
-            shooter.setPower(0.8);
+            shooterSubsystem.spinup();
         } else {
-            shooter.setPower(0.0);
+            shooterSubsystem.stopShooter();
         }
-    }
-
-    static boolean unloadOne(int positions, boolean running) {
-        int num = 0;
-        if (!running) {
-            sort(positions);
-            return false;
-        }
-        return true;
     }
 
 
@@ -147,6 +140,7 @@ public class NewAutoOpMode extends LinearOpMode {
         Hardware hw = Hardware.getInstance(hardwareMap);
 
         mecanumCommand = new MecanumCommand(hw);
+        shooterSubsystem = new ShooterSubsystem(hw);
         resetTimer = new ElapsedTime();
 
         shooter = hw.shooter;

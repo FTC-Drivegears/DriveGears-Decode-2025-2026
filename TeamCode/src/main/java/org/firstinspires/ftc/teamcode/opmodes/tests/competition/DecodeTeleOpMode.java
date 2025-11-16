@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
@@ -24,9 +25,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private SorterSubsystem sorterSubsystem;
+    private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
+    private final double maxRPM = 6000;
 
     private final ElapsedTime sorterTimer = new ElapsedTime();
 
@@ -56,10 +59,15 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         double hoodPos = 0.846;
         double sorterPosition = 0.0;
-        double shootSpeed = 0.8;
+        double shootModifier = 0.8;
+        double shootSpeed = shootModifier * maxRPM;
+
+
+
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
+        shooterSubsystem = new ShooterSubsystem(hw);
         pusher = hw.pusher;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
 
@@ -209,9 +217,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                        shooter.setPower(shootSpeed);
+                    shooterSubsystem.setMaxRPM(shootSpeed);
+                    shooterSubsystem.spinup();
                 }else{
-                    shooter.setPower(0);
+                    shooterSubsystem.stopShooter();
                 }
             }
             previousXState = currentXState;
@@ -242,21 +251,21 @@ public class DecodeTeleOpMode extends LinearOpMode {
             boolean up = gamepad1.dpad_up;
             boolean down = gamepad1.dpad_down;
             if(up){
-                if(shootSpeed >= 1.0){
-                    shootSpeed = 1.0;
+                if(shootModifier >= 1.0){
+                    shootModifier = 1.0;
                 }
                 else {
 //                    shootSpeed += 0.0001;
-                    shootSpeed += 0.005;
+                    shootModifier += 0.005;
                     sleep(500);
                 }
             }
             if(down) {
-                if (shootSpeed <= 0.0) {
-                    shootSpeed = 0.0;
+                if (shootModifier <= 0.0) {
+                    shootModifier = 0.0;
                 } else {
 //                    shootSpeed -= 0.0001;
-                    shootSpeed -= 0.005;
+                    shootModifier -= 0.005;
                     sleep(500);
 //0.8 default shooter speed
                 }
