@@ -84,7 +84,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
 
 
