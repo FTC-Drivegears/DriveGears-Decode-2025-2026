@@ -128,7 +128,7 @@ public class MecanumCommand {
     public boolean moveToPos(double x, double y, double theta) {
         elapsedTime.reset();
         setFinalPosition( 30, x, y, theta);
-        return positionNotReachedYet();
+        return isPositionReached();
     }
 
     public void setFinalPosition(double velocity, double x, double y, double theta) {
@@ -140,7 +140,7 @@ public class MecanumCommand {
 
     }
 
-    public boolean positionNotReachedYet() {
+    public boolean isPositionReached() {
         return (isXReached() && isYReached() && isThetaReached());
     }
 
@@ -165,7 +165,7 @@ public class MecanumCommand {
     }
 
     public boolean isThetaReached() {
-        return getThetaDifferencePinPoint() < 0.07;
+        return getThetaDifferencePinPoint() < 0.1;
     }
 
     public double getOdoX(){
@@ -206,6 +206,11 @@ public class MecanumCommand {
         processPIDUsingPinpoint();
         mecanumSubsystem.motorProcessNoEncoder();
     }
+
+    public void stop(){
+        mecanumSubsystem.stop(true);
+    }
+
 
     public void processOdometry() {
         pinPointOdoSubsystem.processOdometry();
