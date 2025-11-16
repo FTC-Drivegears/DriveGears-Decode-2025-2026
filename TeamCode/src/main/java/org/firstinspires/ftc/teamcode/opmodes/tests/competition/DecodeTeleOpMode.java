@@ -58,7 +58,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         double hoodPos = 0.846;
         double sorterPosition = 0.0;
-        double shootSpeed = 4800;
+        double shootSpeed = 4000;
 
 
 

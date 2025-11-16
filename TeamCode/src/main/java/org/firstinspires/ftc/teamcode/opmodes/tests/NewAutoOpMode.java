@@ -166,8 +166,6 @@ public class NewAutoOpMode extends LinearOpMode {
         long scanStart = System.currentTimeMillis();
         long scanTimeout = 5000;
 
-//        while (!isStarted() && !isStopRequested() &&
-//                (System.currentTimeMillis() - scanStart < scanTimeout)) {
         while (!isStarted() && !isStopRequested()) {
             // Detect obelisk pattern
             String detected = logitechVisionSubsystem.pattern();
@@ -201,13 +199,10 @@ public class NewAutoOpMode extends LinearOpMode {
 
         waitForStart();
 
-
-
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
             shoot(outtakeFlag);
-
 
             telemetry.addData("stage", stage);
             telemetry.addData("Pattern", pattern);
@@ -219,7 +214,7 @@ public class NewAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    //mecanumCommand.moveToPos(0, 0, Math.PI/9);
+                    mecanumCommand.moveToPos(15, 0, Math.PI/9);
                     switch (pattern) {
                         case GPP_1:
                             switch(stage){
@@ -291,7 +286,7 @@ public class NewAutoOpMode extends LinearOpMode {
 //                    sort(1);
 //                    switch (x) {
 //                        case 0:
-//                            mecanumCommand.moveToPos(0, 0, 0);
+//                            mecanumCommand.moveToPos(40, 40, .8);
 //                            x++;
 //                            break;
 //                        case 1:
@@ -364,12 +359,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                    shooter.setPower(0.0);
 //                    autoState = AUTO_STATE.COLLECTION;
 //                    break;
-
-// alliance side  *needs to be fixed*
-//            if ((desiredTag.id == DESIRED_TAG_ID)) {
-//                telemetry.addData("Blue Alliance", desiredTag);
-//            }
-
 
 //                case COLLECTION:
 //                    intake(hw, true);
