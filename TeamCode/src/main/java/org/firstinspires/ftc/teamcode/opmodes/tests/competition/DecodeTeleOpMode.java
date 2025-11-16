@@ -93,9 +93,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
-            //if(apriltag found take its x value and current robot heading and math it){ )
-            // }
-
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
                 isIntakeMotorOn = !isIntakeMotorOn;
