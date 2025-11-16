@@ -58,7 +58,7 @@ public class NewAutoOpMode extends LinearOpMode {
     private static int standardms = 1000;
 
 
-    private static double hoodPos = 1.0;
+    private static double hoodPos = 0.846;
 
     private static DcMotor shooter;
     private static Servo pusher;

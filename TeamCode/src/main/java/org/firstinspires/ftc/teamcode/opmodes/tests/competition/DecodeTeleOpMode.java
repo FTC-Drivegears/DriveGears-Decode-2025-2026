@@ -54,7 +54,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
 
-        double hoodPos = 1.0;
+        double hoodPos = 0.846;
         double sorterPosition = 0.0;
         double shootSpeed = 0.8;
 
@@ -218,8 +218,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             curRB = gamepad1.right_bumper;
             if(curRB){
-                if(hoodPos <= 0.0){
-                    hoodPos = 0.0;
+                if(hoodPos <= 0.359){
+                    hoodPos = 0.359;
                 }
                 else{
                     hoodPos -= 0.001;
@@ -229,8 +229,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             curLB = gamepad1.left_bumper;
             if(curLB){
-                if(hoodPos >= 1.0){
-                    hoodPos = 1.0;
+                if(hoodPos >= 0.846){
+                    hoodPos = 0.846;
                 }
                 else{
                     hoodPos += 0.001;
@@ -247,7 +247,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
                 else {
 //                    shootSpeed += 0.0001;
-                    shootSpeed += 0.05;
+                    shootSpeed += 0.005;
                     sleep(500);
                 }
             }
@@ -256,7 +256,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     shootSpeed = 0.0;
                 } else {
 //                    shootSpeed -= 0.0001;
-                    shootSpeed -= 0.05;
+                    shootSpeed -= 0.005;
                     sleep(500);
 //0.8 default shooter speed
                 }
