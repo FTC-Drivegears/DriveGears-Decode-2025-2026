@@ -84,6 +84,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            mecanumCommand.motorProcess();
+            mecanumCommand.processOdometry();
+
 
             theta = mecanumCommand.fieldOrientedMove(
                     gamepad1.left_stick_y,
@@ -245,7 +248,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
                 else {
 //                    shootSpeed += 0.0001;
-                    shootSpeed += 0.05;
+                    shootSpeed += 0.001;
                     sleep(500);
                 }
             }
@@ -254,7 +257,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     shootSpeed = 0.0;
                 } else {
 //                    shootSpeed -= 0.0001;
-                    shootSpeed -= 0.05;
+                    shootSpeed -= 0.001;
                     sleep(500);
 //0.8 default shooter speed
                 }
@@ -263,13 +266,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
             if (gamepad1.start){
                 mecanumCommand.resetPinPointOdometry();
             }
-
-            if (gamepad1.back){
-                mecanumCommand.moveToPos(0, 0,0);
-            }
-
-            mecanumCommand.motorProcess();
-            mecanumCommand.processOdometry();
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
