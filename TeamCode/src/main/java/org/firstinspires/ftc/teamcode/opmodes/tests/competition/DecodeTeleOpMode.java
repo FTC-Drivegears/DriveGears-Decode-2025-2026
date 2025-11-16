@@ -29,7 +29,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
-    private final double maxRPM = 6000;
 
     private final ElapsedTime sorterTimer = new ElapsedTime();
 
@@ -59,8 +58,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         double hoodPos = 0.846;
         double sorterPosition = 0.0;
-        double shootModifier = 0.8;
-        double shootSpeed = shootModifier * maxRPM;
+        double shootSpeed = 4800;
 
 
 
@@ -251,21 +249,21 @@ public class DecodeTeleOpMode extends LinearOpMode {
             boolean up = gamepad1.dpad_up;
             boolean down = gamepad1.dpad_down;
             if(up){
-                if(shootModifier >= 1.0){
-                    shootModifier = 1.0;
+                if(shootSpeed >= 6000.0){
+                    shootSpeed = 6000.0;
                 }
                 else {
 //                    shootSpeed += 0.0001;
-                    shootModifier += 0.005;
+                    shootSpeed += 30.0;
                     sleep(500);
                 }
             }
             if(down) {
-                if (shootModifier <= 0.0) {
-                    shootModifier = 0.0;
+                if (shootSpeed <= 0.0) {
+                    shootSpeed = 0.0;
                 } else {
 //                    shootSpeed -= 0.0001;
-                    shootModifier -= 0.005;
+                    shootSpeed -= 30.0;
                     sleep(500);
 //0.8 default shooter speed
                 }
