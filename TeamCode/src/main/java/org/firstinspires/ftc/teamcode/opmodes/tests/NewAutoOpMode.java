@@ -225,13 +225,15 @@ public class NewAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    mecanumCommand.moveToPos(0, 0, Math.PI/9);
+                    //mecanumCommand.moveToPos(0, 0, Math.PI/9);
                     switch (pattern) {
                         case GPP_1:
                             switch(stage){
                                 case 0: //turn on outtake
                                     outtakeFlag = true;
                                     stage++;
+                                    stageTimer.reset();
+                                    break;
                                 case 1: // sort
                                     if(stageTimer.milliseconds() > 1500){
                                         sort(0);
@@ -278,6 +280,10 @@ public class NewAutoOpMode extends LinearOpMode {
                                     break;
                                 case 10:
                                     outtakeFlag = false;
+                                    stage = 0;
+                                    stageTimer.reset();
+                                    autoState = AUTO_STATE.COLLECTION_1;
+                                    break;
                             }
                             break;
                         case PGP_2:
@@ -285,8 +291,6 @@ public class NewAutoOpMode extends LinearOpMode {
                         case PPG_3:
                             break;
                     }
-                    autoState = AUTO_STATE.COLLECTION_1;
-                    break;
 //                case COLLECTION_1:
 //                    intake(true);
 //                    int x = 0;

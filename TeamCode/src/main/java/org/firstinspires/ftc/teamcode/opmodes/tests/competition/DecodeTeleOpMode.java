@@ -268,6 +268,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 mecanumCommand.moveToPos(0, 0,0);
             }
 
+            mecanumCommand.motorProcess();
+            mecanumCommand.processOdometry();
+
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.addData("Hood pos: ", hoodPos);
