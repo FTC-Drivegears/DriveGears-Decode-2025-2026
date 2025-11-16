@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
@@ -24,6 +25,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private SorterSubsystem sorterSubsystem;
+    private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
@@ -54,12 +56,16 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
 
-        double hoodPos = 1.0;
+        double hoodPos = 0.846;
         double sorterPosition = 0.0;
-        double shootSpeed = 0.8;
+        double shootSpeed = 4800;
+
+
+
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
+        shooterSubsystem = new ShooterSubsystem(hw);
         pusher = hw.pusher;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
 
@@ -206,17 +212,18 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                        shooter.setPower(shootSpeed);
+                    shooterSubsystem.setMaxRPM(shootSpeed);
+                    shooterSubsystem.spinup();
                 }else{
-                    shooter.setPower(0);
+                    shooterSubsystem.stopShooter();
                 }
             }
             previousXState = currentXState;
 
             curRB = gamepad1.right_bumper;
             if(curRB){
-                if(hoodPos <= 0.0){
-                    hoodPos = 0.0;
+                if(hoodPos <= 0.359){
+                    hoodPos = 0.359;
                 }
                 else{
                     hoodPos -= 0.001;
@@ -226,8 +233,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             curLB = gamepad1.left_bumper;
             if(curLB){
-                if(hoodPos >= 1.0){
-                    hoodPos = 1.0;
+                if(hoodPos >= 0.846){
+                    hoodPos = 0.846;
                 }
                 else{
                     hoodPos += 0.001;
@@ -239,12 +246,12 @@ public class DecodeTeleOpMode extends LinearOpMode {
             boolean up = gamepad1.dpad_up;
             boolean down = gamepad1.dpad_down;
             if(up){
-                if(shootSpeed >= 1.0){
-                    shootSpeed = 1.0;
+                if(shootSpeed >= 6000.0){
+                    shootSpeed = 6000.0;
                 }
                 else {
 //                    shootSpeed += 0.0001;
-                    shootSpeed += 0.001;
+                    shootSpeed += 30.0;
                     sleep(500);
                 }
             }
@@ -253,7 +260,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     shootSpeed = 0.0;
                 } else {
 //                    shootSpeed -= 0.0001;
-                    shootSpeed -= 0.001;
+                    shootSpeed -= 30.0;
                     sleep(500);
 //0.8 default shooter speed
                 }
