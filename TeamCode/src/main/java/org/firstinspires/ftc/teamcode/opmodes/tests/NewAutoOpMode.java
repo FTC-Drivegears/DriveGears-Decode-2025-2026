@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
+import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -6,12 +7,18 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
+import java.util.List;
 
-@Autonomous(name = "New Auto")
+@Autonomous (name = "New Auto")
 public class NewAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private ElapsedTime resetTimer;
@@ -172,15 +179,19 @@ public class NewAutoOpMode extends LinearOpMode {
             String detected = logitechVisionSubsystem.pattern();
             String result = "";
             if (detected != null && !detected.equals("UNKNOWN")) {
-                result = detected.substring(8,11);
-                switch(result){
-                    case "GPP":
+                switch (detected) {
+                    case "GPP_1":
+                    case "21":
                         pattern = PATTERN.GPP_1;
                         break;
-                    case "PGP":
+
+                    case "PGP_2":
+                    case "22":
                         pattern = PATTERN.PGP_2;
                         break;
-                    case "PPG":
+
+                    case "PPG_3":
+                    case "23":
                         pattern = PATTERN.PPG_3;
                         break;
                 }
@@ -333,7 +344,7 @@ public class NewAutoOpMode extends LinearOpMode {
 
 //                    case FIRST_SHOT:
 //                        mecanumCommand.moveToPos(0, 0, 0); //ROTATE TO SHOOT
-    //SORT AND OUTTAKE
+                        //SORT AND OUTTAKE
 //                    shooter.setPower(0.8);
 //                    switch(pattern){
 //                        case GPP_1:

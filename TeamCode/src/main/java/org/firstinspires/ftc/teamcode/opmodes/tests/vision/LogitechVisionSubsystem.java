@@ -117,13 +117,4 @@ public class LogitechVisionSubsystem {
             }
         }
     }
-
-//    public void shutdown() {
-//        // If VisionPortal provides a close/stop API uncomment the following lines and adapt as necessary:
-//        // if (visionPortal != null) visionPortal.close();
-//
-//        // Null references so GC can reclaim (defensive)
-//        this.tagProcessor = null;
-//        this.visionPortal = null;
-//    }
 }
