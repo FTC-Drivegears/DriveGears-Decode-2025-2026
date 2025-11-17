@@ -24,6 +24,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private DcMotor shooter;
     private Servo pusher;
     private Servo hood;
+    private Servo light;
     private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
@@ -67,8 +68,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
         pusher = hw.pusher;
+        light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-
+        hw.light.setPosition(0.0);
         hw.sorter.setPosition(0.0);
         hw.hood.setPosition(hoodPos);
 
@@ -76,7 +78,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
         shooter = hw.shooter;
         hood = hw.hood;
 
+
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
@@ -86,7 +90,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //        while (opModeInInit()){
 //            telemetry.update();
 //        }
-        // Wait for start button to be pressed
+// Wait for start button to be pressed
         waitForStart();
 
         while (opModeIsActive()) {
@@ -210,13 +214,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
             currentXState = gamepad1.x;
             if (currentXState && !previousXState){
                 isOuttakeMotorOn = !isOuttakeMotorOn;
-
-                if (isOuttakeMotorOn){
-                    shooterSubsystem.setMaxRPM(shootSpeed);
-                    shooterSubsystem.spinup();
-                }else{
-                    shooterSubsystem.stopShooter();
-                }
             }
             previousXState = currentXState;
 
@@ -242,10 +239,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 hood.setPosition(hoodPos);
             }
 
-
-            boolean up = gamepad1.dpad_up;
-            boolean down = gamepad1.dpad_down;
-            if(up){
+            if(gamepad1.dpad_up){
                 if(shootSpeed >= 6000.0){
                     shootSpeed = 6000.0;
                 }
@@ -255,7 +249,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     sleep(500);
                 }
             }
-            if(down) {
+
+            if(gamepad1.dpad_down) {
                 if (shootSpeed <= 0.0) {
                     shootSpeed = 0.0;
                 } else {
@@ -268,6 +263,19 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             if (gamepad1.start){
                 mecanumCommand.resetPinPointOdometry();
+            }
+
+            if (isOuttakeMotorOn){
+                shooterSubsystem.setMaxRPM(shootSpeed);
+                if (shooterSubsystem.spinup()){
+                    light.setPosition(1.0);
+                } else {
+                    light.setPosition(0.0);
+                }
+
+            }else{
+                shooterSubsystem.stopShooter();
+                light.setPosition(0.0);
             }
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
