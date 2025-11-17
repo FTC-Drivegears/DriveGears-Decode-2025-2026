@@ -48,4 +48,8 @@ public class ShooterSubsystem {
         targetRPM = maxRPM;
     }
 
+    public void setMaxRPM(double maxRPM){
+        targetRPM = maxRPM;
+    }
+
 }
