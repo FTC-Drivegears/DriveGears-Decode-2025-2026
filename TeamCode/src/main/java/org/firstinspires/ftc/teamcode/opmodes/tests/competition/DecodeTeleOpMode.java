@@ -245,7 +245,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
                 else {
 //                    shootSpeed += 0.0001;
-                    shootSpeed += 30.0;
+                    shootSpeed += 150.0;
                     sleep(500);
                 }
             }
@@ -255,7 +255,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     shootSpeed = 0.0;
                 } else {
 //                    shootSpeed -= 0.0001;
-                    shootSpeed -= 30.0;
+                    shootSpeed -= 150.0;
                     sleep(500);
 //0.8 default shooter speed
                 }
