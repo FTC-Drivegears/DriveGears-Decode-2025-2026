@@ -44,7 +44,7 @@ public class ShooterSubsystem {
         hw.shooter.setVelocity(0);
     }
 
-    public void setMaxRPM(int maxRPM){
+    public void setMaxRPM(double maxRPM){
         targetRPM = maxRPM;
     }
 
