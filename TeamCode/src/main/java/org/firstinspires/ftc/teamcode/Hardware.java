@@ -15,23 +15,18 @@ public class Hardware {
 
     //singleton
     private static Hardware instance;
-
     // Motors
     public final DcMotorEx lf;
     public final DcMotorEx rf;
     public final DcMotorEx lb;
     public final DcMotorEx rb;
-
     public final DcMotorEx intake;
-
     public final DcMotorEx shooter;
-
     public final Servo hood;
 
     public final Servo sorter;
-
     public final Servo pusher;
-
+    public Servo light;
     public final CRServo turret;
 
     public CameraName Webcam_1;
@@ -57,6 +52,7 @@ public class Hardware {
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
         this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
+        this.light = hwMap.get(Servo.class, Specifications.LIGHT);
 
     }
 

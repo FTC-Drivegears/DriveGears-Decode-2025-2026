@@ -60,7 +60,7 @@ public class NewAutoOpMode extends LinearOpMode {
     private static int standardms = 1000;
 
 
-    private static double hoodPos = 0.846;
+    private static double hoodPos = 0.359;
 
     private static DcMotor shooter;
     private static Servo pusher;
@@ -166,6 +166,8 @@ public class NewAutoOpMode extends LinearOpMode {
         long scanStart = System.currentTimeMillis();
         long scanTimeout = 5000;
 
+//        while (!isStarted() && !isStopRequested() &&
+//                (System.currentTimeMillis() - scanStart < scanTimeout)) {
         while (!isStarted() && !isStopRequested()) {
             // Detect obelisk pattern
             String detected = logitechVisionSubsystem.pattern();
@@ -199,10 +201,12 @@ public class NewAutoOpMode extends LinearOpMode {
 
         waitForStart();
 
+
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
             shoot(outtakeFlag);
+
 
             telemetry.addData("stage", stage);
             telemetry.addData("Pattern", pattern);
@@ -212,209 +216,455 @@ public class NewAutoOpMode extends LinearOpMode {
 
             processTelemetry();
 
+
             switch (autoState) {
                 case FIRST_SHOT:
-                    mecanumCommand.moveToPos(15, 0, Math.PI/9);
-                    switch (pattern) {
-                        case GPP_1:
-                            switch(stage){
-                                case 0: //turn on outtake
-                                    outtakeFlag = true;
-                                    stage++;
-                                    stageTimer.reset();
-                                    break;
-                                case 1: // sort
-                                    if(stageTimer.milliseconds() > 1500){
-                                        sort(0);
+                    mecanumCommand.moveToPos(6.5155, 1.9542, 0.4314);
+                    hood.setPosition(0.5); //replace with hood position
+                    if (mecanumCommand.isPositionReached()) {
+                        switch (pattern) {
+                            case GPP_1:
+                                switch (stage) {
+                                    case 0: //turn on outtake
+                                        shooterSubsystem.setMaxRPM(3000);
+                                        outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
                                         break;
-                                    }
-                                    break;
-                                case 2: //push on
-                                case 5:
-                                case 8:
-                                    if (stageTimer.milliseconds() > 750){
-                                        halfPush(true);
+                                    case 1: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(0);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 2: //push on
+                                    case 5:
+                                    case 8:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 3: //push off
+                                    case 6:
+                                    case 9:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 4: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(1);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 7: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(2);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 10:
+                                        outtakeFlag = false;
+                                        stage = 0;
+                                        stageTimer.reset();
+                                        autoState = AUTO_STATE.COLLECTION_1;
+                                        break;
+                                }
+                                break;
+                            case PGP_2:
+                                switch (stage) {
+                                    case 0: //turn on outtake
+                                        shooterSubsystem.setMaxRPM(4000);
+                                        outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
                                         break;
-                                    }
-                                    break;
-                                case 3: //push off
-                                case 6:
-                                case 9:
-                                    if(stageTimer.milliseconds() > 750){
-                                        halfPush(false);
+                                    case 1: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(2);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 2: //push on
+                                    case 5:
+                                    case 8:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 3: //push off
+                                    case 6:
+                                    case 9:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 4: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(0);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 7: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(1);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 10:
+                                        outtakeFlag = false;
+                                        stage = 0;
+                                        stageTimer.reset();
+                                        autoState = AUTO_STATE.COLLECTION_1;
+                                        break;
+                                }
+                                break;
+                            case PPG_3:
+                                switch (stage) {
+                                    case 0: //turn on outtake
+                                        shooterSubsystem.setMaxRPM(4000);
+                                        outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
                                         break;
-                                    }
-                                    break;
-                                case 4: // sort
-                                    if(stageTimer.milliseconds() > 1500){
-                                        sort(1);
-                                        stage++;
-                                        stageTimer.reset();
+                                    case 1: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(1);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
                                         break;
-                                    }
-                                    break;
-                                case 7: // sort
-                                    if(stageTimer.milliseconds() > 1500){
-                                        sort(2);
-                                        stage++;
-                                        stageTimer.reset();
+                                    case 2: //push on
+                                    case 5:
+                                    case 8:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
                                         break;
-                                    }
-                                    break;
-                                case 10:
-                                    outtakeFlag = false;
-                                    stage = 0;
-                                    stageTimer.reset();
-                                    autoState = AUTO_STATE.COLLECTION_1;
-                                    break;
+                                    case 3: //push off
+                                    case 6:
+                                    case 9:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 4: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(2);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 7: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(0);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 10:
+                                        outtakeFlag = false;
+                                        stage = 0;
+                                        stageTimer.reset();
+                                        autoState = AUTO_STATE.COLLECTION_1;
+                                        break;
+                                }
+                                break;
+                        }
+                    }
+                case COLLECTION_1:
+                    switch (stage) {
+                        case 0:
+                            mecanumCommand.moveToPos(0, 0, Math.PI / 2); //align with artifacts
+                            stageTimer.reset();
+                            stage++;
+                            break;
+                        case 1:
+                            intake(true);
+                            stage++;
+                            stageTimer.reset();
+                            break;
+                        case 2:
+                            if (stageTimer.milliseconds() > 1) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(0, 0, Math.PI / 2); //go to place to intake first artifact
+                                stageTimer.reset();
+                                stage++;
+                                break;
                             }
                             break;
-                        case PGP_2:
+                        case 3:
+                            if (stageTimer.milliseconds() > 1) { //replace with whatever time you think is appropriate
+                                sort(1);
+                                stageTimer.reset();
+                                stage++;
+                                break;
+                            }
                             break;
-                        case PPG_3:
+                        case 4:
+                            if (stageTimer.milliseconds() > 1) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(0, 0, Math.PI / 2); //go to place to intake second artifact
+                                stageTimer.reset();
+                                stage++;
+                                break;
+                            }
+                            break;
+                        case 5:
+                            if (stageTimer.milliseconds() > 1) { //replace with whatever time you think is appropriate
+                                sort(2);
+                                stageTimer.reset();
+                                stage++;
+                                break;
+                            }
+                            break;
+                        case 6:
+                            if (stageTimer.milliseconds() > 1) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(0, 0, Math.PI / 2); //go to place to intake third artifact
+                                stageTimer.reset();
+                                stage++;
+                                break;
+                            }
+                            break;
+                        case 7:
+                            if (stageTimer.milliseconds() > 1) { //replace with whatever time you think is appropriate
+                                sort(0);
+                                stageTimer.reset();
+                                stage = 0;
+                                break;
+                            }
                             break;
                     }
-//                case COLLECTION_1:
-//                    intake(true);
-//                    int x = 0;
-//                    sort(1);
-//                    switch (x) {
-//                        case 0:
-//                            mecanumCommand.moveToPos(40, 40, .8);
-//                            x++;
-//                            break;
-//                        case 1:
-//                            sort(0);
-//                            mecanumCommand.moveToPos(0, 0, 0);
-//                            x++;
-//                            break;
-//                        case 2:
-//                            sort(2);
-//                            mecanumCommand.moveToPos(0, 0, 0);
-//                            x++;
-//                            break;
-//                        case 3:
-//                            sort(0);
-//                            mecanumCommand.moveToPos(0, 0, 0);
-//                            break;
-//                    }
-//                    intake(false);
-//                    autoState = AUTO_STATE.SECOND_SHOT;
-//                    break;
-//
-//                case SECOND_SHOT:
-//                    mecanumCommand.moveToPos(0, 0, 0);
-//                    switch (pattern) {
-//                        case GPP_1:
-//                            unload(0, 1, 2);
-//                            break;
-//                        case PGP_2:
-//                            unload(1, 2, 0);
-//                            break;
-//                        case PPG_3:
-//                            unload(2, 0, 1);
-//                            break;
-//
-//                    }
-//                    autoState = AUTO_STATE.FINISH;
-//                    break;
-//
-//                case FINISH:
-//                    mecanumCommand.moveToPos(0, 0, 0);
-//                    stopRobot();
-//                    break;
-//
+                    autoState = AUTO_STATE.SECOND_SHOT;
+                    break;
+                case SECOND_SHOT:
+                    mecanumCommand.moveToPos(6.5155, 1.9542, 0.4314); //move to whatever position we used to go to
+                    hood.setPosition(0.5); //replace with hood position
+                    if (mecanumCommand.isPositionReached()) {
+                        switch (pattern) {
+                            case GPP_1:
+                                switch (stage) {
+                                    case 0: //turn on outtake
+                                        shooterSubsystem.setMaxRPM(4000);
+                                        outtakeFlag = true;
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    case 1: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(0);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 2: //push on
+                                    case 5:
+                                    case 8:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 3: //push off
+                                    case 6:
+                                    case 9:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 4: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(1);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 7: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(2);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 10:
+                                        outtakeFlag = false;
+                                        stage = 0;
+                                        stageTimer.reset();
+                                        autoState = AUTO_STATE.FINISH;
+                                        break;
+                                }
+                                break;
+                            case PGP_2:
+                                switch (stage) {
+                                    case 0: //turn on outtake
+                                        shooterSubsystem.setMaxRPM(4000);
+                                        outtakeFlag = true;
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    case 1: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(2);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 2: //push on
+                                    case 5:
+                                    case 8:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 3: //push off
+                                    case 6:
+                                    case 9:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 4: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(0);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 7: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(1);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 10:
+                                        outtakeFlag = false;
+                                        stage = 0;
+                                        stageTimer.reset();
+                                        autoState = AUTO_STATE.FINISH;
+                                        break;
+                                }
+                                break;
+                            case PPG_3:
+                                switch (stage) {
+                                    case 0: //turn on outtake
+                                        shooterSubsystem.setMaxRPM(4000);
+                                        outtakeFlag = true;
+                                        stage++;
+                                        stageTimer.reset();
+                                        break;
+                                    case 1: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(1);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 2: //push on
+                                    case 5:
+                                    case 8:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 3: //push off
+                                    case 6:
+                                    case 9:
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 4: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(2);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 7: // sort
+                                        if (stageTimer.milliseconds() > 1500) {
+                                            sort(0);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 10:
+                                        outtakeFlag = false;
+                                        stage = 0;
+                                        stageTimer.reset();
+                                        autoState = AUTO_STATE.FINISH;
+                                        break;
+                                }
+                                break;
+                        }
+                    }
+                case FINISH:
+                    mecanumCommand.moveToPos(0, 0, 0); //replace with box position
+                    mecanumCommand.stop();
+                    break;
+
             }
         }
     }
 
 
-//                    case FIRST_SHOT:
-//                        mecanumCommand.moveToPos(0, 0, 0); //ROTATE TO SHOOT
-                        //SORT AND OUTTAKE
-//                    shooter.setPower(0.8);
-//                    switch(pattern){
-//                        case GPP_1:
-//                            sort(0);
-//                            sort(1);
-//                            sort(2);
-//                            break;
-//                        case PGP_2:
-//                            sort(1);
-//                            sort(2);
-//                            sort(0);
-//                            break;
-//                        case PPG_3:
-//                            sort(2);
-//                            sort(0);
-//                            sort(1);
-//                            break;
-//                    }
-//                    shooter.setPower(0.0);
-//                    autoState = AUTO_STATE.COLLECTION;
-//                    break;
-
-//                case COLLECTION:
-//                    intake(hw, true);
-//                    int set = 0;
-//                    sort(hw, 0);
-//                    switch(set){
-//                        case 0:
-//                            mecanumCommand.moveToPos();
-//                            if(mecanumCommand.isPositionReached()){
-//                                set++;
-//                            }
-//                            break;
-//                        case 1:
-//                            sort(hw, 1);
-//                            set++;
-//                        case 2:
-//                            mecanumCommand.moveToPos();
-//                            if(mecanumCommand.isPositionReached()){
-//                                set++;
-//                            }
-//                            break;
-//                        case 3:
-//                            sort(hw, 2);
-//                            set++;
-//                        case 4:
-//                            mecanumCommand.moveToPos();
-//                            break;
-//                    }
-//                    intake(hw, false);
-//                case SECOND_SHOT:
-//                    //mecanumCommand.moveToPos(turn to obelisk);
-
-    /// /                    if(mecanumCommand.isPositionReached()){
-    /// /                        scan apriltag
-    /// /                        pattern = PATTERN.whatever the pattern is
-    /// /                    }
-//                    //mecanumCommand.moveToPos(launch line);
-//
-//                    switch(pattern){
-//                        case GPP_1:
-//                            unload(hw, 0, 1, 2);
-//                            break;
-//                        case PGP_2:
-//                            unload(hw, 1, 2, 0);
-//                            break;
-//                        case PPG_3:
-//                            unload(hw, 2, 0, 1);
-//                            break;
-//                    }
-//                    autoState = AUTO_STATE.FINISH;
-//                    break;
-//                case FINISH:
-//                    mecanumCommand.moveToPos(0, 0 ,0);
-//                    stopRobot();
-//                    break;
-//            }
     public void processTelemetry() {
         //add telemetry messages here
         telemetry.addData("resetTimer: ", resetTimer.milliseconds());
