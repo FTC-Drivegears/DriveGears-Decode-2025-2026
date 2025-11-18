@@ -35,6 +35,13 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     private final ElapsedTime pusherTimer = new ElapsedTime();
 
+    //Shooter Presets
+    private final double FAR_HOOD = 0.5;
+    private final int FAR_SHOOT_SPEED = 3900;
+    private final double MID_HOOD = 0.6;
+    private final int MID_SHOOT_SPEED = 3000;
+    private final double CLOSE_HOOD = 0.846;
+    private final int CLOSE_SHOOT_SPEED = 2500;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -217,48 +224,43 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             previousXState = currentXState;
 
-            curRB = gamepad1.right_bumper;
-            if(curRB){
-                if(hoodPos <= 0.359){
-                    hoodPos = 0.359;
-                }
-                else{
-                    hoodPos -= 0.001;
-                }
-                hood.setPosition(hoodPos);
+//            curRB = gamepad1.right_bumper;
+//            if(curRB){
+//                if(hoodPos <= 0.359){
+//                    hoodPos = 0.359;
+//                }
+//                else{
+//                    hoodPos -= 0.001;
+//                }
+//                hood.setPosition(hoodPos);
+//            }
+//
+//            curLB = gamepad1.left_bumper;
+//            if(curLB){
+//                if(hoodPos >= 0.846){
+//                    hoodPos = 0.846;
+//                }
+//                else{
+//                    hoodPos += 0.001;
+//                }
+//                hood.setPosition(hoodPos);
+//            }
+            // CLOSE
+            if (gamepad2.x){
+                hood.setPosition(CLOSE_HOOD);
+                shootSpeed = CLOSE_SHOOT_SPEED;
+
+            }
+            //MID
+            if (gamepad2.y){
+                hood.setPosition(MID_HOOD);
+                shootSpeed = MID_SHOOT_SPEED;
             }
 
-            curLB = gamepad1.left_bumper;
-            if(curLB){
-                if(hoodPos >= 0.846){
-                    hoodPos = 0.846;
-                }
-                else{
-                    hoodPos += 0.001;
-                }
-                hood.setPosition(hoodPos);
-            }
-
-            if(gamepad1.dpad_up){
-                if(shootSpeed >= 6000.0){
-                    shootSpeed = 6000.0;
-                }
-                else {
-//                    shootSpeed += 0.0001;
-                    shootSpeed += 150.0;
-                    sleep(500);
-                }
-            }
-
-            if(gamepad1.dpad_down) {
-                if (shootSpeed <= 0.0) {
-                    shootSpeed = 0.0;
-                } else {
-//                    shootSpeed -= 0.0001;
-                    shootSpeed -= 150.0;
-                    sleep(500);
-//0.8 default shooter speed
-                }
+            //FAR
+            if (gamepad2.b){
+                hood.setPosition(FAR_HOOD);
+                shootSpeed = FAR_SHOOT_SPEED;
             }
 
             if (gamepad1.start){
