@@ -105,17 +105,21 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             boolean up = gamepad1.dpad_up;
             boolean down = gamepad1.dpad_down;
-//            if (up || down) { // Press up to intake g, down to intake p.
-//                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
-//                char curColor = 'g';
-//                if (down) {
-//                    curColor = 'p';
-//                }
-//                if (durationIntake >= 2) {
-//                    sorterSubsystem.intakeBall(curColor);
-//                    lastIntakeTime = System.nanoTime();
-//                }
-//            }
+
+            // manual color section
+            if (up || down) { // Press up to intake g, down to intake p.
+                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
+                char curColor = 'g';
+                if (down) {
+                    curColor = 'p';
+                }
+                if (durationIntake >= 2) {
+                    sorterSubsystem.intakeBall(curColor);
+                    lastIntakeTime = System.nanoTime();
+                }
+            }
+            // end
+
             if (gamepad1.a){ // Press A to quick fire.
                 double durationFire = (System.nanoTime() - lastFireTime)/1E9;
                 if (durationFire >= 1) {

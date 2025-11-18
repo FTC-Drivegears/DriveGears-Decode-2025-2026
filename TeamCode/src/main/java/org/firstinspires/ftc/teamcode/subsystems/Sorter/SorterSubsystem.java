@@ -67,9 +67,11 @@ public class SorterSubsystem {
             return;
         }
 
-//        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
         turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked
-        detectColor();
+        numIntakeBalls++;
+        sorterList.add(new Artifact(color, sorter.getPosition()));
+        // TODO
+        //detectColor(); <-- add this later when two color sensors are on
     }
 
     public void turnToIntake() { // turn sorter before intaking a ball
@@ -89,7 +91,7 @@ public class SorterSubsystem {
         pushTime.reset();
         isPusherUp = true;
 
-        if (pushTime.milliseconds() >= 500) {
+        if (pushTime.milliseconds() >= 2) {
             pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             telemetry.addLine("Pusher down");
             isPusherUp = false;
