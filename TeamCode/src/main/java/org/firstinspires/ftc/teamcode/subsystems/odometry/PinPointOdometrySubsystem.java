@@ -51,7 +51,7 @@ public class PinPointOdometrySubsystem {
 
         // TODO: Tune these offsets for accurate positioning
         // odo.setOffsets(0, 865);
-        pinpointDriver.setOffsets(120, -48);
+        pinpointDriver.setOffsets(0, 20); //left and right = -
 
         // Set the encoder resolution to the 4-bar pod type
         pinpointDriver.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);

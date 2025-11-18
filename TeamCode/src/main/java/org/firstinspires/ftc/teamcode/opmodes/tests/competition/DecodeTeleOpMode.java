@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
@@ -17,7 +18,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private DcMotor intake;
     private DcMotor shooter;
     private Servo pusher;
+    private Servo hood;
+    private Servo light;
     private SorterSubsystem sorterSubsystem;
+    private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
@@ -32,21 +36,30 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean currentYState;
         boolean curRightTrigger;
         boolean curLeftTrigger;
+        boolean curRB;
+        boolean curLB;
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
         boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
 
+        double hoodPos = 0.846;
+        double shootSpeed = 4000;
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
+        shooterSubsystem = new ShooterSubsystem(hw);
         pusher = hw.pusher;
+        light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+        hw.light.setPosition(0.0);
+        hw.sorter.setPosition(0.0);
+        hw.hood.setPosition(hoodPos);
 
         intake = hw.intake;
-        shooter = hw.intake;
-
+        shooter = hw.shooter;
+        hood = hw.hood;
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
             sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
@@ -59,7 +72,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-
+            mecanumCommand.processOdometry();
             theta = mecanumCommand.fieldOrientedMove(
                     gamepad1.left_stick_y,
                     gamepad1.left_stick_x,
@@ -128,14 +141,80 @@ public class DecodeTeleOpMode extends LinearOpMode {
             currentXState = gamepad1.x;
             if (currentXState && !previousXState){
                 isOuttakeMotorOn = !isOuttakeMotorOn;
-
-                if (isOuttakeMotorOn){
-                    shooter.setPower(1);
-                }else{
-                    shooter.setPower(0);
-                }
             }
             previousXState = currentXState;
+
+
+            curRB = gamepad1.right_bumper;
+            if(curRB){
+                if(hoodPos <= 0.359){
+                    hoodPos = 0.359;
+                }
+                else{
+                    hoodPos -= 0.001;
+                }
+                hood.setPosition(hoodPos);
+            }
+
+            curLB = gamepad1.left_bumper;
+            if(curLB){
+                if(hoodPos >= 0.846){
+                    hoodPos = 0.846;
+                }
+                else{
+                    hoodPos += 0.001;
+                }
+                hood.setPosition(hoodPos);
+            }
+
+            if(gamepad1.dpad_up){
+                if(shootSpeed >= 6000.0){
+                    shootSpeed = 6000.0;
+                }
+                else {
+//                    shootSpeed += 0.0001;
+                    shootSpeed += 150.0;
+                    sleep(500);
+                }
+            }
+
+            if(gamepad1.dpad_down) {
+                if (shootSpeed <= 0.0) {
+                    shootSpeed = 0.0;
+                } else {
+//                    shootSpeed -= 0.0001;
+                    shootSpeed -= 150.0;
+                    sleep(500);
+//0.8 default shooter speed
+                }
+            }
+
+            if (gamepad1.start){
+                mecanumCommand.resetPinPointOdometry();
+            }
+
+            if (isOuttakeMotorOn){
+                shooterSubsystem.setMaxRPM(shootSpeed);
+                if (shooterSubsystem.spinup()){
+                    light.setPosition(1.0);
+                } else {
+                    light.setPosition(0.0);
+                }
+
+            }else{
+                shooterSubsystem.stopShooter();
+                light.setPosition(0.0);
+            }
+
+            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
+            telemetry.addData("Hood pos: ", hoodPos);
+            telemetry.addLine("---------------------------------");
+            telemetry.addData("X", mecanumCommand.getX());
+            telemetry.addData("Y", mecanumCommand.getY());
+            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+            telemetry.addData("Outtake speed: ", shootSpeed);
+            telemetry.update();
         }
     }
 }

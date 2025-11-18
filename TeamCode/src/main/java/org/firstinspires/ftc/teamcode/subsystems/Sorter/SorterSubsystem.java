@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.ArrayList;
 
@@ -14,27 +15,27 @@ public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
     private final Servo sorter;
     private Servo pusher;
-    private final ColorSensor colorSensor;
+    private ColorSensor colorSensor;
     private ColorSensor colorSensor2;
     private final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
+
     private ElapsedTime pushTime = new ElapsedTime();
     private ElapsedTime outtakeTime = new ElapsedTime();
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0, 0.43, 0.875};
+    private final double[] sorterPositions = new double[]{0.0, 0.42, 0.875};
     private int numIntakeBalls = 0;
     private long lastPushTime;
 
     private boolean purpleArt;
-
     private boolean greenArt;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
-        this.colorSensor = hw.colorSensor;
+        this.pusher = hw.pusher;
         this.opMode = opMode;
         this.telemetry = telemetry;
         this.sorterList = new ArrayList<>();
@@ -61,14 +62,17 @@ public class SorterSubsystem {
     public void intakeBall(char color){
         // fail-safe
         if (this.sorterList.size() == MAX_NUM_BALLS){
-            telemetry.addLine("Max balls");
+            telemetry.addLine("Cannot intake any more balls, max capacity");
             telemetry.update();
             return;
         }
+
+//        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
         turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
         numIntakeBalls++;
+        telemetry.update();
 
-        detectColor();
+        this.sorterList.add(new Artifact(color, sorter.getPosition()));
     }
 
     public void turnToIntake() { // turn sorter before intaking a ball
@@ -79,17 +83,19 @@ public class SorterSubsystem {
             }
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
             curSorterPositionIndex++;
+            telemetry.addLine("turning to position");
         }
+        telemetry.update();
     }
     public void push(){
-        telemetry.addLine("Pusher up");
-//      pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+        pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
         pushTime.reset();
         isPusherUp = true;
 
-        if (isPusherUp && (pushTime.seconds() >= 2)) {
+        if (isPusherUp && pushTime.milliseconds() >= 500) {
+            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             telemetry.addLine("Pusher down");
-            //pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             isPusherUp = false;
         }
         telemetry.update();

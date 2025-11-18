@@ -3,34 +3,32 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
 
 public class Hardware {
 
     //singleton
     private static Hardware instance;
-
     // Motors
     public final DcMotorEx lf;
     public final DcMotorEx rf;
     public final DcMotorEx lb;
     public final DcMotorEx rb;
-
     public final DcMotorEx intake;
-
     public final DcMotorEx shooter;
-
     public final Servo hood;
 
     public final Servo sorter;
-
     public final Servo pusher;
-
+    public Servo light;
     public final CRServo turret;
+
+    public CameraName Webcam_1;
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
@@ -49,13 +47,14 @@ public class Hardware {
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
         this.colorSensor = hwMap.get(ColorSensor.class, "colourSensor");
         this.colorSensor2 = hwMap.get(ColorSensor.class, "colourSensor2");
+        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
         this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
+        this.light = hwMap.get(Servo.class, Specifications.LIGHT);
 
-        this.intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {
