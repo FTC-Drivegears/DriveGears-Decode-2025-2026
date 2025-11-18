@@ -226,7 +226,7 @@ public class NewAutoOpMode extends LinearOpMode {
                             case GPP_1:
                                 switch (stage) {
                                     case 0: //turn on outtake
-                                        shooterSubsystem.setMaxRPM(4000);
+                                        shooterSubsystem.setMaxRPM(3000);
                                         outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
