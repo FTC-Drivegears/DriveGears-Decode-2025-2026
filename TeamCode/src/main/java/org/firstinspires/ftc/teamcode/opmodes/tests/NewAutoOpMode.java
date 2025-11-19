@@ -360,8 +360,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 2: //push on
-                                    case 5:
-                                    case 8:
                                         if (stageTimer.milliseconds() > 750) {
                                             halfPush(true);
                                             stage++;
@@ -370,8 +368,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 3: //push off
-                                    case 6:
-                                    case 9:
                                         if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
@@ -387,9 +383,41 @@ public class NewAutoOpMode extends LinearOpMode {
                                             break;
                                         }
                                         break;
+                                    case 5: //push on
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 6: //push off
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
                                     case 7: // sort
                                         if (stageTimer.milliseconds() > 1500) {
                                             sort(0);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 8: //push on
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                            break;
+                                        }
+                                        break;
+                                    case 9: //push off
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
                                             stage++;
                                             stageTimer.reset();
                                             break;
