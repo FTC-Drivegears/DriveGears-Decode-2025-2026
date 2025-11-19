@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
     private final Servo sorter;
-    private Servo pusher;
+    private final Servo pusher;
     private ColorSensor colorSensor;
     private ColorSensor colorSensor2;
     private final Telemetry telemetry;
@@ -22,8 +22,8 @@ public class SorterSubsystem {
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
 
-    private ElapsedTime pushTime = new ElapsedTime();
-    private ElapsedTime outtakeTime = new ElapsedTime();
+    private final ElapsedTime pushTime = new ElapsedTime();
+    private final ElapsedTime outtakeTime = new ElapsedTime();
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.0, 0.42, 0.875};
@@ -82,7 +82,6 @@ public class SorterSubsystem {
             }
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
             curSorterPositionIndex++;
-            telemetry.addLine("turning to position");
         }
         telemetry.update();
     }
@@ -94,6 +93,18 @@ public class SorterSubsystem {
         if (pushTime.milliseconds() >= 2) {
             pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             telemetry.addLine("Pusher down");
+            isPusherUp = false;
+        }
+        telemetry.update();
+    }
+
+    public void mockPush(){
+        pushTime.reset();
+        telemetry.addData("pusher is up for: ", pushTime.seconds());
+        isPusherUp = true;
+
+        if (pushTime.seconds() >= 1) {
+            telemetry.addLine("pusher is down");
             isPusherUp = false;
         }
         telemetry.update();
@@ -148,10 +159,13 @@ public class SorterSubsystem {
                 this.sorterList.remove(0);
             }
         }
-        push();
+        mockPush();
     }
 
     public void outtakeBall() {
+        outtakeTime.reset();
+        pushTime.reset();
+
         if (this.pattern.isEmpty()){
             telemetry.addLine("Pattern is empty");
             telemetry.update();
@@ -184,13 +198,14 @@ public class SorterSubsystem {
 
         for(int i = 0; i <= MAX_NUM_BALLS; i++){
             if (!isPusherUp) {
-                sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
-                telemetry.addLine("sorter moving" + i);
-                // might need to delay to wait for sorter to spin before calling push
-//                push();
-                telemetry.addLine("pusher moved" + i);
-                telemetry.update();
+                if (outtakeTime.seconds() >= 1) {
+                    sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
+                    telemetry.addLine("sorter moving" + i);
+                    telemetry.update();
+                }
             }
+
+            mockPush();
         }
 
         this.sorterList.remove(ballIndexToRemoveFromSorter);

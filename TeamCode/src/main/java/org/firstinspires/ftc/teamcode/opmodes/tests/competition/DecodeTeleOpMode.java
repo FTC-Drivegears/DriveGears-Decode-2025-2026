@@ -79,6 +79,23 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
+            boolean right = gamepad1.dpad_right;
+            boolean left = gamepad1.dpad_left;
+
+            // manual color section
+            if (right || left) { // Press up to intake g, down to intake p.
+                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
+                char curColor = 'g';
+                if (right) {
+                    curColor = 'p';
+                }
+                if (durationIntake >= 2) {
+                    sorterSubsystem.intakeBall(curColor);
+                    lastIntakeTime = System.nanoTime();
+                }
+            }
+            // end
+
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
                 isIntakeMotorOn = !isIntakeMotorOn;
@@ -97,28 +114,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 if (toggleOuttakeSorter){
                     double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
                     if (durationOuttake >= 1) {
-                        //sorterSubsystem.outtakeBall();
+                        sorterSubsystem.outtakeBall();
                         lastOuttakeTime = System.nanoTime();
                     }
                 }
             }
-
-            boolean up = gamepad1.dpad_up;
-            boolean down = gamepad1.dpad_down;
-
-            // manual color section
-            if (up || down) { // Press up to intake g, down to intake p.
-                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
-                char curColor = 'g';
-                if (down) {
-                    curColor = 'p';
-                }
-                if (durationIntake >= 2) {
-                    sorterSubsystem.intakeBall(curColor);
-                    lastIntakeTime = System.nanoTime();
-                }
-            }
-            // end
 
             if (gamepad1.a){ // Press A to quick fire.
                 double durationFire = (System.nanoTime() - lastFireTime)/1E9;
