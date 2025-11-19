@@ -409,7 +409,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                 mecanumCommand.moveToPos(0, 0, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
-                                break;
                             }
                             break;
                         case 3:
@@ -417,7 +416,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                 sort(1);
                                 stageTimer.reset();
                                 stage++;
-                                break;
                             }
                             break;
                         case 4:
@@ -425,7 +423,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                 mecanumCommand.moveToPos(0, 0, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
-                                break;
                             }
                             break;
                         case 5:
@@ -433,7 +430,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                 sort(2);
                                 stageTimer.reset();
                                 stage++;
-                                break;
                             }
                             break;
                         case 6:
@@ -441,7 +437,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                 mecanumCommand.moveToPos(0, 0, Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
-                                break;
                             }
                             break;
                         case 7:
@@ -449,7 +444,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                 sort(0);
                                 stageTimer.reset();
                                 stage = 0;
-                                break;
                             }
                             break;
                     }
