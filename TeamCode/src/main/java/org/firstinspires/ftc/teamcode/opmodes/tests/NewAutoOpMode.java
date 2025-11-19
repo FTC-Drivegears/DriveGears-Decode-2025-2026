@@ -226,7 +226,7 @@ public class NewAutoOpMode extends LinearOpMode {
                             case GPP_1:
                                 switch (stage) {
                                     case 0: //turn on outtake
-                                        shooterSubsystem.setMaxRPM(3000);
+                                        shooterSubsystem.setMaxRPM(4000);
                                         outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
@@ -236,27 +236,20 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 2: //push on
-                                    case 5:
-                                    case 8:
                                         if (stageTimer.milliseconds() > 750) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 3: //push off
-                                    case 6:
-                                    case 9:
                                         if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 4: // sort
@@ -264,7 +257,20 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
+                                        }
+                                        break;
+                                    case 5: //push on
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                        }
+                                        break;
+                                    case 6: //push off
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
@@ -272,7 +278,20 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
+                                        }
+                                        break;
+                                    case 8: //push on
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                        }
+                                        break;
+                                    case 9: //push off
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
                                         }
                                         break;
                                     case 10:
@@ -296,27 +315,23 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
+
                                         }
                                         break;
                                     case 2: //push on
-                                    case 5:
-                                    case 8:
                                         if (stageTimer.milliseconds() > 750) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
+
                                         }
                                         break;
                                     case 3: //push off
-                                    case 6:
-                                    case 9:
                                         if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
+
                                         }
                                         break;
                                     case 4: // sort
@@ -324,7 +339,20 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
+                                        }
+                                        break;
+                                    case 5: //push on
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                        }
+                                        break;
+                                    case 6: //push off
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
@@ -332,7 +360,20 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
+                                        }
+                                        break;
+                                    case 8: //push on
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(true);
+                                            stage++;
+                                            stageTimer.reset();
+                                        }
+                                        break;
+                                    case 9: //push off
+                                        if (stageTimer.milliseconds() > 750) {
+                                            halfPush(false);
+                                            stage++;
+                                            stageTimer.reset();
                                         }
                                         break;
                                     case 10:
@@ -356,7 +397,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 2: //push on
@@ -364,7 +404,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 3: //push off
@@ -372,7 +411,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 4: // sort
@@ -380,7 +418,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 5: //push on
@@ -388,7 +425,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 6: //push off
@@ -396,7 +432,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 7: // sort
@@ -404,7 +439,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 8: //push on
@@ -412,7 +446,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 9: //push off
@@ -420,7 +453,6 @@ public class NewAutoOpMode extends LinearOpMode {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
-                                            break;
                                         }
                                         break;
                                     case 10:
