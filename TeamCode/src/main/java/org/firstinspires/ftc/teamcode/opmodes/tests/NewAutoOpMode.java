@@ -467,7 +467,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(0);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 2: //push on
@@ -477,7 +476,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            halfPush(true);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 3: //push off
@@ -487,7 +485,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            halfPush(false);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 4: // sort
@@ -495,7 +492,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(1);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 7: // sort
@@ -503,7 +499,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(2);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 10:
@@ -527,7 +522,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(2);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 2: //push on
@@ -537,7 +531,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            halfPush(true);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 3: //push off
@@ -547,7 +540,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            halfPush(false);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 4: // sort
@@ -555,7 +547,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(0);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 7: // sort
@@ -563,7 +554,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(1);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 10:
@@ -587,7 +577,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(1);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 2: //push on
@@ -597,7 +586,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            halfPush(true);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 3: //push off
@@ -607,7 +595,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            halfPush(false);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 4: // sort
@@ -615,7 +602,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(2);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 7: // sort
@@ -623,7 +609,6 @@ public class NewAutoOpMode extends LinearOpMode {
 //                                            sort(0);
 //                                            stage++;
 //                                            stageTimer.reset();
-//                                            break;
 //                                        }
 //                                        break;
 //                                    case 10:
