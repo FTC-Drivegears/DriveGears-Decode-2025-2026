@@ -159,7 +159,7 @@ public class NewAutoOpMode extends LinearOpMode {
         AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
-        PATTERN pattern = PATTERN.GPP_1; // default
+        PATTERN pattern = PATTERN.NO_TAG; // default
         boolean outtakeFlag = false;
         boolean intakeFlag = false;
 
@@ -175,17 +175,17 @@ public class NewAutoOpMode extends LinearOpMode {
             String result = "";
             if (detected != null && !detected.equals("UNKNOWN")) {
                 switch (detected) {
-                    case "GPP_1":
+                    case "Obelisk_GPP":
                     case "21":
                         pattern = PATTERN.GPP_1;
                         break;
 
-                    case "PGP_2":
+                    case "Obelisk_PGP":
                     case "22":
                         pattern = PATTERN.PGP_2;
                         break;
 
-                    case "PPG_3":
+                    case "Obelisk_PPG":
                     case "23":
                         pattern = PATTERN.PPG_3;
                         break;
@@ -218,10 +218,12 @@ public class NewAutoOpMode extends LinearOpMode {
             processTelemetry();
 
 
+
             switch (autoState) {
                 case FIRST_SHOT:
                     shooterSubsystem.setMaxRPM(3900);
-                    mecanumCommand.moveToPos(26, -14, 0.5014);
+                    //mecanumCommand.moveToPos(26, -14, 0.5014);
+                    mecanumCommand.moveToPos(26, -6, 0.47014);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -281,7 +283,6 @@ public class NewAutoOpMode extends LinearOpMode {
                             case PGP_2:
                                 switch (stage) {
                                     case 0: //turn on outtake
-                                        shooterSubsystem.setMaxRPM(3900);
                                         outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
@@ -335,7 +336,6 @@ public class NewAutoOpMode extends LinearOpMode {
                             case PPG_3:
                                 switch (stage) {
                                     case 0: //turn on outtake
-                                        shooterSubsystem.setMaxRPM(3900);
                                         outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
@@ -453,15 +453,15 @@ public class NewAutoOpMode extends LinearOpMode {
                     break;
 
                 case SECOND_SHOT:
-                    mecanumCommand.moveToPos(26, -14, 0.5014); //move to whatever position we used to go to
+                    //mecanumCommand.moveToPos(26, -14, 0.5014); //move to whatever position we used to go to
+                    mecanumCommand.moveToPos(26, -6, 0.47014);
+                    shooterSubsystem.setMaxRPM(3900);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
                                 switch (stage) {
                                     case 0: //turn on outtake
-                                        shooterSubsystem.setMaxRPM(3900);
-                                        hood.setPosition(0.43);
                                         outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
@@ -516,7 +516,6 @@ public class NewAutoOpMode extends LinearOpMode {
                             case PGP_2:
                                 switch (stage) {
                                     case 0: //turn on outtake
-                                        shooterSubsystem.setMaxRPM(3900);
                                         outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
@@ -571,7 +570,6 @@ public class NewAutoOpMode extends LinearOpMode {
                             case PPG_3:
                                 switch (stage) {
                                     case 0: //turn on outtake
-                                        shooterSubsystem.setMaxRPM(3900);
                                         outtakeFlag = true;
                                         stage++;
                                         stageTimer.reset();
