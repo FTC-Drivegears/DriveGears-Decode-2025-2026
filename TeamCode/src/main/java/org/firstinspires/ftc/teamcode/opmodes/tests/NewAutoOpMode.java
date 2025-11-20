@@ -206,6 +206,9 @@ public class NewAutoOpMode extends LinearOpMode {
                     mecanumCommand.moveToPos(26, -14, 0.5014);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
+                    }
+                case SECONDSTAGE:
+
                         switch (pattern) {
                             case GPP_1:
                                 switch (stage) {
@@ -370,7 +373,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                 break;
                         }
                         break;
-                    }
+
                     break;
                 case COLLECTION_1:
                     switch (stage) {
