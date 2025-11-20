@@ -1,6 +1,4 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests;
-import android.util.Size;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -8,17 +6,10 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.teamcode.util.PusherConsts;
-import java.util.List;
 
 @Autonomous (name = "New Auto")
 public class NewAutoOpMode extends LinearOpMode {
@@ -28,7 +19,6 @@ public class NewAutoOpMode extends LinearOpMode {
 
     private LogitechVisionSubsystem logitechVisionSubsystem;
 
-
     private double targetX = Double.NaN; // X position of alliance-specific tag
 
 
@@ -37,13 +27,11 @@ public class NewAutoOpMode extends LinearOpMode {
     }
 
     enum PATTERN {
-        NO_TAG, //default state
         GPP_1, //Tag ID 21
         PGP_2, //Tag ID 22
         PPG_3 //Tag ID 23
     }
 
-    //Pusher variables
     //Pusher variables
     private static final double PUSHER_UP = 0.65;
     private static final double PUSHER_DOWN = 1.0;
@@ -59,10 +47,7 @@ public class NewAutoOpMode extends LinearOpMode {
     private static double pos2 = 0.515;
     private static double pos3 = 0.96;
     private static int standardms = 1000;
-
-
     private static double hoodPos = 0.359;
-
     private static DcMotor shooter;
     private static Servo pusher;
     private static Servo hood;
@@ -176,17 +161,14 @@ public class NewAutoOpMode extends LinearOpMode {
             if (detected != null && !detected.equals("UNKNOWN")) {
                 switch (detected) {
                     case "GPP_1":
-                    case "21":
                         pattern = PATTERN.GPP_1;
                         break;
 
                     case "PGP_2":
-                    case "22":
                         pattern = PATTERN.PGP_2;
                         break;
 
                     case "PPG_3":
-                    case "23":
                         pattern = PATTERN.PPG_3;
                         break;
                 }
