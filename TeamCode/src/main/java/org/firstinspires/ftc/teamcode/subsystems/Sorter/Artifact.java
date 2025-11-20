@@ -1,15 +1,15 @@
 package org.firstinspires.ftc.teamcode.subsystems.Sorter;
 
 public class Artifact {
-    private char color;
+    private char colour;
     private double position;
 
     public Artifact(char c, double p) {
-        this.color = c;
+        this.colour = c;
         this.position = p;
     }
 
-    char getColor() { return this.color; }
+    char getColor() { return this.colour; }
 
     double getPosition() { return this.position; }
 }

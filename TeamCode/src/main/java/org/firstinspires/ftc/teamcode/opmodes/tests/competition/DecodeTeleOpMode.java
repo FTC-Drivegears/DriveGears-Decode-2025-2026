@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -62,7 +63,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         hood = hw.hood;
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
-            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
+            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
         }
 
         while (opModeInInit()){
@@ -79,22 +80,35 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
+            // Manually input ball.
             boolean right = gamepad1.dpad_right;
             boolean left = gamepad1.dpad_left;
-
-            // manual color section
             if (right || left) { // Press up to intake g, down to intake p.
                 double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
                 char curColor = 'g';
                 if (right) {
                     curColor = 'p';
                 }
-                if (durationIntake >= 2) {
+                if (durationIntake >= 1) {
                     sorterSubsystem.intakeBall(curColor);
                     lastIntakeTime = System.nanoTime();
                 }
             }
-            // end
+
+            // Manually outtake ball.
+            boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
+            boolean shouldOuttakeGreen = gamepad1.b;
+            if (shouldOuttakePurple || shouldOuttakeGreen) {
+                double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
+                char curColor = 'g';
+                if (shouldOuttakePurple) {
+                    curColor = 'p';
+                }
+                if (durationOuttake >= 1) {
+                    sorterSubsystem.outtakeBall(curColor);
+                    lastOuttakeTime = System.nanoTime();
+                }
+            }
 
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
@@ -107,18 +121,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             prevRightTrigger = curRightTrigger;
 
-            curLeftTrigger = gamepad1.left_trigger > 0;
-            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
-                toggleOuttakeSorter = !toggleOuttakeSorter;
 
-                if (toggleOuttakeSorter){
-                    double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
-                    if (durationOuttake >= 1) {
-                        sorterSubsystem.outtakeBall();
-                        lastOuttakeTime = System.nanoTime();
-                    }
-                }
-            }
 
             if (gamepad1.a){ // Press A to quick fire.
                 double durationFire = (System.nanoTime() - lastFireTime)/1E9;

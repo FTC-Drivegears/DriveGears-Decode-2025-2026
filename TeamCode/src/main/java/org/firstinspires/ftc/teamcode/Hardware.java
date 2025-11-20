@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.widget.GridLayout;
+
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -32,8 +34,8 @@ public class Hardware {
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
-    public final ColorSensor colorSensor2;
-    public ColorSensor colorSensor;
+//    public ColorSensor colourSensor2;
+//    public ColorSensor colourSensor;
 
     private Hardware(HardwareMap hwMap){
         this.rf = hwMap.get(DcMotorEx.class, Specifications.FTRT_MOTOR); //rightforward
@@ -45,9 +47,9 @@ public class Hardware {
 
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
-        this.colorSensor = hwMap.get(ColorSensor.class, "colourSensor");
-        this.colorSensor2 = hwMap.get(ColorSensor.class, "colourSensor2");
-        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
+//        this.colourSensor = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
+//        this.colourSensor2 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR2);
+//        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
