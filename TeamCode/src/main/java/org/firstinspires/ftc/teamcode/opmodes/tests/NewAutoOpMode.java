@@ -55,9 +55,9 @@ public class NewAutoOpMode extends LinearOpMode {
 
     //Sorter variables
     private static final ElapsedTime sorterTimer = new ElapsedTime();
-    private static double pos1 = 0.0;
-    private static double pos2 = 0.43;
-    private static double pos3 = 0.875;
+    private static double pos1 = 0.085;
+    private static double pos2 = 0.515;
+    private static double pos3 = 0.96;
     private static int standardms = 1000;
 
 
@@ -100,7 +100,7 @@ public class NewAutoOpMode extends LinearOpMode {
         if (!isPusherUp){
 
             if (sp == 0) {
-                sorter.setPosition(0.0);//60 degrees
+                sorter.setPosition(0.085);//60 degrees
             }
             else if (sp == 1) {
                 sorter.setPosition(pos2);//60 degrees

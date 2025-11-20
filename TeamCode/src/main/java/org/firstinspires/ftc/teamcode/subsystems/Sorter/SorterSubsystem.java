@@ -24,7 +24,7 @@ public class SorterSubsystem {
     private boolean isPusherUp = false;
 
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0.0, 0.42, 0.875};
+    private final double[] sorterPositions = new double[]{0.085, 0.515, 0.96};
     private int numIntakeBalls = 0;
     private long lastPushTime;
 
