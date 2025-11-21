@@ -33,7 +33,7 @@ public class NewAutoOpMode extends LinearOpMode {
 
 
     enum AUTO_STATE {
-        FIRST_SHOT, COLLECTION_1, SECOND_SHOT, COLLECTION_2, THIRD_SHOT, FINISH
+        FIRST_SHOT, RESET, COLLECTION_1, SECOND_SHOT, COLLECTION_2, THIRD_SHOT, FINISH
     }
 
     enum PATTERN {
@@ -98,15 +98,17 @@ public class NewAutoOpMode extends LinearOpMode {
 
     static boolean sort(int sp) {
         if (!isPusherUp){
-
             if (sp == 0) {
-                sorter.setPosition(0.085);//60 degrees
+                sorter.setPosition(pos1);//60 degrees
+                return true;
             }
             else if (sp == 1) {
                 sorter.setPosition(pos2);//60 degrees
+                return true;
             }
             else if (sp == 2) {
                 sorter.setPosition(pos3);//60 degrees
+                return true;
             }
             if (sorterTimer.milliseconds()>= 1500){
                 sorterTimer.reset();
@@ -276,7 +278,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 10:
                                         stage = 0;
                                         stageTimer.reset();
-                                        autoState = AUTO_STATE.COLLECTION_1;
+                                        autoState = AUTO_STATE.RESET;
                                         break;
                                 }
                                 break;
@@ -329,7 +331,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 10:
                                         stage = 0;
                                         stageTimer.reset();
-                                        autoState = AUTO_STATE.COLLECTION_1;
+                                        autoState = AUTO_STATE.RESET;
                                         break;
                                 }
                                 break;
@@ -359,7 +361,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 750) {
+                                        if (stageTimer.milliseconds() > 1000) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -382,66 +384,73 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 10:
                                         stage = 0;
                                         stageTimer.reset();
-                                        autoState = AUTO_STATE.COLLECTION_1;
+                                        autoState = AUTO_STATE.RESET;
                                         break;
                                 }
                                 break;
                         }
                         break;
+
                     }
                     break;
+                case RESET: //set position for ball 1
+                    if(sort(1)){
+                        stageTimer.reset();
+                        autoState = AUTO_STATE.COLLECTION_1;
+                    }
+                    break;
+
                 case COLLECTION_1:
                     switch (stage) {
-                        case 0:
+                        case 0: //align with artifacts
                             mecanumCommand.moveToPos(70, 35, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
-                        case 1:
+                        case 1: //turn on intake
                             if (mecanumCommand.isPositionReached()) {
                                 intakeFlag = true;
                                 stage++;
                                 stageTimer.reset();
                             }
                             break;
-                        case 2:
-                            if (stageTimer.milliseconds() > 1) { //replace with whatever time you think is appropriate
+                        case 2: //intake first ball
+                            if (stageTimer.milliseconds() > 1250) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(70, 45, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
-                        case 3:
+                        case 3: //set position for second ball
                             if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                sort(1);
+                                sort(2);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
-                        case 4:
-                            if (stageTimer.milliseconds() > 1150) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, 55, Math.PI / 2); //go to place to intake second artifact
+                        case 4: //intake second ball
+                            if (stageTimer.milliseconds() > 1750) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(70, 58, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
-                        case 5:
-                            if (stageTimer.milliseconds() > 1300) { //replace with whatever time you think is appropriate
+                        case 5: //set position to third ball
+                            if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
                                 sort(0);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
-                        case 6:
-                            if (stageTimer.milliseconds() > 1450) { //replace with whatever time you think is appropriate
+                        case 6: //move to third ball
+                            if (stageTimer.milliseconds() > 2150) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(65, 85, Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 7:
-                            if (stageTimer.milliseconds() > 1600) { //replace with whatever time you think is appropriate
-                                sort(2);
+                            if (stageTimer.milliseconds() > 1900) { //replace with whatever time you think is appropriate
                                 intakeFlag = false;
                                 stageTimer.reset();
                                 stage = 0;
@@ -449,6 +458,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                 break;
                             }
                             break;
+
                     }
                     break;
 
@@ -522,7 +532,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                         break;
                                     case 1: // sort
                                         if (stageTimer.milliseconds() > 1000) {
-                                            sort(2);
+                                            sort(1);
                                             stage++;
                                             stageTimer.reset();
                                         }
@@ -547,14 +557,14 @@ public class NewAutoOpMode extends LinearOpMode {
                                         break;
                                     case 4: // sort
                                         if (stageTimer.milliseconds() > 1500) {
-                                            sort(0);
+                                            sort(2);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
                                         if (stageTimer.milliseconds() > 1500) {
-                                            sort(1);
+                                            sort(0);
                                             stage++;
                                             stageTimer.reset();
                                         }
