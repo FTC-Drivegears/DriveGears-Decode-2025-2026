@@ -121,7 +121,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-            curLeftTrigger = gamepad1.left_trigger> 0;
+            curLeftTrigger = gamepad1.left_trigger > 0;
             if (curLeftTrigger && !prevLeftTrigger){
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
