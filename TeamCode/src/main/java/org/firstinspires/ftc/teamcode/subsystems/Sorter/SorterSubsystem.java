@@ -15,8 +15,8 @@ public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
     private final Servo sorter;
     private final Servo pusher;
-//    private final ColorSensor colourSensor;
-//    private final ColorSensor colourSensor2;
+    private final ColorSensor colourSensor;
+    private final ColorSensor colourSensor2;
     private final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
@@ -24,6 +24,7 @@ public class SorterSubsystem {
 
     private final ElapsedTime pushTime = new ElapsedTime();
     private final ElapsedTime outtakeTime = new ElapsedTime();
+    private final ElapsedTime sorterSpinTime = new ElapsedTime();
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.0, 0.43, 0.875};
@@ -31,8 +32,8 @@ public class SorterSubsystem {
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
         this.pusher = hw.pusher;
-//        this.colourSensor = hw.colourSensor;
-//        this.colourSensor2 = hw.colourSensor2;
+        this.colourSensor = hw.colourSensor;
+        this.colourSensor2 = hw.colourSensor2;
         this.opMode = opMode;
         this.telemetry = telemetry;
         this.sorterList = new ArrayList<>();
@@ -56,7 +57,7 @@ public class SorterSubsystem {
         return this.sorterList.size() == MAX_NUM_BALLS;
     }
 
-    public void intakeBall(char color) {
+    public void intakeBall() {
         // fail-safe
         if (this.sorterList.size() == MAX_NUM_BALLS){
             telemetry.addLine("Cannot intake any more balls, max capacity");
@@ -65,22 +66,21 @@ public class SorterSubsystem {
         }
 
         turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked
-
-        // If color sensor is not on use this code:
-        sorterList.add(new Artifact(color, sorter.getPosition()));
-
         // TODO: If color sensor is on, use this following block instead, remove char color in input from intakeBall parameter
-        //detectColor(); <-- add this later when two color sensors are on
+        detectColor();
     }
 
     public void turnToIntake() { // turn sorter before intaking a ball
+        sorterSpinTime.reset();
 
         if (sorter.getPosition() != 1 && !isPusherUp) { // ensure the sorter cannot turn more than max
             if (curSorterPositionIndex >= MAX_NUM_BALLS) {
                 curSorterPositionIndex = 0;
             }
-            sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
-            curSorterPositionIndex++;
+            if (sorterSpinTime.milliseconds() >= 750) {
+                sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+                curSorterPositionIndex++;
+            }
         }
         telemetry.update();
     }
@@ -111,30 +111,31 @@ public class SorterSubsystem {
         return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
     }
 
-//    public void detectColor() {
-//        int red = colourSensor.red();
-//        int red2 = colourSensor2.red();
-//
-//        int green = colourSensor.green();
-//        int green2 = colourSensor2.green();
-//
-//        int blue = colourSensor.blue();
-//        int blue2 = colourSensor2.blue();
-//
-//        int alpha = colourSensor.alpha();
-//        int alpha2 = colourSensor2.alpha();
-//
-//        // Purple ball is detected
-//        if (isPurple(red, green, blue, alpha) && isPurple(red2, green2, blue2, alpha2)) {
-//            telemetry.addLine("Purple Detected");
-//            sorterList.add(new Artifact('p', sorter.getPosition()));
-//        } else if (isGreen(red, green, blue, alpha) && isGreen(red2, green2, blue2, alpha2)) {
-//            telemetry.addLine("Green Detected");
-//            sorterList.add(new Artifact('g', sorter.getPosition()));
-//        }
-//
-//        telemetry.update();
-//    }
+    public void detectColor() { // detects & stores color in sorterList, move to next pos
+        int red = colourSensor.red();
+        int red2 = colourSensor2.red();
+
+        int green = colourSensor.green();
+        int green2 = colourSensor2.green();
+
+        int blue = colourSensor.blue();
+        int blue2 = colourSensor2.blue();
+
+        int alpha = colourSensor.alpha();
+        int alpha2 = colourSensor2.alpha();
+
+        // Purple ball is detected
+        if (isPurple(red, green, blue, alpha) && isPurple(red2, green2, blue2, alpha2)) {
+            telemetry.addLine("Purple Detected");
+            sorterList.add(new Artifact('p', sorter.getPosition()));
+        } else if (isGreen(red, green, blue, alpha) && isGreen(red2, green2, blue2, alpha2)) {
+            telemetry.addLine("Green Detected");
+            sorterList.add(new Artifact('g', sorter.getPosition()));
+        }
+        turnToIntake();
+
+        telemetry.update();
+    }
 
     // quickFire fires a random ball
     public void quickFire(){

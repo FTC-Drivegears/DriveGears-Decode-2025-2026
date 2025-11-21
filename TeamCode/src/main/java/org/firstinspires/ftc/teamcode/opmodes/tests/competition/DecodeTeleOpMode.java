@@ -18,11 +18,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private double theta;
     private DcMotor intake;
     private DcMotor shooter;
-    private Servo pusher;
     private Servo hood;
-    private Servo light;
     private SorterSubsystem sorterSubsystem;
-    private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
     private long lastFireTime;
     private long lastOuttakeTime;
@@ -50,9 +47,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
-        shooterSubsystem = new ShooterSubsystem(hw);
-        pusher = hw.pusher;
-        light = hw.light;
+        ShooterSubsystem shooterSubsystem = new ShooterSubsystem(hw);
+        Servo pusher = hw.pusher;
+        Servo light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.light.setPosition(0.0);
         hw.sorter.setPosition(0.0);
@@ -80,21 +77,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
-            // Manually input ball.
-            boolean right = gamepad1.dpad_right;
-            boolean left = gamepad1.dpad_left;
-            if (right || left) { // Press up to intake g, down to intake p.
-                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
-                char curColor = 'g';
-                if (right) {
-                    curColor = 'p';
-                }
-                if (durationIntake >= 1) {
-                    sorterSubsystem.intakeBall(curColor);
-                    lastIntakeTime = System.nanoTime();
-                }
-            }
-
             // Manually outtake ball.
             boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
             boolean shouldOuttakeGreen = gamepad1.b;
@@ -113,8 +95,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
                 isIntakeMotorOn = !isIntakeMotorOn;
+                sorterSubsystem.intakeBall();
+
                 if (isIntakeMotorOn){
-                    intake.setPower(0.65);
+                    intake.setPower(-0.8);
                 }else {
                     intake.setPower(0);
                 }

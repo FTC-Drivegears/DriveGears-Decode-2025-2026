@@ -34,8 +34,8 @@ public class Hardware {
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
-//    public ColorSensor colourSensor2;
-//    public ColorSensor colourSensor;
+    public ColorSensor colourSensor2;
+    public ColorSensor colourSensor;
 
     private Hardware(HardwareMap hwMap){
         this.rf = hwMap.get(DcMotorEx.class, Specifications.FTRT_MOTOR); //rightforward
@@ -47,9 +47,9 @@ public class Hardware {
 
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
-//        this.colourSensor = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
-//        this.colourSensor2 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR2);
-//        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
+        this.colourSensor = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
+        this.colourSensor2 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR2);
+        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
