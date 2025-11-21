@@ -17,6 +17,7 @@ public class SorterSubsystem {
     private final Servo pusher;
     public final ColorSensor colourSensor;
     public final ColorSensor colourSensor2;
+
     public final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;

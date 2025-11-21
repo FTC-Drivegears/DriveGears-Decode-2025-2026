@@ -22,10 +22,9 @@ public class ColorSensorTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        hw = Hardware.getInstance(hardwareMap);
         this.colourSensor = hw.colourSensor;
         this.colourSensor2 = hw.colourSensor2;
-
-        hw = Hardware.getInstance(hardwareMap);
 
         while (opModeInInit()) {
             telemetry.update();
@@ -48,16 +47,13 @@ public class ColorSensorTest extends LinearOpMode {
             int blue = colourSensor.blue();
             int blue2 = colourSensor2.blue();
 
-            int alpha = colourSensor.alpha();
-            int alpha2 = colourSensor2.alpha();
-
             detectColorTime.reset();
             while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
-                if (isPurple(red, green, blue, alpha) || isPurple(red2, green2, blue2, alpha2)) {
+                if (isPurple(red, green, blue) || isPurple(red2, green2, blue2)) {
                     telemetry.addLine("Purple Detected");
                     hasDetectedColor = true;
                     detectedPurple = true;
-                } else if (isGreen(red, green, blue, alpha) || isGreen(red2, green2, blue2, alpha2)) {
+                } else if (isGreen(red, green, blue) || isGreen(red2, green2, blue2)) {
                     telemetry.addLine("Green Detected");
                     hasDetectedColor = true;
                     detectedGreen = true;
@@ -70,11 +66,11 @@ public class ColorSensorTest extends LinearOpMode {
         }
     }
 
-    private boolean isPurple(int red, int green, int blue, int alpha) {
-        return red > 50 && red < 65 && green < 95 && green > 80 && blue < 95 && blue > 78 && alpha < 85 && alpha > 70;
+    boolean isPurple(int red, int green, int blue) {
+        return red > 99 && red  < 181 && green > 79 && green < 96 && blue > 77 && blue < 96;
     }
 
-    private boolean isGreen(int red, int green, int blue, int alpha){
-        return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
+    boolean isGreen(int red, int green, int blue) {
+        return red > 19 && red < 81 && green > 99 && green < 256 && blue > 19 && blue < 81;
     }
 }
