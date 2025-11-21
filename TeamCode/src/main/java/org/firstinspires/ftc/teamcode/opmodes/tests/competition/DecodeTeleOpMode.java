@@ -77,8 +77,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             );
 
             // Manually spin sorter plate.
-            shouldSpinSorter = gamepad1.dpad_left;
-            if (shouldSpinSorter) {
+            if (gamepad1.dpad_left) {
                 sorterSubsystem.intakeBall();
             }
 

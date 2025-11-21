@@ -73,10 +73,10 @@ public class SorterSubsystem {
                 curSorterPositionIndex = 0;
             }
 
-            spinForIntakeTime.reset();
             if (spinForIntakeTime.milliseconds() >= 500) { // Debounce for sorter spin
                 telemetry.addLine("I am pressing dpad left yes");
                 sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+                spinForIntakeTime.reset();
                 curSorterPositionIndex++;
             }
         } else {
@@ -93,33 +93,36 @@ public class SorterSubsystem {
     }
 
     public void detectColor() { // detects & stores color in sorterList, move to next pos
-        int red = colourSensor.red();
-        int red2 = colourSensor2.red();
-
-        int green = colourSensor.green();
-        int green2 = colourSensor2.green();
-
-        int blue = colourSensor.blue();
-        int blue2 = colourSensor2.blue();
-
-        int alpha = colourSensor.alpha();
-        int alpha2 = colourSensor2.alpha();
-
         detectColorTime.reset();
         boolean hasDetectedColor = false;
         while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
-            if (isPurple(red, green, blue, alpha) || isPurple(red2, green2, blue2, alpha2)) {
-                telemetry.addLine("Purple Detected");
-                hasDetectedColor = true;
-                sorterList.add(new Artifact('p', sorter.getPosition()));
-            } else if (isGreen(red, green, blue, alpha) || isGreen(red2, green2, blue2, alpha2)) {
-                telemetry.addLine("Green Detected");
-                hasDetectedColor = true;
-                sorterList.add(new Artifact('g', sorter.getPosition()));
+            int red = colourSensor.red();
+            int red2 = colourSensor2.red();
+
+            int green = colourSensor.green();
+            int green2 = colourSensor2.green();
+
+            int blue = colourSensor.blue();
+            int blue2 = colourSensor2.blue();
+
+            int alpha = colourSensor.alpha();
+            int alpha2 = colourSensor2.alpha();
+
+            detectColorTime.reset();
+            while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
+                if (isPurple(red, green, blue, alpha) || isPurple(red2, green2, blue2, alpha2)) {
+                    telemetry.addLine("Purple Detected");
+                    hasDetectedColor = true;
+                    sorterList.add(new Artifact('p', sorter.getPosition()));
+                } else if (isGreen(red, green, blue, alpha) || isGreen(red2, green2, blue2, alpha2)) {
+                    telemetry.addLine("Green Detected");
+                    hasDetectedColor = true;
+                    sorterList.add(new Artifact('g', sorter.getPosition()));
+                }
             }
+            telemetry.addData("Did it detect color?", hasDetectedColor);
+            telemetry.update();
         }
-        telemetry.addData("Did it detect color?", hasDetectedColor);
-        telemetry.update();
     }
 
     // push will wait 750ms to push up, then wait for less time to go back down.
