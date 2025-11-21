@@ -15,9 +15,9 @@ public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
     private final Servo sorter;
     private final Servo pusher;
-    private final ColorSensor colourSensor;
-    private final ColorSensor colourSensor2;
-    private final Telemetry telemetry;
+    public final ColorSensor colourSensor;
+    public final ColorSensor colourSensor2;
+    public final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
@@ -29,7 +29,7 @@ public class SorterSubsystem {
     private final ElapsedTime detectColorTime = new ElapsedTime();
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0.0, 0.43, 0.875};
+    private final double[] sorterPositions = new double[]{0.1, 0.43, 0.875};
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -74,7 +74,8 @@ public class SorterSubsystem {
             }
 
             spinForIntakeTime.reset();
-            if (spinForIntakeTime.milliseconds() >= 500) { // Debounce for sorter spin.
+            if (spinForIntakeTime.milliseconds() >= 500) { // Debounce for sorter spin
+                telemetry.addLine("I am pressing dpad left yes");
                 sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
                 curSorterPositionIndex++;
             }
@@ -91,7 +92,7 @@ public class SorterSubsystem {
         return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
     }
 
-    private void detectColor() { // detects & stores color in sorterList, move to next pos
+    public void detectColor() { // detects & stores color in sorterList, move to next pos
         int red = colourSensor.red();
         int red2 = colourSensor2.red();
 
@@ -107,17 +108,17 @@ public class SorterSubsystem {
         detectColorTime.reset();
         boolean hasDetectedColor = false;
         while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
-            if (isPurple(red, green, blue, alpha) && isPurple(red2, green2, blue2, alpha2)) {
+            if (isPurple(red, green, blue, alpha) || isPurple(red2, green2, blue2, alpha2)) {
                 telemetry.addLine("Purple Detected");
                 hasDetectedColor = true;
                 sorterList.add(new Artifact('p', sorter.getPosition()));
-            } else if (isGreen(red, green, blue, alpha) && isGreen(red2, green2, blue2, alpha2)) {
+            } else if (isGreen(red, green, blue, alpha) || isGreen(red2, green2, blue2, alpha2)) {
                 telemetry.addLine("Green Detected");
                 hasDetectedColor = true;
                 sorterList.add(new Artifact('g', sorter.getPosition()));
             }
         }
-
+        telemetry.addData("Did it detect color?", hasDetectedColor);
         telemetry.update();
     }
 
@@ -202,7 +203,7 @@ public class SorterSubsystem {
         this.waitForSpinAndPush(ballIndexToRemoveFromSorter);
     }
 
-    private void waitForSpinAndPush(int ballIndexToRemoveFromSorter) {
+    private void waitForSpinAndPush(int ballIndexToRemoveFromSorter) { //
         if (ballIndexToRemoveFromSorter >= this.sorterList.size()) {
             telemetry.addLine("index " + ballIndexToRemoveFromSorter + " >= " + this.sorterList.size());
             telemetry.update();

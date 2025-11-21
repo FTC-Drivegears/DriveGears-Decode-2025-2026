@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
@@ -36,6 +34,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean curLeftTrigger;
         boolean curRB;
         boolean curLB;
+        boolean shouldSpinSorter;
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
@@ -52,7 +51,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         Servo light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.light.setPosition(0.0);
-        hw.sorter.setPosition(0.0);
+        hw.sorter.setPosition(0.1);
         hw.hood.setPosition(hoodPos);
 
         intake = hw.intake;
@@ -78,7 +77,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             );
 
             // Manually spin sorter plate.
-            boolean shouldSpinSorter = gamepad1.dpad_left;
+            shouldSpinSorter = gamepad1.dpad_left;
             if (shouldSpinSorter) {
                 sorterSubsystem.intakeBall();
             }
@@ -197,14 +196,12 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 light.setPosition(0.0);
             }
 
-            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
-            telemetry.addData("Hood pos: ", hoodPos);
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("X", mecanumCommand.getX());
-            telemetry.addData("Y", mecanumCommand.getY());
-            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
-            telemetry.addData("Outtake speed: ", shootSpeed);
+//            telemetry.addData("Hood pos: ", hoodPos);
+//            telemetry.addLine("---------------------------------");
+//            telemetry.addData("X", mecanumCommand.getX());
+//            telemetry.addData("Y", mecanumCommand.getY());
+//            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+//            telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }
     }
