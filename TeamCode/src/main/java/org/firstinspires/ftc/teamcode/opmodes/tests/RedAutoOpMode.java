@@ -225,7 +225,7 @@ public class RedAutoOpMode extends LinearOpMode {
                 case FIRST_SHOT:
                     shooterSubsystem.setMaxRPM(3900);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, 6, -0.47014);
+                    mecanumCommand.moveToPos(26, 6, -0.5014);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
