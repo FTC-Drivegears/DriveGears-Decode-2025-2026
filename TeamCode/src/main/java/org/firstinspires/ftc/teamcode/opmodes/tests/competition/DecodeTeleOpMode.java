@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
@@ -20,9 +21,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private DcMotor shooter;
     private Servo hood;
     private SorterSubsystem sorterSubsystem;
-    private long lastIntakeTime;
     private long lastFireTime;
-    private long lastOuttakeTime;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -77,25 +77,26 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
+            // Manually spin sorter plate.
+            boolean shouldSpinSorter = gamepad1.dpad_left;
+            if (shouldSpinSorter) {
+                sorterSubsystem.intakeBall();
+            }
+
             // Manually outtake ball.
             boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
             boolean shouldOuttakeGreen = gamepad1.b;
             if (shouldOuttakePurple || shouldOuttakeGreen) {
-                double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
                 char curColor = 'g';
                 if (shouldOuttakePurple) {
                     curColor = 'p';
                 }
-                if (durationOuttake >= 1) {
-                    sorterSubsystem.outtakeBall(curColor);
-                    lastOuttakeTime = System.nanoTime();
-                }
+                sorterSubsystem.outtakeBall(curColor);
             }
 
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
                 isIntakeMotorOn = !isIntakeMotorOn;
-                sorterSubsystem.intakeBall();
 
                 if (isIntakeMotorOn){
                     intake.setPower(-0.8);
@@ -104,7 +105,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
             prevRightTrigger = curRightTrigger;
-
 
 
             if (gamepad1.a){ // Press A to quick fire.

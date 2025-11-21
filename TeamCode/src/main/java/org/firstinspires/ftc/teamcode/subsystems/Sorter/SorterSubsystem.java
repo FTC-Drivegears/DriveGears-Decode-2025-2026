@@ -23,8 +23,10 @@ public class SorterSubsystem {
     private final ArrayList<Artifact> sorterList;
 
     private final ElapsedTime pushTime = new ElapsedTime();
-    private final ElapsedTime outtakeTime = new ElapsedTime();
-    private final ElapsedTime sorterSpinTime = new ElapsedTime();
+
+    private final ElapsedTime spinForIntakeTime = new ElapsedTime();
+    private final ElapsedTime spinForOuttakeTime = new ElapsedTime();
+    private final ElapsedTime detectColorTime = new ElapsedTime();
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.0, 0.43, 0.875};
@@ -53,10 +55,6 @@ public class SorterSubsystem {
         this.isPusherUp = isPusherUp;
     }
 
-    public boolean isMaxBallsReached() {
-        return this.sorterList.size() == MAX_NUM_BALLS;
-    }
-
     public void intakeBall() {
         // fail-safe
         if (this.sorterList.size() == MAX_NUM_BALLS){
@@ -65,42 +63,24 @@ public class SorterSubsystem {
             return;
         }
 
-        turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked
-        // TODO: If color sensor is on, use this following block instead, remove char color in input from intakeBall parameter
-        detectColor();
+        this.turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked
+        this.detectColor();
     }
 
-    public void turnToIntake() { // turn sorter before intaking a ball
-        sorterSpinTime.reset();
-
-        if (sorter.getPosition() != 1 && !isPusherUp) { // ensure the sorter cannot turn more than max
+    private void turnToIntake() { // turn sorter before intaking a ball
+        if (!isPusherUp && sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
             if (curSorterPositionIndex >= MAX_NUM_BALLS) {
                 curSorterPositionIndex = 0;
             }
-            if (sorterSpinTime.milliseconds() >= 750) {
+
+            spinForIntakeTime.reset();
+            if (spinForIntakeTime.milliseconds() >= 500) { // Debounce for sorter spin.
                 sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
                 curSorterPositionIndex++;
             }
+        } else {
+            telemetry.addLine("pusher is up, CANNOT turn sorter");
         }
-        telemetry.update();
-    }
-
-    // push will wait 750ms to push up, then wait for less time to go back down.
-    public void push() {
-        if (pushTime.milliseconds() >= 700) { // Wait for plate to spin.
-            pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-            pushTime.reset();
-            telemetry.addLine("Pusher up");
-            isPusherUp = true;
-        }
-
-        if (pushTime.milliseconds() >= 250) {
-            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-            pushTime.reset();
-            telemetry.addLine("Pusher down");
-            isPusherUp = false;
-        }
-        telemetry.update();
     }
 
     boolean isPurple(int red, int green, int blue, int alpha) {
@@ -111,7 +91,7 @@ public class SorterSubsystem {
         return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
     }
 
-    public void detectColor() { // detects & stores color in sorterList, move to next pos
+    private void detectColor() { // detects & stores color in sorterList, move to next pos
         int red = colourSensor.red();
         int red2 = colourSensor2.red();
 
@@ -124,39 +104,51 @@ public class SorterSubsystem {
         int alpha = colourSensor.alpha();
         int alpha2 = colourSensor2.alpha();
 
-        // Purple ball is detected
-        if (isPurple(red, green, blue, alpha) && isPurple(red2, green2, blue2, alpha2)) {
-            telemetry.addLine("Purple Detected");
-            sorterList.add(new Artifact('p', sorter.getPosition()));
-        } else if (isGreen(red, green, blue, alpha) && isGreen(red2, green2, blue2, alpha2)) {
-            telemetry.addLine("Green Detected");
-            sorterList.add(new Artifact('g', sorter.getPosition()));
+        detectColorTime.reset();
+        boolean hasDetectedColor = false;
+        while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
+            if (isPurple(red, green, blue, alpha) && isPurple(red2, green2, blue2, alpha2)) {
+                telemetry.addLine("Purple Detected");
+                hasDetectedColor = true;
+                sorterList.add(new Artifact('p', sorter.getPosition()));
+            } else if (isGreen(red, green, blue, alpha) && isGreen(red2, green2, blue2, alpha2)) {
+                telemetry.addLine("Green Detected");
+                hasDetectedColor = true;
+                sorterList.add(new Artifact('g', sorter.getPosition()));
+            }
         }
-        turnToIntake();
 
         telemetry.update();
     }
 
-    // quickFire fires a random ball
-    public void quickFire(){
-        outtakeTime.reset();
+    // push will wait 750ms to push up, then wait for less time to go back down.
+    public void push() {
+        pushTime.reset();
+        if (pushTime.milliseconds() >= 500) { // Wait for plate to spin.
+            pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+            telemetry.addLine("Pusher up");
+            isPusherUp = true;
+        }
 
+        pushTime.reset();
+        if (pushTime.milliseconds() >= 250) {
+            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+            telemetry.addLine("Pusher down");
+            isPusherUp = false;
+        }
+        telemetry.update();
+    }
+
+    // quickFire fires a random ball
+    public void quickFire() {
         if (this.sorterList.isEmpty()){
             return;
         }
 
-        if (!isPusherUp) { // means pusher is down
-            if (outtakeTime.seconds() >= 1){
-                sorter.setPosition(this.sorterList.get(0).getPosition());
-                this.sorterList.remove(0);
-            }
-        }
-        this.push();
+        this.waitForSpinAndPush(0);
     }
 
     public void outtakeBall(char colorToRemove) {
-        outtakeTime.reset();
-
         if (this.sorterList.isEmpty()) {
             telemetry.addLine("No ball in sorter");
             telemetry.update();
@@ -172,8 +164,6 @@ public class SorterSubsystem {
     // However reading from tag means we must execute the steps right away.
     // Otherwise pattern will be continously read. There is no good stopping point in teleop.
     public void outtakeBallWithPattern() {
-        outtakeTime.reset();
-
         if (this.pattern.isEmpty()){
             telemetry.addLine("Pattern is empty");
             telemetry.update();
@@ -209,8 +199,19 @@ public class SorterSubsystem {
             return;
         }
 
+        this.waitForSpinAndPush(ballIndexToRemoveFromSorter);
+    }
+
+    private void waitForSpinAndPush(int ballIndexToRemoveFromSorter) {
+        if (ballIndexToRemoveFromSorter >= this.sorterList.size()) {
+            telemetry.addLine("index " + ballIndexToRemoveFromSorter + " >= " + this.sorterList.size());
+            telemetry.update();
+            return;
+        }
+
         if (!isPusherUp) {
-            if (outtakeTime.seconds() >= 1) {
+            spinForOuttakeTime.reset();
+            if (spinForOuttakeTime.milliseconds() >= 500) {
                 sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
                 telemetry.addLine("index" + ballIndexToRemoveFromSorter);
             }
