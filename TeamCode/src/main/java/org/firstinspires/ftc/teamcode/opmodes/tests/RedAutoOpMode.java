@@ -73,6 +73,8 @@ public class RedAutoOpMode extends LinearOpMode {
     private static boolean currentPushState;
 
     private static int stage;
+    //        PATTERN pattern = PATTERN.NO_TAG; // default
+    private PATTERN pattern = PATTERN.PPG_3;
 
 
     int detection;
@@ -161,7 +163,6 @@ public class RedAutoOpMode extends LinearOpMode {
         AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
-        PATTERN pattern = PATTERN.NO_TAG; // default
         boolean outtakeFlag = false;
         boolean intakeFlag = false;
 
@@ -290,7 +291,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                         stageTimer.reset();
                                         break;
                                     case 1: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1700) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
@@ -431,28 +432,28 @@ public class RedAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 1750) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(70, -58, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
                                 sort(0);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 6: //move to third ball
-                            if (stageTimer.milliseconds() > 2150) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(65, -85, -Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 7:
-                            if (stageTimer.milliseconds() > 1900) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
                                 intakeFlag = false;
                                 stageTimer.reset();
                                 stage = 0;
@@ -650,6 +651,7 @@ public class RedAutoOpMode extends LinearOpMode {
     public void processTelemetry() {
         //add telemetry messages here
         telemetry.addData("timer: ", stageTimer.milliseconds());
+        telemetry.addData("Pattern", pattern);
         telemetry.addLine("---------------------------------");
         telemetry.addData("X", mecanumCommand.getX());
         telemetry.addData("Y", mecanumCommand.getY());

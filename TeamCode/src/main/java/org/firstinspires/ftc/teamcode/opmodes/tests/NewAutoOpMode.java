@@ -161,7 +161,7 @@ public class NewAutoOpMode extends LinearOpMode {
         AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
-        PATTERN pattern = PATTERN.NO_TAG; // default
+        PATTERN pattern = PATTERN.PPG_3; // default
         boolean outtakeFlag = false;
         boolean intakeFlag = false;
 
