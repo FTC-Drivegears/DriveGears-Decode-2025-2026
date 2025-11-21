@@ -394,9 +394,11 @@ public class BlueAutoOpMode extends LinearOpMode {
                     }
                     break;
                 case RESET: //set position for ball 1
-                    if(sort(1)){
-                        stageTimer.reset();
-                        autoState = AUTO_STATE.COLLECTION_1;
+                    if(!isPusherUp && stageTimer.milliseconds() > 500){
+                        if(sort(1)) {
+                            stageTimer.reset();
+                            autoState = AUTO_STATE.COLLECTION_1;
+                        }
                     }
                     break;
 

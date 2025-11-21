@@ -246,7 +246,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -255,7 +255,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 750) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -299,7 +299,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -308,7 +308,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 750) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -352,7 +352,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -486,7 +486,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -495,7 +495,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 750) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -540,7 +540,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -549,7 +549,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 750) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -594,7 +594,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -603,7 +603,7 @@ public class NewAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 750) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
