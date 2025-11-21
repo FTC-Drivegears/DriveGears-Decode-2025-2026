@@ -139,7 +139,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     }
                 }
             }
-            else leftTriggerPressed = false;
+            else
+                leftTriggerPressed = false;
 
 //            curLeftTrigger = gamepad1.left_trigger > 0;
 //            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
