@@ -63,6 +63,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean isOuttakeMotorOn = false;
         boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
+        boolean rightTriggerPressed = false;
+        boolean leftTriggerPressed = false;
 
         double hoodPos = 0.846;
         double sorterPosition = 0.0;
@@ -110,27 +112,32 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
-            curRightTrigger = gamepad1.right_trigger > 0;
-            if (curRightTrigger && !prevRightTrigger){
-                isIntakeMotorOn = !isIntakeMotorOn;
-
-                if (isIntakeMotorOn){
-                    intake.setPower(0.8);
-                } else {
-                    intake.setPower(0);
+            if (gamepad1.right_trigger > 0) {
+                if (!rightTriggerPressed) {
+                    rightTriggerPressed = true;
+                    isIntakeMotorOn = !isIntakeMotorOn;
+                    if (isIntakeMotorOn)
+                        intake.setPower(0.8);
+                    else
+                        intake.setPower(0);
                 }
             }
+                else
+                    rightTriggerPressed = false;
 
-            curLeftTrigger = gamepad1.left_trigger > 0;
-            if (curLeftTrigger && !prevLeftTrigger){
-                isOuttakeMotorOn = !isOuttakeMotorOn;
-
-                if (isOuttakeMotorOn){
-                    intake.setPower(-0.8);
-                } else {
-                    intake.setPower(0);
+            if (gamepad1.left_trigger > 0) {
+                if (!leftTriggerPressed) {
+                    leftTriggerPressed = true;
+                    isIntakeMotorOn = !isIntakeMotorOn;
+                    if (isIntakeMotorOn)
+                        intake.setPower(-0.8);
+                    else
+                        intake.setPower(0);
                 }
             }
+            else
+                leftTriggerPressed = false;
+
 
 //            curLeftTrigger = gamepad1.left_trigger > 0;
 //            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
