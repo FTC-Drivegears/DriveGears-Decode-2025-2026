@@ -56,7 +56,7 @@ public class SorterSubsystem {
         this.isPusherUp = isPusherUp;
     }
 
-    public void intakeBall() {
+    public void intakeBall(char color) {
         // fail-safe
         if (this.sorterList.size() == MAX_NUM_BALLS){
             telemetry.addLine("Cannot intake any more balls, max capacity");
@@ -64,25 +64,26 @@ public class SorterSubsystem {
             return;
         }
 
-        this.turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked
-        this.detectColor();
+        this.turnToIntake(color); // First turn to a position that allows robot to take in ball without being blocked
+
     }
 
-    private void turnToIntake() { // turn sorter before intaking a ball
+    private void turnToIntake(char color) { // turn sorter before intaking a ball
         if (!isPusherUp && sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
             if (curSorterPositionIndex >= MAX_NUM_BALLS) {
                 curSorterPositionIndex = 0;
             }
 
-            if (spinForIntakeTime.milliseconds() >= 500) { // Debounce for sorter spin
                 telemetry.addLine("I am pressing dpad left yes");
                 sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+                sorterList.add(new Artifact(color, sorter.getPosition()));
                 spinForIntakeTime.reset();
                 curSorterPositionIndex++;
-            }
         } else {
             telemetry.addLine("pusher is up, CANNOT turn sorter");
         }
+
+        telemetry.update();
     }
 
     boolean isPurple(int red, int green, int blue, int alpha) {
@@ -128,20 +129,18 @@ public class SorterSubsystem {
 
     // push will wait 750ms to push up, then wait for less time to go back down.
     public void push() {
+        pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+        telemetry.addLine("Pusher up");
+        isPusherUp = true;
         pushTime.reset();
-        if (pushTime.milliseconds() >= 500) { // Wait for plate to spin.
-            pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-            telemetry.addLine("Pusher up");
-            isPusherUp = true;
-        }
+    }
 
-        pushTime.reset();
-        if (pushTime.milliseconds() >= 250) {
+    public void pushDown() {
+        if (isPusherUp && pushTime.milliseconds() >= 350) {
             pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             telemetry.addLine("Pusher down");
             isPusherUp = false;
         }
-        telemetry.update();
     }
 
     // quickFire fires a random ball
@@ -215,11 +214,8 @@ public class SorterSubsystem {
         }
 
         if (!isPusherUp) {
-            spinForOuttakeTime.reset();
-            if (spinForOuttakeTime.milliseconds() >= 500) {
-                sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
-                telemetry.addLine("index" + ballIndexToRemoveFromSorter);
-            }
+            sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
+            telemetry.addLine("index" + ballIndexToRemoveFromSorter);
         } else {
             telemetry.addLine("pusher is up, CANNOT turn sorter");
         }

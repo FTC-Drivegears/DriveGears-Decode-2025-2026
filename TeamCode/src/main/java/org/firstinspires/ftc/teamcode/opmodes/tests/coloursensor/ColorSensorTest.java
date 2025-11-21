@@ -14,9 +14,6 @@ public class ColorSensorTest extends LinearOpMode {
     private Hardware hw;
     public ColorSensor colourSensor;
     public ColorSensor colourSensor2;
-
-    private Telemetry telemetry;
-
     private final ElapsedTime detectColorTime = new ElapsedTime();
 
     @Override
@@ -33,44 +30,61 @@ public class ColorSensorTest extends LinearOpMode {
 
         detectColorTime.reset();
 
-        boolean hasDetectedColor = false;
         boolean detectedPurple = false;
         boolean detectedGreen = false;
 
-        while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
-            int red = colourSensor.red();
-            int red2 = colourSensor2.red();
-
-            int green = colourSensor.green();
-            int green2 = colourSensor2.green();
-
-            int blue = colourSensor.blue();
-            int blue2 = colourSensor2.blue();
-
+        while (opModeIsActive()) {
             detectColorTime.reset();
+            boolean hasDetectedColor = false;
             while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
-                if (isPurple(red, green, blue) || isPurple(red2, green2, blue2)) {
-                    telemetry.addLine("Purple Detected");
-                    hasDetectedColor = true;
-                    detectedPurple = true;
-                } else if (isGreen(red, green, blue) || isGreen(red2, green2, blue2)) {
-                    telemetry.addLine("Green Detected");
-                    hasDetectedColor = true;
-                    detectedGreen = true;
+                int red = colourSensor.red();
+                int red2 = colourSensor2.red();
+
+                int green = colourSensor.green();
+                int green2 = colourSensor2.green();
+
+                int blue = colourSensor.blue();
+                int blue2 = colourSensor2.blue();
+
+                int alpha = colourSensor.alpha();
+                int alpha2 = colourSensor2.alpha();
+
+                detectColorTime.reset();
+                while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
+                    if (isPurple(red, green, blue, alpha) || isPurple(red2, green, blue2, alpha2)) {
+                        telemetry.addLine("Purple Detected");
+                        hasDetectedColor = true;
+                        detectedPurple = true;
+                    } else if (isGreen(red,green,blue,alpha) || isGreen(red2, green2, blue2, alpha)) {
+                        telemetry.addLine("Green Detected");
+                        hasDetectedColor = true;
+                        detectedGreen = true;
+
+                    }
+
                 }
+                telemetry.addData("Did it detect color?", hasDetectedColor);
+                telemetry.addData("Am I seeing purple?", detectedPurple);
+                telemetry.addData("Am I seeing green?", detectedGreen);
+                telemetry.addData("red", red);
+                telemetry.addData("red2", red2);
+                telemetry.addData("green", green);
+                telemetry.addData("green2", green2);
+                telemetry.addData("blue2", blue2);
+                telemetry.addData("blue", blue);
+                telemetry.update();
             }
-            telemetry.addData("Did it detect color?", hasDetectedColor);
-            telemetry.addData("Am I seeing purple?", detectedPurple);
-            telemetry.addData("Am I seeing green?", detectedGreen);
-            telemetry.update();
         }
     }
 
-    boolean isPurple(int red, int green, int blue) {
-        return red > 99 && red  < 181 && green > 79 && green < 96 && blue > 77 && blue < 96;
+    private boolean isGreen(int red, int green, int blue, int alpha) {
+        //return green > red && green > blue && green >= 255;
+        return red > 50 && red < 65 && green < 95 && green > 80 && blue < 95 && blue > 78 && alpha < 85 && alpha > 70;
     }
 
-    boolean isGreen(int red, int green, int blue) {
-        return red > 19 && red < 81 && green > 99 && green < 256 && blue > 19 && blue < 81;
+
+    boolean isPurple ( int red, int green, int blue, int alpha){
+        //return blue > green && alpha < 700;
+        return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
     }
 }

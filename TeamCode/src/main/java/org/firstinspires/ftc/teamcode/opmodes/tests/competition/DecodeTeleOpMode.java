@@ -20,6 +20,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Servo hood;
     private SorterSubsystem sorterSubsystem;
     private long lastFireTime;
+    private long lastIntakeTime;
+
+    private long lastOuttakeTime;
 
 
     @Override
@@ -77,20 +80,43 @@ public class DecodeTeleOpMode extends LinearOpMode {
             );
 
             // Manually spin sorter plate.
-            if (gamepad1.dpad_left) {
-                sorterSubsystem.intakeBall();
-            }
 
+            boolean shouldIntakeGreen = gamepad1.dpad_left;
+            boolean shouldIntakePurple = gamepad1.dpad_right;
+            if (shouldIntakeGreen || shouldIntakePurple) {
+                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
+                char curColor = 'g';
+                if (shouldIntakePurple) {
+                    curColor = 'p';
+                }
+                if (durationIntake >= 0.7) {
+                    sorterSubsystem.intakeBall(curColor);
+                    lastIntakeTime = System.nanoTime();
+                }
+            }
+            
             // Manually outtake ball.
             boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
             boolean shouldOuttakeGreen = gamepad1.b;
             if (shouldOuttakePurple || shouldOuttakeGreen) {
+                double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
                 char curColor = 'g';
                 if (shouldOuttakePurple) {
                     curColor = 'p';
                 }
-                sorterSubsystem.outtakeBall(curColor);
+                if (durationOuttake >= 0.7) {
+                    sorterSubsystem.outtakeBall(curColor);
+                    lastOuttakeTime = System.nanoTime();
+                }
             }
+            if (gamepad1.a){ // Press A to quick fire.
+                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
+                if (durationFire >= 0.7) {
+                    sorterSubsystem.quickFire();
+                    lastFireTime = System.nanoTime();
+                }
+            }
+            sorterSubsystem.pushDown(); // Will push down if the pusher is up.
 
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
@@ -105,13 +131,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             prevRightTrigger = curRightTrigger;
 
 
-            if (gamepad1.a){ // Press A to quick fire.
-                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
-                if (durationFire >= 1) {
-                    sorterSubsystem.quickFire();
-                    lastFireTime = System.nanoTime();
-                }
-            }
+
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState){
