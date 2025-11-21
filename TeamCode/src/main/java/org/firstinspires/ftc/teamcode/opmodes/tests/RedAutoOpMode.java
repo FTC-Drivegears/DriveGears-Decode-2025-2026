@@ -163,6 +163,7 @@ public class RedAutoOpMode extends LinearOpMode {
         AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
+        PATTERN pattern = PATTERN.NO_TAG; // default
         boolean outtakeFlag = false;
         boolean intakeFlag = false;
 
@@ -225,8 +226,7 @@ public class RedAutoOpMode extends LinearOpMode {
             switch (autoState) {
                 case FIRST_SHOT:
                     shooterSubsystem.setMaxRPM(3900);
-                    //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, 6, -0.3514);
+                    mecanumCommand.moveToPos(26, 6, -0.4);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -247,7 +247,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -256,7 +256,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 400) {
+                                        if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -291,7 +291,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                         stageTimer.reset();
                                         break;
                                     case 1: // sort
-                                        if (stageTimer.milliseconds() > 1700) {
+                                        if (stageTimer.milliseconds() > 1500) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
@@ -300,7 +300,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -309,7 +309,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 400) {
+                                        if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -353,7 +353,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -362,7 +362,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 400) {
+                                        if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -395,11 +395,11 @@ public class RedAutoOpMode extends LinearOpMode {
                     }
                     break;
                 case RESET: //set position for ball 1
-                    if(!isPusherUp && stageTimer.milliseconds() > 500){
-                        if(sort(1)) {
-                            stageTimer.reset();
-                            autoState = AUTO_STATE.COLLECTION_1;
-                        }
+                     if(!isPusherUp && stageTimer.milliseconds() > 500){
+                    if(sort(1)){
+                        stageTimer.reset();
+                        autoState = AUTO_STATE.COLLECTION_1;
+                    }
                     }
                     break;
 
@@ -432,28 +432,28 @@ public class RedAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1750) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(70, -58, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
                                 sort(0);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 6: //move to third ball
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 2150) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(65, -85, -Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 7:
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1900) { //replace with whatever time you think is appropriate
                                 intakeFlag = false;
                                 stageTimer.reset();
                                 stage = 0;
@@ -461,13 +461,12 @@ public class RedAutoOpMode extends LinearOpMode {
                                 break;
                             }
                             break;
-
                     }
                     break;
 
                 case SECOND_SHOT:
                     //mecanumCommand.moveToPos(26, -14, 0.5014); //move to whatever position we used to go to
-                    mecanumCommand.moveToPos(26, 6, -0.47014);
+                    mecanumCommand.moveToPos(26, 6, -0.4);
                     shooterSubsystem.setMaxRPM(3900);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
@@ -489,7 +488,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -498,7 +497,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 400) {
+                                        if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -543,7 +542,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -552,7 +551,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 400) {
+                                        if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -597,7 +596,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -606,7 +605,7 @@ public class RedAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 400) {
+                                        if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -650,8 +649,7 @@ public class RedAutoOpMode extends LinearOpMode {
 
     public void processTelemetry() {
         //add telemetry messages here
-        telemetry.addData("timer: ", stageTimer.milliseconds());
-        telemetry.addData("Pattern", pattern);
+        telemetry.addData("resetTimer: ", resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
         telemetry.addData("X", mecanumCommand.getX());
         telemetry.addData("Y", mecanumCommand.getY());
