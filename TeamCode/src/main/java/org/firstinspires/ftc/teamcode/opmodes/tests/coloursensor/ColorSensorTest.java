@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import org.firstinspires.ftc.teamcode.Hardware;
@@ -16,7 +15,7 @@ public class ColorSensorTest extends LinearOpMode {
     public ColorSensor colourSensor;
     public ColorSensor colourSensor2;
 
-    public Telemetry telemetry;
+    private Telemetry telemetry;
 
     private final ElapsedTime detectColorTime = new ElapsedTime();
 
@@ -33,6 +32,7 @@ public class ColorSensorTest extends LinearOpMode {
         waitForStart();
 
         detectColorTime.reset();
+
         boolean hasDetectedColor = false;
         boolean detectedPurple = false;
         boolean detectedGreen = false;
