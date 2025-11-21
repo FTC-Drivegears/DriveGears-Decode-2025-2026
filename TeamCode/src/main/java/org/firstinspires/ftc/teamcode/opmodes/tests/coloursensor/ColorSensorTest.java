@@ -1,4 +1,5 @@
-package org.firstinspires.ftc.teamcode.subsystems.Sorter;
+//this is for teleop
+package org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
