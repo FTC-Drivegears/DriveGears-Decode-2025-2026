@@ -81,8 +81,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             // Manually spin sorter plate.
 
-            boolean shouldIntakeGreen = gamepad1.dpad_left;
-            boolean shouldIntakePurple = gamepad1.dpad_right;
+            boolean shouldIntakeGreen = gamepad2.dpad_down;
+            boolean shouldIntakePurple = gamepad2.dpad_up;
             if (shouldIntakeGreen || shouldIntakePurple) {
                 double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
                 char curColor = 'g';
@@ -96,8 +96,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
 
             // Manually outtake ball.
-            boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
-            boolean shouldOuttakeGreen = gamepad1.b;
+            boolean shouldOuttakePurple = gamepad1.dpad_up;
+            boolean shouldOuttakeGreen = gamepad1.dpad_down;
             if (shouldOuttakePurple || shouldOuttakeGreen) {
                 double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
                 char curColor = 'g';
