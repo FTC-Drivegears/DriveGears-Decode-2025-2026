@@ -81,8 +81,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             // Manually spin sorter plate.
 
-            boolean shouldIntakeGreen = gamepad1.dpad_left;
-            boolean shouldIntakePurple = gamepad1.dpad_right;
+            boolean shouldIntakeGreen = gamepad2.dpad_down;
+            boolean shouldIntakePurple = gamepad2.dpad_up;
             if (shouldIntakeGreen || shouldIntakePurple) {
                 double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
                 char curColor = 'g';
@@ -96,8 +96,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
 
             // Manually outtake ball.
-            boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
-            boolean shouldOuttakeGreen = gamepad1.b;
+            boolean shouldOuttakePurple = gamepad1.dpad_up;
+            boolean shouldOuttakeGreen = gamepad1.dpad_down;
             if (shouldOuttakePurple || shouldOuttakeGreen) {
                 double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
                 char curColor = 'g';
@@ -160,7 +160,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             previousXState = currentXState;
 
 
-            curRB = gamepad1.right_bumper;
+            curRB = gamepad2.right_bumper;
             if(curRB){
                 if(hoodPos <= 0.359){
                     hoodPos = 0.359;
@@ -171,7 +171,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 hood.setPosition(hoodPos);
             }
 
-            curLB = gamepad1.left_bumper;
+            curLB = gamepad2.left_bumper;
             if(curLB){
                 if(hoodPos >= 0.846){
                     hoodPos = 0.846;
@@ -182,7 +182,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 hood.setPosition(hoodPos);
             }
 
-            if(gamepad1.dpad_up){
+            if(gamepad2.y){
                 if(shootSpeed >= 6000.0){
                     shootSpeed = 6000.0;
                 }
@@ -193,7 +193,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-            if(gamepad1.dpad_down) {
+            if(gamepad2.b) {
                 if (shootSpeed <= 0.0) {
                     shootSpeed = 0.0;
                 } else {
