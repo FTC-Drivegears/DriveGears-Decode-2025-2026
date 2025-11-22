@@ -160,7 +160,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             previousXState = currentXState;
 
 
-            curRB = gamepad1.right_bumper;
+            curRB = gamepad2.right_bumper;
             if(curRB){
                 if(hoodPos <= 0.359){
                     hoodPos = 0.359;
@@ -171,7 +171,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 hood.setPosition(hoodPos);
             }
 
-            curLB = gamepad1.left_bumper;
+            curLB = gamepad2.left_bumper;
             if(curLB){
                 if(hoodPos >= 0.846){
                     hoodPos = 0.846;
@@ -182,7 +182,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 hood.setPosition(hoodPos);
             }
 
-            if(gamepad1.dpad_up){
+            if(gamepad2.dpad_up){
                 if(shootSpeed >= 6000.0){
                     shootSpeed = 6000.0;
                 }
@@ -193,7 +193,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-            if(gamepad1.dpad_down) {
+            if(gamepad2.dpad_down) {
                 if (shootSpeed <= 0.0) {
                     shootSpeed = 0.0;
                 } else {
