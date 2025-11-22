@@ -21,9 +21,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private SorterSubsystem sorterSubsystem;
     private long lastFireTime;
     private long lastIntakeTime;
-
     private long lastOuttakeTime;
 
+    boolean isManualPushOn;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -106,6 +106,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
                 if (durationOuttake >= 0.7) {
                     sorterSubsystem.outtakeBall(curColor);
+                    isManualPushOn = false;
                     lastOuttakeTime = System.nanoTime();
                 }
             }
@@ -113,10 +114,14 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 double durationFire = (System.nanoTime() - lastFireTime)/1E9;
                 if (durationFire >= 0.7) {
                     sorterSubsystem.quickFire();
+                    isManualPushOn = false;
                     lastFireTime = System.nanoTime();
                 }
             }
-            sorterSubsystem.pushDown(); // Will push down if the pusher is up.
+
+            if (!isManualPushOn) {
+                sorterSubsystem.pushDown(); // Will push down if the pusher is up by outtake.
+            }
 
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger){
@@ -138,9 +143,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 togglePusher = !togglePusher;
 
                 if (togglePusher){
+                    isManualPushOn = true;
                     pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                     sorterSubsystem.setIsPusherUp(true);
-                }else{
+                } else {
                     pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                     sorterSubsystem.setIsPusherUp(false);
                 }

@@ -136,7 +136,7 @@ public class SorterSubsystem {
     }
 
     public void pushDown() {
-        if (isPusherUp && pushTime.milliseconds() >= 350) {
+        if (isPusherUp && pushTime.milliseconds() >= 1500) {
             pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             telemetry.addLine("Pusher down");
             isPusherUp = false;
