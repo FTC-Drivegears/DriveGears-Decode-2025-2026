@@ -25,7 +25,7 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
 
 
     enum AUTO_STATE {
-        FIRST_SHOT, RESET, COLLECTION_1, SECOND_SHOT, COLLECTION_2, THIRD_SHOT, FINISH
+        FIRST_SHOT, RESET, GET_OFF_LINE, FINISH
     }
 
     enum PATTERN {
@@ -214,8 +214,8 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    shooterSubsystem.setMaxRPM(3900);
-                    mecanumCommand.moveToPos(-100, 0, 0);
+                    shooterSubsystem.setMaxRPM(2600);
+                    mecanumCommand.moveToPos(-50, 0, 0);
                     hood.setPosition(0.846); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -236,7 +236,7 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 750 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 1500 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -387,9 +387,26 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
                     if (!isPusherUp && stageTimer.milliseconds() > 500) {
                         if (sort(1)) {
                             stageTimer.reset();
-                            autoState = AUTO_STATE.COLLECTION_1;
+                            autoState = AUTO_STATE.GET_OFF_LINE;
                         }
                     }
+                    break;
+                case GET_OFF_LINE:
+                    switch(stage){
+                        case 0:
+                            mecanumCommand.moveToPos(-75, -50, -Math.PI/4);
+                            stageTimer.reset();
+                            stage++;
+                            break;
+                        case 1:
+                            stage = 0;
+                            stageTimer.reset();
+                            autoState = AUTO_STATE.FINISH;
+                            break;
+                    }
+                case FINISH:
+                    outtakeFlag = false;
+                    mecanumCommand.stop();
                     break;
             }
         }
