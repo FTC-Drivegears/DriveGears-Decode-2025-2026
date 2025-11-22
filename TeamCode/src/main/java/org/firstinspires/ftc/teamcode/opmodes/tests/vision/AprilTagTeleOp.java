@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.vision;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Hardware;
@@ -17,10 +18,10 @@ public class AprilTagTeleOp extends LinearOpMode {
         mecanumCommand = new MecanumCommand(hw);
         vision = new LogitechVisionSubsystem(hw, "BLUE");
 
-        waitForStart();
-
         double maxPower = 1;
-        double deadZone = 0.0; //inches
+        double zone = 1;   // in inches
+
+        waitForStart();
 
         while (opModeIsActive()) {
 
@@ -34,18 +35,16 @@ public class AprilTagTeleOp extends LinearOpMode {
 
             if (alignPressed) {
 
-                double xOffset = vision.targetApril(telemetry); //inches
-                telemetry.addData("ftcPose.x", xOffset);
+                double xOffset = vision.targetApril(telemetry);  // in inches
+                telemetry.addData("x", xOffset);
 
                 if (!Double.isNaN(xOffset)) {
 
-                    double kP = (Math.abs(xOffset) < 3.0) ? 0.008 : 0.015;
+                    double kP = (Math.abs(xOffset) < 1.0) ? 0.05 : 0.07;
 
-                    if (Math.abs(xOffset) > deadZone) {
+                    if (Math.abs(xOffset) > zone) {
 
-                        // More offset = more turning power
                         double turnPower = -xOffset * kP;
-
                         turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
 
                         mecanumCommand.fieldOrientedMove(0, 0, turnPower);
@@ -53,14 +52,17 @@ public class AprilTagTeleOp extends LinearOpMode {
                         telemetry.addData("Turn Power", turnPower);
 
                     } else {
+                        // In zone = stop turning
                         mecanumCommand.fieldOrientedMove(0, 0, 0);
                         telemetry.addLine("Centered");
                     }
 
                 } else {
+                    mecanumCommand.fieldOrientedMove(0, 0, 0);
                     telemetry.addLine("No Tag Detected");
                 }
             }
+
             telemetry.update();
         }
     }
