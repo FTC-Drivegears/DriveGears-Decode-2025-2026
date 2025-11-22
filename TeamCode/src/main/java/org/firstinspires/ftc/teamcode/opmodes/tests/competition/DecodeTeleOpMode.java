@@ -179,7 +179,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //                }
 //            }
 
-            if (gamepad1.b && sorterTimer.milliseconds() > 1000){
+            if (gamepad2.b && sorterTimer.milliseconds() > 1000){
                 sorterPosition = (sorterPosition+1)%3;
                 sorterTimer.reset();
                 if (sorterPosition == 0) {
@@ -253,19 +253,19 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //                hood.setPosition(hoodPos);
 //            }
             // CLOSE
-            if (gamepad2.x){
+            if (gamepad2.a){
                 hood.setPosition(CLOSE_HOOD);
                 shootSpeed = CLOSE_SHOOT_SPEED;
 
             }
             //MID
-            if (gamepad2.y){
+            if (gamepad2.x){
                 hood.setPosition(MID_HOOD);
                 shootSpeed = MID_SHOOT_SPEED;
             }
 
             //FAR
-            if (gamepad2.b){
+            if (gamepad2.y){
                 hood.setPosition(FAR_HOOD);
                 shootSpeed = FAR_SHOOT_SPEED;
             }
