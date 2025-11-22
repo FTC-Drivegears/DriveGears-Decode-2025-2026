@@ -231,27 +231,27 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             previousXState = currentXState;
 
-//            curRB = gamepad1.right_bumper;
-//            if(curRB){
-//                if(hoodPos <= 0.359){
-//                    hoodPos = 0.359;
-//                }
-//                else{
-//                    hoodPos -= 0.001;
-//                }
-//                hood.setPosition(hoodPos);
-//            }
-//
-//            curLB = gamepad1.left_bumper;
-//            if(curLB){
-//                if(hoodPos >= 0.846){
-//                    hoodPos = 0.846;
-//                }
-//                else{
-//                    hoodPos += 0.001;
-//                }
-//                hood.setPosition(hoodPos);
-//            }
+            curRB = gamepad2.right_bumper;
+            if(curRB){
+                if(hoodPos <= 0.359){
+                    hoodPos = 0.359;
+                }
+                else{
+                    hoodPos -= 0.001;
+                }
+                hood.setPosition(hoodPos);
+            }
+
+            curLB = gamepad2.left_bumper;
+            if(curLB){
+                if(hoodPos >= 0.846){
+                    hoodPos = 0.846;
+                }
+                else{
+                    hoodPos += 0.001;
+                }
+                hood.setPosition(hoodPos);
+            }
             // CLOSE
             if (gamepad2.a){
                 hood.setPosition(CLOSE_HOOD);
