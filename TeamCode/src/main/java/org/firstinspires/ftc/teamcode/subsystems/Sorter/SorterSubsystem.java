@@ -26,6 +26,7 @@ public class SorterSubsystem {
     private final ArrayList<Artifact> sorterList;
 
     private final ElapsedTime pushTime = new ElapsedTime();
+    private final ElapsedTime sorterSpinTime = new ElapsedTime();
 
     private final ElapsedTime spinForIntakeTime = new ElapsedTime();
     private final ElapsedTime spinForOuttakeTime = new ElapsedTime();
@@ -76,6 +77,7 @@ public class SorterSubsystem {
 
             telemetry.addLine("I am pressing dpad left yes");
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+            sorterSpinTime.reset();
             sorterList.add(new Artifact(color, sorter.getPosition()));
             spinForIntakeTime.reset();
             curSorterPositionIndex++;
@@ -96,10 +98,12 @@ public class SorterSubsystem {
 
     // push will wait 750ms to push up, then wait for less time to go back down.
     public void push() {
-        pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-        telemetry.addLine("Pusher up");
-        isPusherUp = true;
-        pushTime.reset();
+        if (sorterSpinTime.milliseconds() >= 1500) {
+            pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+            telemetry.addLine("Pusher up");
+            isPusherUp = true;
+            pushTime.reset();
+        }
     }
 
     public void pushDown() {
@@ -120,11 +124,11 @@ public class SorterSubsystem {
     }
 
     public void outtakeBall(char colorToRemove) {
-        if (this.sorterList.isEmpty()) {
-            telemetry.addLine("No ball in sorter");
-            telemetry.update();
-            return;
-        }
+//        if (this.sorterList.isEmpty()) {
+//            telemetry.addLine("No ball in sorter");
+//            telemetry.update();
+//            return;
+//        }
 
         telemetry.addData("color to remove", colorToRemove);
         this.spinToBallAndPush(colorToRemove);
@@ -182,6 +186,7 @@ public class SorterSubsystem {
 
         if (!isPusherUp) {
             sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
+            sorterSpinTime.reset();
             telemetry.addLine("index" + ballIndexToRemoveFromSorter);
         } else {
             telemetry.addLine("pusher is up, CANNOT turn sorter");

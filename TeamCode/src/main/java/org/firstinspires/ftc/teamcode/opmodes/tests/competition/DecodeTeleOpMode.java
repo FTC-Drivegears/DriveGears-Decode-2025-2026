@@ -3,6 +3,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
@@ -32,6 +33,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private final int MID_SHOOT_SPEED = 3000;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
+
+    private final ElapsedTime sorterTimer = new ElapsedTime();
+
+    double sorterPosition = 0.0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -144,7 +149,17 @@ public class DecodeTeleOpMode extends LinearOpMode {
             prevRightTrigger = curRightTrigger;
 
 
-
+            if (gamepad2.b && sorterTimer.milliseconds() > 1000){
+                sorterPosition = (sorterPosition+1)%3;
+                sorterTimer.reset();
+                if (sorterPosition == 0) {
+                    hw.sorter.setPosition(0.085);//60 degrees
+                }
+            } else if (sorterPosition == 1) {
+                hw.sorter.setPosition(0.515);//60 degrees
+            } else if (sorterPosition == 2) {
+                hw.sorter.setPosition(0.96);//60 degrees
+            }
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState){
