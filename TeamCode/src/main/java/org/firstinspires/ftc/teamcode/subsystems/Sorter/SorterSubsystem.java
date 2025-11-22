@@ -31,7 +31,7 @@ public class SorterSubsystem {
     private final ElapsedTime spinForIntakeTime = new ElapsedTime();
     private final ElapsedTime spinForOuttakeTime = new ElapsedTime();
     private final ElapsedTime detectColorTime = new ElapsedTime();
-    private boolean isPusherUp = false; // pusher is down
+    public boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.1, 0.43, 0.875};
 
