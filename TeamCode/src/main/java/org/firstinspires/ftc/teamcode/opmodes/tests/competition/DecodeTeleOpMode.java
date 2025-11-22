@@ -154,11 +154,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 sorterTimer.reset();
                 if (sorterPosition == 0) {
                     hw.sorter.setPosition(0.085);//60 degrees
+                } else if (sorterPosition == 1) {
+                    hw.sorter.setPosition(0.515);//60 degrees
+                } else if (sorterPosition == 2) {
+                    hw.sorter.setPosition(0.96);//60 degrees
                 }
-            } else if (sorterPosition == 1) {
-                hw.sorter.setPosition(0.515);//60 degrees
-            } else if (sorterPosition == 2) {
-                hw.sorter.setPosition(0.96);//60 degrees
             }
 
             currentYState = gamepad1.y;
