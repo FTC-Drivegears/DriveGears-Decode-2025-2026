@@ -385,7 +385,7 @@ public class RedAutoFarOpMode extends LinearOpMode {
                     }
                     break;
                 case RESET: //set position for ball 1
-                     if(!isPusherUp && stageTimer.milliseconds() > 500){
+                     if(!isPusherUp && stageTimer.milliseconds() > 1000){
                         if(sort(0)){
                             stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_1;
