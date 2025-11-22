@@ -29,7 +29,6 @@ public class RedAutoFarOpMode extends LinearOpMode {
     }
 
     enum PATTERN {
-        NO_TAG, //default state
         GPP_1, //Tag ID 21
         PGP_2, //Tag ID 22
         PPG_3 //Tag ID 23
@@ -65,7 +64,6 @@ public class RedAutoFarOpMode extends LinearOpMode {
     private static boolean currentPushState;
 
     private static int stage;
-    //        PATTERN pattern = PATTERN.NO_TAG; // default
     private PATTERN pattern = PATTERN.PPG_3;
 
 
@@ -155,7 +153,7 @@ public class RedAutoFarOpMode extends LinearOpMode {
         AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
-        PATTERN pattern = PATTERN.NO_TAG; // default
+        PATTERN pattern = PATTERN.PPG_3; // default
         boolean outtakeFlag = false;
         boolean intakeFlag = false;
 
@@ -388,10 +386,10 @@ public class RedAutoFarOpMode extends LinearOpMode {
                     break;
                 case RESET: //set position for ball 1
                      if(!isPusherUp && stageTimer.milliseconds() > 500){
-                    if(sort(1)){
-                        stageTimer.reset();
-                        autoState = AUTO_STATE.COLLECTION_1;
-                    }
+                        if(sort(0)){
+                            stageTimer.reset();
+                            autoState = AUTO_STATE.COLLECTION_1;
+                        }
                     }
                     break;
 
@@ -410,42 +408,42 @@ public class RedAutoFarOpMode extends LinearOpMode {
                             }
                             break;
                         case 2: //intake first ball
-                            if (stageTimer.milliseconds() > 1250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 800) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(70, -45, -Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                sort(2);
+                            if (stageTimer.milliseconds() > 750) { //replace with whatever time you think is appropriate
+                                sort(1);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 1750) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(70, -58, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
-                                sort(0);
+                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
+                                sort(2);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 6: //move to third ball
-                            if (stageTimer.milliseconds() > 2150) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(65, -85, -Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 7:
-                            if (stageTimer.milliseconds() > 1900) { //replace with whatever time you think is appropriate
+                                if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
                                 intakeFlag = false;
                                 stageTimer.reset();
                                 stage = 0;

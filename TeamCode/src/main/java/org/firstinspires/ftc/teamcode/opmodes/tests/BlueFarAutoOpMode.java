@@ -29,7 +29,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
     }
 
     enum PATTERN {
-        NO_TAG, //default state
         GPP_1, //Tag ID 21
         PGP_2, //Tag ID 22
         PPG_3 //Tag ID 23
@@ -215,9 +214,9 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    shooterSubsystem.setMaxRPM(3900);
+                    shooterSubsystem.setMaxRPM(3800);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.47014);
+                    mecanumCommand.moveToPos(26, -6, 0.4714);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -229,7 +228,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         stageTimer.reset();
                                         break;
                                     case 1: // sort
-                                        if (stageTimer.milliseconds() > 2000) {
+                                        if (stageTimer.milliseconds() > 1500) {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
@@ -254,14 +253,14 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 4: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
@@ -282,7 +281,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         stageTimer.reset();
                                         break;
                                     case 1: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
@@ -307,14 +306,14 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 4: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
@@ -335,7 +334,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         stageTimer.reset();
                                         break;
                                     case 1: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
@@ -353,21 +352,21 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 1000) {
+                                        if (stageTimer.milliseconds() > 750) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 4: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
@@ -387,7 +386,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     break;
                 case RESET: //set position for ball 1
                     if(!isPusherUp && stageTimer.milliseconds() > 500){
-                        if(sort(1)) {
+                        if(sort(0)) {
                             stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_1;
                         }
@@ -409,21 +408,21 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 2: //intake first ball
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 800) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(70, 45, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                sort(2);
+                            if (stageTimer.milliseconds() > 1250) { //replace with whatever time you think is appropriate
+                                sort(1);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(70, 58, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
@@ -431,14 +430,14 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 5: //set position to third ball
                             if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                sort(0);
+                                sort(2);
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 6: //move to third ball
                             if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(65, 85, Math.PI / 2); //go to place to intake third artifact
+                                mecanumCommand.moveToPos(70, 85, Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -458,8 +457,8 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
                 case SECOND_SHOT:
                     //mecanumCommand.moveToPos(26, -14, 0.5014); //move to whatever position we used to go to
-                    mecanumCommand.moveToPos(26, -6, 0.47014);
-                    shooterSubsystem.setMaxRPM(3900);
+                    mecanumCommand.moveToPos(26, -6, 0.43014);
+                    shooterSubsystem.setMaxRPM(3800);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -496,14 +495,14 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 4: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
@@ -525,8 +524,8 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         stageTimer.reset();
                                         break;
                                     case 1: // sort
-                                        if (stageTimer.milliseconds() > 1000) {
-                                            sort(1);
+                                        if (stageTimer.milliseconds() > 1250) {
+                                            sort(2);
                                             stage++;
                                             stageTimer.reset();
                                         }
@@ -550,15 +549,15 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 4: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
-                                            sort(2);
+                                        if (stageTimer.milliseconds() > 1250) {
+                                            sort(0);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
-                                            sort(0);
+                                        if (stageTimer.milliseconds() > 1250) {
+                                            sort(1);
                                             stage++;
                                             stageTimer.reset();
                                         }
@@ -579,7 +578,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         stageTimer.reset();
                                         break;
                                     case 1: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(1);
                                             stage++;
                                             stageTimer.reset();
@@ -604,14 +603,14 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 4: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 1250) {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();

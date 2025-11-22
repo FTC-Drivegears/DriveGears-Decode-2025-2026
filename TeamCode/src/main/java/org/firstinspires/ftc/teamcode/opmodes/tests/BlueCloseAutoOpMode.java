@@ -29,7 +29,6 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
     }
 
     enum PATTERN {
-        NO_TAG, //default state
         GPP_1, //Tag ID 21
         PGP_2, //Tag ID 22
         PPG_3 //Tag ID 23
