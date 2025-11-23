@@ -114,17 +114,17 @@ public class SorterSubsystem {
     public void quickFire(Servo sorter) {
         sorter.setPosition(sorterList.get(0).getPosition());
         opMode.sleep(500);
-        //launch
+        // launch
         sorterList.remove(0);
 
         sorter.setPosition(sorterList.get(0).getPosition());
         opMode.sleep(500);
-        //launch
+        // launch
         sorterList.remove(0);
 
         sorter.setPosition(sorterList.get(0).getPosition());
         opMode.sleep(500);
-        //launch
+        // launch
         sorterList.remove(0);
     }
 
