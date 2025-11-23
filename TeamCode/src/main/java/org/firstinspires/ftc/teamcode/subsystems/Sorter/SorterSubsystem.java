@@ -9,34 +9,33 @@ import org.firstinspires.ftc.teamcode.util.Artifact;
 import java.util.ArrayList;
 
 public class SorterSubsystem {
-    private final Servo sorter;
+    public final Servo sorter;
 
     private final ColorSensor colourSensor;
     private final Telemetry telemetry;
     private final LinearOpMode opMode;
 
-    private ArrayList<String> pattern;
-
     private ArrayList<Artifact> sorterList = new ArrayList<Artifact>();
 
     private int red;
-
     private int blue;
-
     private int green;
-
     private int alpha;
 
     private long lastColourDetectionTime;
+    private long lastColourTurnTime;
 
     boolean detectedColour = false;
+
+    private static double pos1 = 0.085;
+    private static double pos2 = 0.515;
+    private static double pos3 = 0.96;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
         this.sorter = hw.sorter;
         this.colourSensor = hw.colour;
         this.opMode = opMode;
         this.telemetry = telemetry;
-        pattern = new ArrayList<>();
     }
 
     public void detectColour() {
@@ -88,21 +87,22 @@ public class SorterSubsystem {
         if (sorterList.size() == 3) {
             return;
         }
-
-        if (sorter.getPosition() != 1) {
-            // Ensures the sorter doesn't break
-            sorter.setPosition(sorterList.size() * 0.45 );
+        if (sorter.getPosition() == pos2) {
+            sorter.setPosition(pos3);
+        }
+        if (sorter.getPosition() == pos1) {
+            sorter.setPosition(pos2);
         }
     }
 
-    public void turnToColour(String color, Servo sorter) {
+    public void turnToColour(String colour, Servo sorter) {
         double pos = 0;
-        if (color.equals("Green")) {
+        if (colour.equals("Green")) {
             // Gets position of the first green it finds
             pos = sorterList.get(sorterList.indexOf("Green")).getPosition();
         }
 
-        if (color.equals("Purple")) {
+        if (colour.equals("Purple")) {
             // Gets position of the first purple it finds
             pos = sorterList.get(sorterList.indexOf("Purple")).getPosition();
         }
@@ -130,12 +130,6 @@ public class SorterSubsystem {
 
     public int getNumBalls() {
         return sorterList.size();
-    }
-
-    public void setPattern(String art1, String art2, String art3){
-        pattern.add(art1);
-        pattern.add(art2);
-        pattern.add(art3);
     }
 
     public int getRed(){
