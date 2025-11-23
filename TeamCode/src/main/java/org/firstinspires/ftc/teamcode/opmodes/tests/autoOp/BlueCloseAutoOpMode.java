@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes.tests;
+package org.firstinspires.ftc.teamcode.opmodes.tests.autoOp;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -12,8 +12,8 @@ import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsyst
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 
-@Autonomous (name = "Red Close Auto")
-public class RedCloseAutoOpMode extends LinearOpMode {
+@Autonomous (name = "Blue Close Auto")
+public class BlueCloseAutoOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
     private ElapsedTime resetTimer;
@@ -393,7 +393,7 @@ public class RedCloseAutoOpMode extends LinearOpMode {
                 case GET_OFF_LINE:
                     switch(stage){
                         case 0:
-                            mecanumCommand.moveToPos(-75, 50, Math.PI/4);
+                            mecanumCommand.moveToPos(-75, -50, -Math.PI/4);
                             stageTimer.reset();
                             stage++;
                             break;
