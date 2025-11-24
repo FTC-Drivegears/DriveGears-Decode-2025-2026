@@ -17,13 +17,7 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
-    private MecanumCommand mecanumCommand;
     private Hardware hw;
-    private IMU imu;
-    private DcMotorEx lf;
-    private DcMotorEx lb;
-    private DcMotorEx rf;
-    private DcMotorEx rb;
     private double theta;
     private DcMotor intake;
     private DcMotor shooter;
@@ -69,16 +63,13 @@ public class DecodeTeleOpMode extends LinearOpMode {
         double hoodPos = 0.846;
         double shootSpeed = 4000;
 
-        lf.setDirection(DcMotorEx.Direction.REVERSE);
-        rb.setDirection(DcMotorEx.Direction.REVERSE);
-
-        imu = hw.imu;
+        IMU imu = hw.imu;
         hw = Hardware.getInstance(hardwareMap);
-        lf = hw.lf;
-        lb = hw.lb;
-        rf = hw.rf;
-        rb = hw.rb;
-        mecanumCommand = new MecanumCommand(hw);
+        DcMotorEx lf = hw.lf;
+        DcMotorEx lb = hw.lb;
+        DcMotorEx rf = hw.rf;
+        DcMotorEx rb = hw.rb;
+        MecanumCommand mecanumCommand = new MecanumCommand(hw);
         ShooterSubsystem shooterSubsystem = new ShooterSubsystem(hw);
         Servo pusher = hw.pusher;
         Servo light = hw.light;
@@ -95,9 +86,12 @@ public class DecodeTeleOpMode extends LinearOpMode {
             sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
         }
 
+        lf.setDirection(DcMotorEx.Direction.REVERSE);
+        rb.setDirection(DcMotorEx.Direction.REVERSE);
+
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP, //what the orientation of the logo on the REV HUB
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));//what the orientation of usb is
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT, //what the orientation of the logo on the REV HUB
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));//what the orientation of usb is
                 //these might not be correct
         imu.initialize(parameters);
 
