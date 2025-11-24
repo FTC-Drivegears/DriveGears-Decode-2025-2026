@@ -204,6 +204,7 @@ public class SorterSubsystem {
         }
 
         this.waitForSpinAndPush(ballIndexToRemoveFromSorter);
+        this.waitForSpinAndPush(ballIndexToRemoveFromSorter);
     }
 
     private void waitForSpinAndPush(int ballIndexToRemoveFromSorter) { //

@@ -5,6 +5,7 @@ import android.widget.GridLayout;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -27,6 +28,7 @@ public class Hardware {
 
     public final Servo sorter;
     public final Servo pusher;
+    public final IMU imu;
     public Servo light;
     public final CRServo turret;
 
@@ -44,7 +46,7 @@ public class Hardware {
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
-
+        this.imu = hwMap.get(IMU.class, Specifications.IMU);
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
         this.colourSensor = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
