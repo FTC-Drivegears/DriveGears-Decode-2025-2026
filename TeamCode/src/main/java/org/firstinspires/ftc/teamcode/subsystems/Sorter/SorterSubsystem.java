@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems.Sorter;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware;
@@ -13,11 +14,27 @@ import java.util.ArrayList;
 public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
     private final Servo sorter;
+    private final ColorSensor colourSensor1;
+    private final ColorSensor colourSensor2;
     private Servo pusher;
     private final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
+
+    boolean detectedColour = false;
+
+    public int red1;
+    public int blue1;
+    public int green1;
+    public int alpha1;
+
+    public int red2;
+    public int blue2;
+    public int green2;
+    public int alpha2;
+
+    private long lastColourDetectionTime;
 
     private ElapsedTime pushTime = new ElapsedTime();
 
@@ -33,6 +50,8 @@ public class SorterSubsystem {
         this.pusher = hw.pusher;
         this.opMode = opMode;
         this.telemetry = telemetry;
+        this.colourSensor1 = hw.colour1;
+        this.colourSensor2 = hw.colour2;
         this.sorterList = new ArrayList<>();
 
         this.reinitPattern(pattern);
@@ -66,7 +85,7 @@ public class SorterSubsystem {
         this.sorterList.add(new Artifact(color, sorter.getPosition()));
     }
 
-    public void turnToIntake() { // turn sorter before intaking a ball
+    public void turnToIntake() { // turn sorter before intake a ball
 
         if (sorter.getPosition() != 1 && !isPusherUp) { // ensure the sorter cannot turn more than max
             telemetry.addData("how many balls?", this.sorterList.size());
@@ -79,6 +98,68 @@ public class SorterSubsystem {
             telemetry.update();
         }
         telemetry.update();
+    }
+
+    public void turnSorter() {
+        // If the sorterList is full it stops
+        if (sorterList.size() == MAX_NUM_BALLS) {
+            return;
+        }
+        if (sorter.getPosition() == sorterPositions[1]) {
+            sorter.setPosition(sorterPositions[2]);
+        }
+        if (sorter.getPosition() == sorterPositions[0]) {
+            sorter.setPosition(sorterPositions[1]);
+        }
+    }
+
+    public void detectColour() {
+        red1 = colourSensor1.red();
+        green1 = colourSensor1.green();
+        blue1 = colourSensor1.blue();
+        alpha1 = colourSensor1.alpha();
+
+        red2 = colourSensor2.red();
+        green2 = colourSensor2.green();
+        blue2 = colourSensor2.blue();
+        alpha2 = colourSensor2.alpha();
+
+        // If the sorter is full it stops
+        if (sorterList.size() == MAX_NUM_BALLS) {
+            return;
+        }
+
+        // Purple ball is detected
+        if (red1 > 50 && red1 < 65 && green1 < 95 && green1 > 80 && blue1 < 95 && blue1 > 78 && alpha1 < 85 && alpha1 > 70) {
+            telemetry.addLine("Purple Detected");
+            telemetry.update();
+            if (!detectedColour) {
+                detectedColour = true;
+                sorterList.add(new Artifact('P', sorter.getPosition()));
+                turnSorter();
+            }
+        }
+
+        // Green ball is detected
+        else if (red1 < 55 && red1 > 40 && green1 < 110 && green1 > 90 && blue1 < 90 && blue1 > 70 && alpha1 < 85 && alpha1 > 65) {
+            telemetry.addLine("Green Detected");
+            telemetry.update();
+            if (!detectedColour) {
+                detectedColour = true;
+                sorterList.add(new Artifact('G', sorter.getPosition()));
+                turnSorter();
+            }
+        }
+
+        else {
+            if (System.currentTimeMillis() - lastColourDetectionTime > 300) {
+                detectedColour = false;
+            }
+        }
+
+        if (detectedColour) {
+            lastColourDetectionTime = System.currentTimeMillis();
+        }
     }
     public void push(){
 

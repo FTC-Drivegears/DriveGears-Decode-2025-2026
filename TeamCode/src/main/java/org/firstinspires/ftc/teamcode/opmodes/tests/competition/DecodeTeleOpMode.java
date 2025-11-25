@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
@@ -290,6 +289,19 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 light.setPosition(0.0);
             }
 
+            telemetry.addLine("-----------First Sensor----------");
+            telemetry.addData("R", sorterSubsystem.red1);
+            telemetry.addData("G", sorterSubsystem.green1);
+            telemetry.addData("B", sorterSubsystem.blue1);
+            telemetry.addData("A", sorterSubsystem.alpha1);
+            telemetry.addLine("---------------------------------");
+            telemetry.addLine("-----------Second Sensor---------");
+            telemetry.addLine("---------------------------------");
+            telemetry.addData("R", sorterSubsystem.red2);
+            telemetry.addData("G", sorterSubsystem.green2);
+            telemetry.addData("B", sorterSubsystem.blue2);
+            telemetry.addData("A", sorterSubsystem.alpha2);
+            telemetry.addLine("---------------------------------");
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.addData("Hood pos: ", hoodPos);
