@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.vision;
-
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.Range;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
@@ -12,34 +10,26 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainCon
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/*
+@TeleOp
+public class LogitechFollow extends LinearOpMode {
+    // Adjust these numbers to suit your robot.
+    final double DESIRED_DISTANCE = 12.0; //  this is how close the camera should get to the target (inches)
 
- * Press and hold the *Left Bumper* to enable the automatic "Drive to target" mode.
- * Release the Left Bumper to return to manual driving mode.
- * Use DESIRED_DISTANCE to set how close you want the robot to get to the target.
- * Speed and Turn sensitivity can be adjusted using the SPEED_GAIN, STRAFE_GAIN and TURN_GAIN constants.
- */
-
-@Autonomous (name = "LogitechFollow")
-public class LogitechFollow extends LinearOpMode
-{
-    final double DESIRED_DISTANCE = 8.0; //  this is how close the camera should get to the target (inches)
-    final double SPEED_GAIN  =  0.08  ;   //  Forward Speed Control "Gain". e.g. Ramp up to 50% power at a 25 inch error.   (0.50 / 25.0)
-    final double STRAFE_GAIN =  0.04 ;   //  Strafe Speed Control "Gain".  e.g. Ramp up to 37% power at a 25 degree Yaw error.   (0.375 / 25.0)
-    final double TURN_GAIN   =  0.05  ;   //  Turn Control "Gain".  e.g. Ramp up to 25% power at a 25 degree error. (0.25 / 25.0)
+    final double SPEED_GAIN  =  0.02  ;   //  Forward Speed Control "Gain". e.g. Ramp up to 50% power at a 25 inch error.   (0.50 / 25.0)
+    final double STRAFE_GAIN =  0.015 ;   //  Strafe Speed Control "Gain".  e.g. Ramp up to 37% power at a 25 degree Yaw error.   (0.375 / 25.0)
+    final double TURN_GAIN   =  0.01  ;   //  Turn Control "Gain".  e.g. Ramp up to 25% power at a 25 degree error. (0.25 / 25.0)
 
     final double MAX_AUTO_SPEED = 0.5;   //  Clip the approach speed to this max value (adjust for your robot)
     final double MAX_AUTO_STRAFE= 0.5;   //  Clip the strafing speed to this max value (adjust for your robot)
     final double MAX_AUTO_TURN  = 0.3;   //  Clip the turn speed to this max value (adjust for your robot)
 
-    private DcMotor frontLeftDrive = null;  //  Used to control the left front drive wheel
-    private DcMotor frontRightDrive = null;  //  Used to control the right front drive wheel
-    private DcMotor backLeftDrive = null;  //  Used to control the left back drive wheel
-    private DcMotor backRightDrive = null;  //  Used to control the right back drive wheel
+    private DcMotorEx frontLeftDrive = null;  //  Used to control the left front drive wheel
+    private DcMotorEx frontRightDrive = null;  //  Used to control the right front drive wheel
+    private DcMotorEx backLeftDrive = null;  //  Used to control the left back drive wheel
+    private DcMotorEx backRightDrive = null;  //  Used to control the right back drive wheel
 
     private static final boolean USE_WEBCAM = true;  // Set true to use a webcam, or false for a phone camera
     private static final int DESIRED_TAG_ID = -1;     // Choose the tag you want to approach or set to -1 for ANY tag.
@@ -47,8 +37,7 @@ public class LogitechFollow extends LinearOpMode
     private AprilTagProcessor aprilTag;              // Used for managing the AprilTag detection process.
     private AprilTagDetection desiredTag = null;     // Used to hold the data for a detected AprilTag
 
-    @Override public void runOpMode()
-    {
+public void runOpMode() {
         boolean targetFound     = false;    // Set to true when an AprilTag target is detected
         double  drive           = 0;        // Desired forward power/speed (-1 to +1)
         double  strafe          = 0;        // Desired strafe power/speed (-1 to +1)
@@ -57,18 +46,24 @@ public class LogitechFollow extends LinearOpMode
         // Initialize the Apriltag Detection process
         initAprilTag();
 
-        frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
-        frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
-        backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
-        backRightDrive = hardwareMap.get(DcMotor.class, "backRightDrive");
+        // Initialize the hardware variables. Note that the strings used here as parameters
+        // to 'get' must match the names assigned during the robot configuration.
+        // step (using the FTC Robot Controller app on the phone).
+        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "lf");
+        frontRightDrive = hardwareMap.get(DcMotorEx.class, "rf");
+        backLeftDrive = hardwareMap.get(DcMotorEx.class, "lb");
+        backRightDrive = hardwareMap.get(DcMotorEx.class, "rb");
 
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
+        // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
+        // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
+        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
         if (USE_WEBCAM)
-            setManualExposure(7, 250);  // Use low exposure time to reduce motion blur
+            setManualExposure(2, 230);  // Use low exposure time to reduce motion blur
 
         // Wait for driver to press start
         telemetry.addData("Camera preview on/off", "3 dots, Camera Stream");
@@ -114,8 +109,7 @@ public class LogitechFollow extends LinearOpMode
             }
 
             // If Left Bumper is being pressed, AND we have found the desired target, Drive to target Automatically .
-            //if (gamepad1.left_bumper && targetFound) {
-            if (targetFound) {
+            if (gamepad1.left_bumper && targetFound) {
 
                 // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
                 double  rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
@@ -144,6 +138,12 @@ public class LogitechFollow extends LinearOpMode
         }
     }
 
+    /**
+     * Move robot according to desired axes motions
+     * Positive X is forward
+     * Positive Y is strafe left
+     * Positive Yaw is counter-clockwise
+     */
     public void moveRobot(double x, double y, double yaw) {
         // Calculate wheel powers.
         double frontLeftPower    =  x - y - yaw;
@@ -178,10 +178,13 @@ public class LogitechFollow extends LinearOpMode
         aprilTag = new AprilTagProcessor.Builder().build();
 
         // Adjust Image Decimation to trade-off detection-range for detection-rate.
+        // e.g. Some typical detection data using a Logitech C920 WebCam
         // Decimation = 1 ..  Detect 2" Tag from 10 feet away at 10 Frames per second
         // Decimation = 2 ..  Detect 2" Tag from 6  feet away at 22 Frames per second
         // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second
-        aprilTag.setDecimation(1);
+        // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second
+        // Note: Decimation can be changed on-the-fly to adapt during a match.
+        aprilTag.setDecimation(2);
 
         // Create the vision portal by using a builder.
         if (USE_WEBCAM) {
@@ -196,7 +199,12 @@ public class LogitechFollow extends LinearOpMode
                     .build();
         }
     }
-    private void    setManualExposure(int exposureMS, int gain) {
+
+    /*
+     Manually set the camera gain and exposure.
+     This can only be called AFTER calling initAprilTag(), and only works for Webcams;
+    */
+    private void setManualExposure(int exposureMS, int gain) {
         // Wait for the camera to be open, then use the controls
 
         if (visionPortal == null) {
