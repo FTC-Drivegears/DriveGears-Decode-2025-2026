@@ -78,7 +78,7 @@ public class decode2 extends LinearOpMode {
         light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.light.setPosition(0.0);
-        hw.sorter.setPosition(0.0);
+        hw.sorter.setPosition(0.085);
         hw.hood.setPosition(hoodPos);
 
         intake = hw.intake;
@@ -292,6 +292,7 @@ public class decode2 extends LinearOpMode {
             telemetry.addData("X", mecanumCommand.getX());
             telemetry.addData("Y", mecanumCommand.getY());
             telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+            telemetry.addData("Pusher State", togglePusher);
             telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }

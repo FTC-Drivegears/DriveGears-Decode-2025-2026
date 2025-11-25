@@ -36,7 +36,7 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
 
     //Pusher variables
     //Pusher variables
-    private static final double PUSHER_UP = 0.65;
+    private static final double PUSHER_UP = 0.2;
     private static final double PUSHER_DOWN = 1.0;
     private static final long PUSHER_TIME = 500;
     private static boolean isPusherUp = false;
@@ -70,39 +70,39 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
     int detection;
 
     static boolean halfPush(boolean isUp) {
-        if(isUp){
-            pusher.setPosition(PUSHER_UP);
-            isPusherUp = true;
+        if (isUp) {
+            if (!isPusherUp) {
+                pusher.setPosition(PUSHER_UP);
+                isPusherUp = true;
+                pusherTimer.reset();
+            }
+        } else {
+            if (isPusherUp) {
+                pusher.setPosition(PUSHER_DOWN);
+                isPusherUp = false;
+                pusherTimer.reset();
+            }
         }
-        else{
-            pusher.setPosition(PUSHER_DOWN);
-            isPusherUp = false;
-        }
-        if(pusherTimer.milliseconds() >= 1500){
+        if (pusherTimer.milliseconds() >= PUSHER_TIME) {
             pusherTimer.reset();
             return true;
         }
         return false;
     }
 
-
-
-
     static boolean sort(int sp) {
-        if (!isPusherUp){
+        if (!isPusherUp && pusherTimer.milliseconds() >= PUSHER_TIME) {
             if (sp == 0) {
                 sorter.setPosition(pos1);//60 degrees
                 return true;
-            }
-            else if (sp == 1) {
+            } else if (sp == 1) {
                 sorter.setPosition(pos2);//60 degrees
                 return true;
-            }
-            else if (sp == 2) {
+            } else if (sp == 2) {
                 sorter.setPosition(pos3);//60 degrees
                 return true;
             }
-            if (sorterTimer.milliseconds()>= 1500){
+            if (sorterTimer.milliseconds() >= 1500) {
                 sorterTimer.reset();
                 return true;
             }
