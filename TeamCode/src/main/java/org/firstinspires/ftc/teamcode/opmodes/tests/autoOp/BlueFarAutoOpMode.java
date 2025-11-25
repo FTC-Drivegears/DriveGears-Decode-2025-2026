@@ -51,8 +51,12 @@ public class BlueFarAutoOpMode extends LinearOpMode {
     private static double pos3 = 0.96;
     private static int standardms = 1000;
 
-    private static final long SORTER_TIME = 250; // wait after commanding sorter
-    private static int currentSort = -1; // -1 = unknown / not set
+    private static final long SORTER_TIME = 250;
+    private static int currentSort = -1;
+
+    private static final ElapsedTime intakeTimer = new ElapsedTime();
+    private static final long INTAKE_WAIT = 700;
+    private static boolean intakeWasOn = false;
 
 
     private static double hoodPos = 0.359;
@@ -86,8 +90,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                 pusherTimer.reset(); // start timing physical move
             }
         }
-        // return true only when physical move time has elapsed,
-        // but DO NOT reset the timer here (other code reads it)
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
@@ -120,9 +122,14 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
     static void intake(boolean isOn) {
         if (isOn) {
-            intake.setPower(-0.8);
+            intake.setPower(-1.0);
+            if (!intakeWasOn) { // rising edge -> start intake timer once
+                intakeTimer.reset();
+                intakeWasOn = true;
+            }
         } else {
             intake.setPower(0.0);
+            intakeWasOn = false;
         }
     }
 
@@ -423,7 +430,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(1)) {
                                     stageTimer.reset();
                                     stage++;
@@ -438,7 +445,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(2)) {
                                     stageTimer.reset();
                                     stage++;
@@ -674,7 +681,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(0)){
                                     stageTimer.reset();
                                     stage++;
@@ -689,7 +696,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(1)) {
                                     stageTimer.reset();
                                     stage++;

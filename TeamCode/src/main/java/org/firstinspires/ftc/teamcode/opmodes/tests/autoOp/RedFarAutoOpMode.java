@@ -54,6 +54,10 @@ public class RedFarAutoOpMode extends LinearOpMode {
     private static final long SORTER_TIME = 250; // wait after commanding sorter
     private static int currentSort = -1; // -1 = unknown / not set
 
+    private static final ElapsedTime intakeTimer = new ElapsedTime();
+    private static final long INTAKE_WAIT = 700;
+    private static boolean intakeWasOn = false;
+
 
     private static double hoodPos = 0.359;
 
@@ -121,10 +125,16 @@ public class RedFarAutoOpMode extends LinearOpMode {
     static void intake(boolean isOn) {
         if (isOn) {
             intake.setPower(-1.0);
+            if (!intakeWasOn) { // rising edge -> start intake timer once
+                intakeTimer.reset();
+                intakeWasOn = true;
+            }
         } else {
             intake.setPower(0.0);
+            intakeWasOn = false;
         }
     }
+
 
 
 
@@ -423,7 +433,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(1)) {
                                     stageTimer.reset();
                                     stage++;
@@ -438,7 +448,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(2)){
                                     stageTimer.reset();
                                     stage++;
@@ -674,7 +684,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(0)) {
                                     stageTimer.reset();
                                     stage++;
@@ -689,7 +699,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 250) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(2)){
                                     stageTimer.reset();
                                     stage++;
