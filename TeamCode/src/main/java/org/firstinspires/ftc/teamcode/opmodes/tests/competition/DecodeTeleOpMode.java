@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
     private Hardware hw;
+    private IMU imu;
     private double theta;
     private DcMotor intake;
     private DcMotor shooter;
@@ -43,6 +44,18 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        MecanumCommand mecanumCommand = new MecanumCommand(hw);
+        ShooterSubsystem shooterSubsystem = new ShooterSubsystem(hw);
+        IMU imu = hw.imu;
+        hw = Hardware.getInstance(hardwareMap);
+        DcMotorEx lf = hw.lf;
+        DcMotorEx lb = hw.lb;
+        DcMotorEx rf = hw.rf;
+        DcMotorEx rb = hw.rb;
+
+        lf.setDirection(DcMotorEx.Direction.REVERSE);
+        rb.setDirection(DcMotorEx.Direction.REVERSE);
+
         boolean previousXState = false;
         boolean previousYState = false;
         boolean prevRightTrigger = false;
@@ -63,14 +76,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
         double hoodPos = 0.846;
         double shootSpeed = 4000;
 
-        IMU imu = hw.imu;
-        hw = Hardware.getInstance(hardwareMap);
-        DcMotorEx lf = hw.lf;
-        DcMotorEx lb = hw.lb;
-        DcMotorEx rf = hw.rf;
-        DcMotorEx rb = hw.rb;
-        MecanumCommand mecanumCommand = new MecanumCommand(hw);
-        ShooterSubsystem shooterSubsystem = new ShooterSubsystem(hw);
         Servo pusher = hw.pusher;
         Servo light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
@@ -85,9 +90,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
             sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
         }
-
-        lf.setDirection(DcMotorEx.Direction.REVERSE);
-        rb.setDirection(DcMotorEx.Direction.REVERSE);
 
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT, //what the orientation of the logo on the REV HUB
