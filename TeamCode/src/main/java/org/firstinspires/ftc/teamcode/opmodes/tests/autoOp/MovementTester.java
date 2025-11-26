@@ -197,7 +197,6 @@ public class MovementTester extends LinearOpMode {
 
 
         while (opModeIsActive()) {
-            mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
             shoot(outtakeFlag);
             intake(intakeFlag);
@@ -209,8 +208,6 @@ public class MovementTester extends LinearOpMode {
             telemetry.addData("stageTimer: ", stageTimer.milliseconds());
 
             processTelemetry();
-
-            mecanumCommand.moveToPos(131, 35, Math.PI/2);
 
         }
     }
