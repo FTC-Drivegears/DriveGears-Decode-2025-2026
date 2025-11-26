@@ -1,13 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.IMU;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
@@ -17,8 +12,8 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
+    private MecanumCommand mecanumCommand;
     private Hardware hw;
-    private IMU imu;
     private double theta;
     private DcMotor intake;
     private DcMotor shooter;
@@ -29,33 +24,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     private long lastOuttakeTime;
 
-
-    //Shooter Presets
-    private final double FAR_HOOD = 0.5;
-    private final int FAR_SHOOT_SPEED = 3900;
-    private final double MID_HOOD = 0.6;
-    private final int MID_SHOOT_SPEED = 3000;
-    private final double CLOSE_HOOD = 0.846;
-    private final int CLOSE_SHOOT_SPEED = 2500;
-
-    private final ElapsedTime sorterTimer = new ElapsedTime();
-
-    double sorterPosition = 0.0;
+    boolean isManualPushOn;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        MecanumCommand mecanumCommand = new MecanumCommand(hw);
-        ShooterSubsystem shooterSubsystem = new ShooterSubsystem(hw);
-        IMU imu = hw.imu;
-        hw = Hardware.getInstance(hardwareMap);
-        DcMotorEx lf = hw.lf;
-        DcMotorEx lb = hw.lb;
-        DcMotorEx rf = hw.rf;
-        DcMotorEx rb = hw.rb;
-
-        lf.setDirection(DcMotorEx.Direction.REVERSE);
-        rb.setDirection(DcMotorEx.Direction.REVERSE);
-
         boolean previousXState = false;
         boolean previousYState = false;
         boolean prevRightTrigger = false;
@@ -76,6 +48,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
         double hoodPos = 0.846;
         double shootSpeed = 4000;
 
+        hw = Hardware.getInstance(hardwareMap);
+        mecanumCommand = new MecanumCommand(hw);
+        ShooterSubsystem shooterSubsystem = new ShooterSubsystem(hw);
         Servo pusher = hw.pusher;
         Servo light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
@@ -88,54 +63,29 @@ public class DecodeTeleOpMode extends LinearOpMode {
         hood = hw.hood;
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
-            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
+            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
         }
 
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT, //what the orientation of the logo on the REV HUB
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));//what the orientation of usb is
-                //these might not be correct
-        imu.initialize(parameters);
-
-        while (opModeInInit()){
+        while (opModeInInit()) {
             telemetry.update();
         }
         // Wait for start button to be pressed
         waitForStart();
 
         while (opModeIsActive()) {
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
-
-            if (gamepad1.start){
-                imu.resetYaw();
-            }
-
-            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
-            double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-            double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-
-            rotX = rotX*1.1;
-
-            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-            double lfPower = (rotY + rotX + rx) / denominator;
-            double lbPower = (rotY - rotX + rx) / denominator;
-            double rfPower = (rotY - rotX - rx) / denominator;
-            double rbPower = (rotY + rotX - rx) / denominator;
-
-            lf.setPower(lfPower);
-            lb.setPower(lbPower);
-            rf.setPower(rfPower);
-            rb.setPower(rbPower);
+            mecanumCommand.processOdometry();
+            theta = mecanumCommand.fieldOrientedMove(
+                    gamepad1.left_stick_y,
+                    gamepad1.left_stick_x,
+                    gamepad1.right_stick_x
+            );
 
             // Manually spin sorter plate.
 
-            boolean shouldIntakeGreen = gamepad2.dpad_down;
-            boolean shouldIntakePurple = gamepad2.dpad_up;
+            boolean shouldIntakeGreen = gamepad1.dpad_left;
+            boolean shouldIntakePurple = gamepad1.dpad_right;
             if (shouldIntakeGreen || shouldIntakePurple) {
-                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
+                double durationIntake = (System.nanoTime() - lastIntakeTime) / 1E9;
                 char curColor = 'g';
                 if (shouldIntakePurple) {
                     curColor = 'p';
@@ -147,61 +97,55 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
 
             // Manually outtake ball.
-            boolean shouldOuttakePurple = gamepad1.dpad_up;
-            boolean shouldOuttakeGreen = gamepad1.dpad_down;
+            boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
+            boolean shouldOuttakeGreen = gamepad1.b;
             if (shouldOuttakePurple || shouldOuttakeGreen) {
-                double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
+                double durationOuttake = (System.nanoTime() - lastOuttakeTime) / 1E9;
                 char curColor = 'g';
                 if (shouldOuttakePurple) {
                     curColor = 'p';
                 }
                 if (durationOuttake >= 0.7) {
                     sorterSubsystem.outtakeBall(curColor);
+                    isManualPushOn = false;
                     lastOuttakeTime = System.nanoTime();
                 }
             }
-            if (gamepad1.a){ // Press A to quick fire.
-                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
+            if (gamepad1.a) { // Press A to quick fire.
+                double durationFire = (System.nanoTime() - lastFireTime) / 1E9;
                 if (durationFire >= 0.7) {
                     sorterSubsystem.quickFire();
+                    isManualPushOn = false;
                     lastFireTime = System.nanoTime();
                 }
             }
-            sorterSubsystem.pushDown(); // Will push down if the pusher is up.
+
+            if (!isManualPushOn) {
+                sorterSubsystem.pushDown(); // Will push down if the pusher is up by outtake.
+            }
 
             curRightTrigger = gamepad1.right_trigger > 0;
-            if (curRightTrigger && !prevRightTrigger){
+            if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
-                if (isIntakeMotorOn){
+                if (isIntakeMotorOn) {
                     intake.setPower(-0.8);
-                }else {
+                } else {
                     intake.setPower(0);
                 }
             }
             prevRightTrigger = curRightTrigger;
 
 
-            if (gamepad2.b && sorterTimer.milliseconds() > 1000){
-                sorterPosition = (sorterPosition+1)%3;
-                sorterTimer.reset();
-                if (sorterPosition == 0) {
-                    hw.sorter.setPosition(0.085);//60 degrees
-                } else if (sorterPosition == 1) {
-                    hw.sorter.setPosition(0.515);//60 degrees
-                } else if (sorterPosition == 2) {
-                    hw.sorter.setPosition(0.96);//60 degrees
-                }
-            }
-
             currentYState = gamepad1.y;
-            if (currentYState && !previousYState){
+            if (currentYState && !previousYState) {
                 togglePusher = !togglePusher;
 
-                if (togglePusher){
+                if (togglePusher) {
+                    isManualPushOn = true;
                     pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                     sorterSubsystem.setIsPusherUp(true);
-                }else{
+                } else{
                     pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                     sorterSubsystem.setIsPusherUp(false);
                 }
@@ -209,40 +153,66 @@ public class DecodeTeleOpMode extends LinearOpMode {
             previousYState = currentYState;
 
             currentXState = gamepad1.x;
-            if (currentXState && !previousXState){
+            if (currentXState && !previousXState) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
             }
             previousXState = currentXState;
 
-            // CLOSE
-            if (gamepad2.a) {
-                hood.setPosition(CLOSE_HOOD);
-                shootSpeed = CLOSE_SHOOT_SPEED;
-            }
-            //MID
-            if (gamepad2.x) {
-                hood.setPosition(MID_HOOD);
-                shootSpeed = MID_SHOOT_SPEED;
-            }
-            //FAR
-            if (gamepad2.y){
-                hood.setPosition(FAR_HOOD);
-                shootSpeed = FAR_SHOOT_SPEED;
+
+            curRB = gamepad1.right_bumper;
+            if (curRB) {
+                if (hoodPos <= 0.359) {
+                    hoodPos = 0.359;
+                } else {
+                    hoodPos -= 0.001;
+                }
+                hood.setPosition(hoodPos);
             }
 
-            if (gamepad1.start){
+            curLB = gamepad1.left_bumper;
+            if (curLB) {
+                if (hoodPos >= 0.846) {
+                    hoodPos = 0.846;
+                } else {
+                    hoodPos += 0.001;
+                }
+                hood.setPosition(hoodPos);
+            }
+
+            if (gamepad1.dpad_up) {
+                if (shootSpeed >= 6000.0) {
+                    shootSpeed = 6000.0;
+                } else {
+//                    shootSpeed += 0.0001;
+                    shootSpeed += 150.0;
+                    sleep(500);
+                }
+            }
+
+            if (gamepad1.dpad_down) {
+                if (shootSpeed <= 0.0) {
+                    shootSpeed = 0.0;
+                } else {
+//                    shootSpeed -= 0.0001;
+                    shootSpeed -= 150.0;
+                    sleep(500);
+//0.8 default shooter speed
+                }
+            }
+
+            if (gamepad1.start) {
                 mecanumCommand.resetPinPointOdometry();
             }
 
-            if (isOuttakeMotorOn){
+            if (isOuttakeMotorOn) {
                 shooterSubsystem.setMaxRPM(shootSpeed);
-                if (shooterSubsystem.spinup()){
+                if (shooterSubsystem.spinup()) {
                     light.setPosition(1.0);
                 } else {
                     light.setPosition(0.0);
                 }
 
-            }else{
+            } else {
                 shooterSubsystem.stopShooter();
                 light.setPosition(0.0);
             }
