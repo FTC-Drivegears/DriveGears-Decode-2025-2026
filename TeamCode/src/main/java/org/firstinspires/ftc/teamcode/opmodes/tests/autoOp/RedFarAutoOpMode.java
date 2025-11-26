@@ -51,8 +51,8 @@ public class RedFarAutoOpMode extends LinearOpMode {
     private static double pos3 = 0.96;
     private static int standardms = 1000;
 
-    private static final long SORTER_TIME = 250; // wait after commanding sorter
-    private static int currentSort = -1; // -1 = unknown / not set
+    private static final long SORTER_TIME = 250;
+    private static int currentSort = -1;
 
     private static final ElapsedTime intakeTimer = new ElapsedTime();
     private static final long INTAKE_WAIT = 700;
@@ -90,13 +90,10 @@ public class RedFarAutoOpMode extends LinearOpMode {
                 pusherTimer.reset(); // start timing physical move
             }
         }
-        // return true only when physical move time has elapsed,
-        // but DO NOT reset the timer here (other code reads it)
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
     static boolean sort(int sp) {
-        // only command sorter after pusher has physically been down long enough
         if (!isPusherUp && pusherTimer.milliseconds() >= PUSHER_TIME) {
             if (sp != currentSort) {
                 double pos = (sp == 0) ? pos1 : (sp == 1) ? pos2 : pos3;
@@ -125,7 +122,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
     static void intake(boolean isOn) {
         if (isOn) {
             intake.setPower(-1.0);
-            if (!intakeWasOn) { // rising edge -> start intake timer once
+            if (!intakeWasOn) {
                 intakeTimer.reset();
                 intakeWasOn = true;
             }

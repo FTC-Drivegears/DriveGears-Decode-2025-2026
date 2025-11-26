@@ -94,7 +94,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
     }
 
     static boolean sort(int sp) {
-        // only command sorter after pusher has physically been down long enough
         if (!isPusherUp && pusherTimer.milliseconds() >= PUSHER_TIME) {
             if (sp != currentSort) {
                 double pos = (sp == 0) ? pos1 : (sp == 1) ? pos2 : pos3;
@@ -123,7 +122,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
     static void intake(boolean isOn) {
         if (isOn) {
             intake.setPower(-1.0);
-            if (!intakeWasOn) { // rising edge -> start intake timer once
+            if (!intakeWasOn) {
                 intakeTimer.reset();
                 intakeWasOn = true;
             }
