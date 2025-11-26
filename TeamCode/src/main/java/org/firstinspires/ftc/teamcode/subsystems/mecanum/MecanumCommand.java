@@ -201,6 +201,10 @@ public class MecanumCommand {
         mecanumSubsystem.fieldOrientedMove(-vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
         return pinPointOdoSubsystem.getHeading();
     }
+    public double robotOrientedMove(double vertical, double horizontal, double rotational) {
+        mecanumSubsystem.robotOrientedMove(-vertical, horizontal, rotational);
+        return pinPointOdoSubsystem.getHeading();
+    }
 
     public void motorProcess() {
         processPIDUsingPinpoint();

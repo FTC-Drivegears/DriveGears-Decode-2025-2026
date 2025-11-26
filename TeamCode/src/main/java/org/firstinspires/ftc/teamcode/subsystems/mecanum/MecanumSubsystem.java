@@ -82,51 +82,6 @@ class MecanumSubsystem {
         hw.rf.setPower(0);
     }
 
-    // provides more control at lower speeds
-    public void fieldOrientedMoveExponential(double x, double y, double z, double theta) {
-        double newX = x * Math.cos(theta) - y * Math.sin(theta);
-        double newY = x * Math.sin(theta) + y * Math.cos(theta);
-
-        rightFrontMotorOutput = -newY + newX - z;
-        leftFrontMotorOutput = newY + newX + z;
-        rightBackMotorOutput = newY + newX - z;
-        leftBackMotorOutput = -newY + newX + z;
-
-        double largest = Math.max(
-                Math.max(Math.abs(rightFrontMotorOutput), Math.abs(leftFrontMotorOutput)),
-                Math.max(Math.abs(rightBackMotorOutput), Math.abs(leftBackMotorOutput)));
-
-        if (largest > 1) {
-            rightFrontMotorOutput /= largest;
-            leftFrontMotorOutput /= largest;
-            rightBackMotorOutput /= largest;
-            leftBackMotorOutput /= largest;
-        }
-        rightFrontMotorOutput *= POWER_SCALE_FACTOR;
-        leftFrontMotorOutput *= POWER_SCALE_FACTOR;
-        rightBackMotorOutput *= POWER_SCALE_FACTOR;
-        leftBackMotorOutput *= POWER_SCALE_FACTOR;
-
-        hw.rf.setPower(normalizedFunction(rightFrontMotorOutput));
-        hw.lf.setPower(normalizedFunction(leftFrontMotorOutput));
-        hw.rb.setPower(normalizedFunction(rightBackMotorOutput));
-        hw.lb.setPower(normalizedFunction(leftBackMotorOutput));
-    }
-
-    public static double normalizedFunction(double t) {
-        double x = 128 * Math.abs(t);
-        // Updated parameters: increased base (1.05), reduced linear term (0.1)
-        double numerator = 1.2 * Math.pow(1.02, x) - 1.2 + 0.2 * x;
-        double denominator = 1.2 * Math.pow(1.02, 128) - 1.2 + 0.2 * 128;
-        double result;
-        if (t < 0) {
-            result = numerator * -1 / denominator;
-        } else {
-            result = numerator / denominator;
-        }
-        return result;
-    }
-
     // resets all motor encoders
     public void reset() {
         hw.rf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -292,6 +247,34 @@ class MecanumSubsystem {
         leftFrontMotorOutput = newY + newX + z;
         rightBackMotorOutput = newY + newX -  z;
         leftBackMotorOutput = - newY + newX + z;
+
+        // normalize powers to maintain ratio while staying within the range of -1 to 1
+        double largest = Math.max(
+                Math.max(Math.abs(rightFrontMotorOutput), Math.abs(leftFrontMotorOutput)),
+                Math.max(Math.abs(rightBackMotorOutput), Math.abs(leftBackMotorOutput)));
+
+        if (largest > 1) {
+            rightFrontMotorOutput /= largest;
+            leftFrontMotorOutput /= largest;
+            rightBackMotorOutput /= largest;
+            leftBackMotorOutput /= largest;
+        }
+
+        // apply scaling and set motor powers
+        rightFrontMotorOutput *= POWER_SCALE_FACTOR;
+        leftFrontMotorOutput *= POWER_SCALE_FACTOR;
+        rightBackMotorOutput *= POWER_SCALE_FACTOR;
+        leftBackMotorOutput *= POWER_SCALE_FACTOR;
+
+        setPowers(rightFrontMotorOutput,leftBackMotorOutput,rightBackMotorOutput,leftFrontMotorOutput);
+    }
+
+    public void robotOrientedMove(double x, double y, double z) {
+        // normal mecanum drive function
+        rightFrontMotorOutput = - y + x - z;
+        leftFrontMotorOutput = y + x + z;
+        rightBackMotorOutput = y + x -  z;
+        leftBackMotorOutput = - y + x + z;
 
         // normalize powers to maintain ratio while staying within the range of -1 to 1
         double largest = Math.max(

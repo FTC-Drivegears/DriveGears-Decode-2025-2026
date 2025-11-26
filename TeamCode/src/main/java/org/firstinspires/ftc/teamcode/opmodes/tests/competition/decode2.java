@@ -41,6 +41,10 @@ public class decode2 extends LinearOpMode {
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
 
+    private enum DRIVETYPE{
+        ROBOTORIENTED, FIELDORIENTED
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
         boolean previousXState = false;
@@ -68,7 +72,7 @@ public class decode2 extends LinearOpMode {
         double sorterPosition = 0.0;
         double shootSpeed = 4000;
 
-
+        DRIVETYPE drivetype = DRIVETYPE.FIELDORIENTED;
 
 
         hw = Hardware.getInstance(hardwareMap);
@@ -94,21 +98,28 @@ public class decode2 extends LinearOpMode {
             sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
         }
 
-//        while (opModeInInit()){
-//            telemetry.update();
-//        }
+        while (opModeInInit()){
+            if (gamepad1.a){
+                drivetype = DRIVETYPE.ROBOTORIENTED;
+            }
+
+            if (gamepad1.b){
+                drivetype = DRIVETYPE.ROBOTORIENTED;
+            }
+
+            telemetry.update();
+        }
 // Wait for start button to be pressed
         waitForStart();
 
         while (opModeIsActive()) {
             mecanumCommand.processOdometry();
 
-
-            theta = mecanumCommand.fieldOrientedMove(
-                    gamepad1.left_stick_y,
-                    gamepad1.left_stick_x,
-                    gamepad1.right_stick_x
-            );
+            if (drivetype == DRIVETYPE.FIELDORIENTED) {
+                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            } else if (drivetype == DRIVETYPE.ROBOTORIENTED){
+                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            }
 
             if (gamepad1.right_trigger > 0) {
                 if (!rightTriggerPressed) {
