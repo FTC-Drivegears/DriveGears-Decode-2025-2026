@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.vision;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -18,7 +18,7 @@ public class turretcam extends LinearOpMode {
     final double DESIRED_DISTANCE = 8.0; // closeness of camera to the target (in)
     final double TURN_GAIN   =  0.05  ;   //  Turn Control "Gain".  e.g. Ramp up to 25% power at a 25 degree error. (0.25 / 25.0)
     final double MAX_AUTO_TURN  = 1;   //  Clip the turn speed to this max value (adjust for your robot)
-    private DcMotorEx turretcam = null;
+    private CRServo turretcam = null;
 
     private static final boolean USE_WEBCAM = true;
     private static final int DESIRED_TAG_ID = -1;     // Choose the tag you want to approach or set to -1 for ANY tag.
@@ -33,8 +33,8 @@ public class turretcam extends LinearOpMode {
 
         initAprilTag();
 
-        turretcam = hardwareMap.get(DcMotorEx.class, "turretmotor");
-        turretcam.setDirection(DcMotorEx.Direction.FORWARD);
+        turretcam = hardwareMap.get(CRServo.class, "turretservo");
+        turretcam.setDirection(CRServo.Direction.FORWARD);
 
         if (USE_WEBCAM)
             setManualExposure(7, 250);
