@@ -64,7 +64,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean toggleOuttakeSorter = false;
         boolean rightTriggerPressed = false;
         boolean leftTriggerPressed = false;
-
+// Detects the colour about 6 or 7 times
         double hoodPos = 0.846;
         double sorterPosition = 0.0;
         double shootSpeed = 4000;
@@ -79,7 +79,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.light.setPosition(0.0);
-        hw.sorter.setPosition(0.0);
+        hw.sorter.setPosition(0.085);
         hw.hood.setPosition(hoodPos);
 
         intake = hw.intake;
@@ -140,6 +140,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             else
                 leftTriggerPressed = false;
+
+            sorterSubsystem.detectColour();
 
 //            curLeftTrigger = gamepad1.left_trigger > 0;
 //            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
@@ -289,7 +291,13 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 light.setPosition(0.0);
             }
 
+            if (sorterSubsystem.detectedPurple)
+                telemetry.addLine("Purple detected!");
+            if (sorterSubsystem.detectedGreen)
+                telemetry.addLine("Green detected!");
+            telemetry.addLine("---------------------------------");
             telemetry.addLine("-----------First Sensor----------");
+            telemetry.addLine("---------------------------------");
             telemetry.addData("R", sorterSubsystem.red1);
             telemetry.addData("G", sorterSubsystem.green1);
             telemetry.addData("B", sorterSubsystem.blue1);
@@ -312,6 +320,5 @@ public class DecodeTeleOpMode extends LinearOpMode {
             telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }
-
     }
 }

@@ -23,6 +23,8 @@ public class SorterSubsystem {
     private final ArrayList<Artifact> sorterList;
 
     boolean detectedColour = false;
+    public boolean detectedPurple = false;
+    public boolean detectedGreen = false;
 
     public int red1;
     public int blue1;
@@ -41,7 +43,7 @@ public class SorterSubsystem {
     private boolean isPusherUp = false;
 
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0.085, 0.515, 0.96};
+    public final double[] sorterPositions = new double[]{0.085, 0.515, 0.96};
     private int numIntakeBalls = 0;
     private long lastPushTime;
 
@@ -130,30 +132,31 @@ public class SorterSubsystem {
         }
 
         // Purple ball is detected
-        if (red1 > 50 && red1 < 65 && green1 < 95 && green1 > 80 && blue1 < 95 && blue1 > 78 && alpha1 < 85 && alpha1 > 70) {
-            telemetry.addLine("Purple Detected");
-            telemetry.update();
+        if (green2-red2 < 500 && red2 > 1600) {
             if (!detectedColour) {
                 detectedColour = true;
+                detectedPurple = true;
                 sorterList.add(new Artifact('P', sorter.getPosition()));
                 turnSorter();
             }
         }
 
         // Green ball is detected
-        else if (red1 < 55 && red1 > 40 && green1 < 110 && green1 > 90 && blue1 < 90 && blue1 > 70 && alpha1 < 85 && alpha1 > 65) {
-            telemetry.addLine("Green Detected");
-            telemetry.update();
+        else if (green2-red2 > 1600 && green2 > blue2) {
             if (!detectedColour) {
                 detectedColour = true;
+                detectedGreen = true;
                 sorterList.add(new Artifact('G', sorter.getPosition()));
                 turnSorter();
             }
+
         }
 
         else {
             if (System.currentTimeMillis() - lastColourDetectionTime > 300) {
                 detectedColour = false;
+                detectedPurple = false;
+                detectedGreen = false;
             }
         }
 

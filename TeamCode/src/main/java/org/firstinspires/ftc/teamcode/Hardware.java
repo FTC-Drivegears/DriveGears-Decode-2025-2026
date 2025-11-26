@@ -42,7 +42,8 @@ public class Hardware {
         this.lb = hwMap.get(DcMotorEx.class, Specifications.BKLF_MOTOR); //leftback
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
 
-//        this.colour = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
+        this.colour1 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR1);
+        this.colour2 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR2);
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
 
