@@ -100,7 +100,7 @@ public class decode2 extends LinearOpMode {
 
         while (opModeInInit()){
             if (gamepad1.a){
-                drivetype = DRIVETYPE.ROBOTORIENTED;
+                drivetype = DRIVETYPE.FIELDORIENTED;
             }
 
             if (gamepad1.b){
