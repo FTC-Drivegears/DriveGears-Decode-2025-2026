@@ -25,7 +25,7 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
 
 
     enum AUTO_STATE {
-        FIRST_SHOT, RESET, GET_OFF_LINE, FINISH
+        FIRST_SHOT, RESET, COLLECTION_1, SECOND_SHOT, RESET_2, COLLECTION_2, THIRD_SHOT, FINISH
     }
 
     enum PATTERN {
@@ -38,7 +38,7 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
     //Pusher variables
     private static final double PUSHER_UP = 0.2;
     private static final double PUSHER_DOWN = 1.0;
-    private static final long PUSHER_TIME = 500;
+    private static final long PUSHER_TIME = 250;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
 
@@ -50,6 +50,13 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
     private static double pos2 = 0.515;
     private static double pos3 = 0.96;
     private static int standardms = 1000;
+
+    private static final long SORTER_TIME = 250;
+    private static int currentSort = -1;
+
+    private static final ElapsedTime intakeTimer = new ElapsedTime();
+    private static final long INTAKE_WAIT = 700;
+    private static boolean intakeWasOn = false;
 
 
     private static double hoodPos = 0.359;
@@ -74,37 +81,30 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
             if (!isPusherUp) {
                 pusher.setPosition(PUSHER_UP);
                 isPusherUp = true;
-                pusherTimer.reset();
+                pusherTimer.reset(); // start timing physical move
             }
         } else {
             if (isPusherUp) {
                 pusher.setPosition(PUSHER_DOWN);
                 isPusherUp = false;
-                pusherTimer.reset();
+                pusherTimer.reset(); // start timing physical move
             }
         }
-        if (pusherTimer.milliseconds() >= PUSHER_TIME) {
-            pusherTimer.reset();
-            return true;
-        }
-        return false;
+        return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
     static boolean sort(int sp) {
         if (!isPusherUp && pusherTimer.milliseconds() >= PUSHER_TIME) {
-            if (sp == 0) {
-                sorter.setPosition(pos1);//60 degrees
-                return true;
-            } else if (sp == 1) {
-                sorter.setPosition(pos2);//60 degrees
-                return true;
-            } else if (sp == 2) {
-                sorter.setPosition(pos3);//60 degrees
-                return true;
-            }
-            if (sorterTimer.milliseconds() >= 1500) {
+            if (sp != currentSort) {
+                double pos = (sp == 0) ? pos1 : (sp == 1) ? pos2 : pos3;
+                sorter.setPosition(pos);
+                currentSort = sp;
                 sorterTimer.reset();
-                return true;
+                return false; // need to wait SORTER_TIME before reporting success
+            } else {
+                if (sorterTimer.milliseconds() >= SORTER_TIME) {
+                    return true;
+                }
             }
         }
         return false;
@@ -121,9 +121,14 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
 
     static void intake(boolean isOn) {
         if (isOn) {
-            intake.setPower(-0.8);
+            intake.setPower(-1.0);
+            if (!intakeWasOn) {
+                intakeTimer.reset();
+                intakeWasOn = true;
+            }
         } else {
             intake.setPower(0.0);
+            intakeWasOn = false;
         }
     }
 
@@ -386,11 +391,11 @@ public class BlueCloseAutoOpMode extends LinearOpMode {
                     if (!isPusherUp && stageTimer.milliseconds() > 500) {
                         if (sort(1)) {
                             stageTimer.reset();
-                            autoState = AUTO_STATE.GET_OFF_LINE;
+                            autoState = AUTO_STATE.COLLECTION_1;
                         }
                     }
                     break;
-                case GET_OFF_LINE:
+                case COLLECTION_1:
                     switch(stage){
                         case 0:
                             mecanumCommand.moveToPos(-75, -50, -Math.PI/4);
