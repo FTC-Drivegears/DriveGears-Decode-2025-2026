@@ -27,7 +27,6 @@ public class Hardware {
     public final Servo sorter;
     public final Servo pusher;
     public Servo light;
-    public final CRServo turret;
 
     public CameraName Webcam_1;
 
@@ -51,7 +50,6 @@ public class Hardware {
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
-        this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
         this.light = hwMap.get(Servo.class, Specifications.LIGHT);
 
     }
