@@ -19,25 +19,29 @@ public class ShooterSubsystem {
 
     double seconds_In_A_Minute = 60.0;
 
+    double kpShooter = 2.0;
+
     public ShooterSubsystem(Hardware hw) {
         this.hw = hw;
         this.shooter = hw.shooter;
         this.targetRPM = DEFAULT_RPM;
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter.setPositionPIDFCoefficients(kpShooter);
     }
 
     //returns whether or not we have reached the correctRPM
-    public boolean isRPMReached(double currentRPM) {
+    public boolean isRPMReached() {
+        double currentRPM = hw.shooter.getVelocity() * seconds_In_A_Minute / PPR_of_6000_motor;
         return Math.abs(targetRPM - currentRPM) < 200;
     }
 
     public boolean spinup(){
-        double currentRPM = hw.shooter.getVelocity() * seconds_In_A_Minute / PPR_of_6000_motor;
+
         double targetTPS = targetRPM * PPR_of_6000_motor / seconds_In_A_Minute;
 
         hw.shooter.setVelocity(targetTPS);
 
-        return isRPMReached(currentRPM);
+        return isRPMReached();
     }
 
     public void stopShooter(){
@@ -50,6 +54,10 @@ public class ShooterSubsystem {
 
     public void setMaxRPM(double maxRPM){
         targetRPM = maxRPM;
+    }
+
+    public double getShooterVelocity(){
+        return hw.shooter.getVelocity();
     }
 
 }

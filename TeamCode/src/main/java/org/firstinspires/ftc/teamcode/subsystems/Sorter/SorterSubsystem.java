@@ -19,11 +19,20 @@ public class SorterSubsystem {
     public final ColorSensor colourSensor2;
 
     public final Telemetry telemetry;
+    private final Servo pusher;
+
+    // Color sensors do not work. One reports 0 values. Another one reported 646 for red, 2000 for other numbers.
+//    public final ColorSensor colourSensor;
+//    public final ColorSensor colourSensor2;
+
+    public final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
 
     private final ElapsedTime pushTime = new ElapsedTime();
+    private final ElapsedTime pushTime = new ElapsedTime();
+    private final ElapsedTime sorterSpinTime = new ElapsedTime();
 
     private final ElapsedTime spinForIntakeTime = new ElapsedTime();
     private final ElapsedTime spinForOuttakeTime = new ElapsedTime();
@@ -64,75 +73,41 @@ public class SorterSubsystem {
             return;
         }
 
-        this.turnToIntake(color); // First turn to a position that allows robot to take in ball without being blocked
+//        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
+        turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
+        numIntakeBalls++;
+        telemetry.update();
 
+        this.sorterList.add(new Artifact(color, sorter.getPosition()));
     }
 
-    private void turnToIntake(char color) { // turn sorter before intaking a ball
-        if (!isPusherUp && sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
+    public void turnToIntake() { // turn sorter before intaking a ball
+
+        if (sorter.getPosition() != 1 && !isPusherUp) { // ensure the sorter cannot turn more than max
+            telemetry.addData("how many balls?", this.sorterList.size());
             if (curSorterPositionIndex >= MAX_NUM_BALLS) {
                 curSorterPositionIndex = 0;
             }
-
-                telemetry.addLine("I am pressing dpad left yes");
-                sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
-                sorterList.add(new Artifact(color, sorter.getPosition()));
-                spinForIntakeTime.reset();
-                curSorterPositionIndex++;
-        } else {
-            telemetry.addLine("pusher is up, CANNOT turn sorter");
+            sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+            curSorterPositionIndex++;
+            telemetry.addLine("turning to position");
+            telemetry.update();
         }
-
         telemetry.update();
-    }
-
-    boolean isPurple(int red, int green, int blue, int alpha) {
-        return red > 50 && red < 65 && green < 95 && green > 80 && blue < 95 && blue > 78 && alpha < 85 && alpha > 70;
     }
 
     boolean isGreen(int red, int green, int blue, int alpha) {
         return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
     }
 
-    public void detectColor() { // detects & stores color in sorterList, move to next pos
-        detectColorTime.reset();
-        boolean hasDetectedColor = false;
-        while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
-            int red = colourSensor.red();
-            int red2 = colourSensor2.red();
-
-            int green = colourSensor.green();
-            int green2 = colourSensor2.green();
-
-            int blue = colourSensor.blue();
-            int blue2 = colourSensor2.blue();
-
-            int alpha = colourSensor.alpha();
-            int alpha2 = colourSensor2.alpha();
-
-            detectColorTime.reset();
-            while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
-                if (isPurple(red, green, blue, alpha) || isPurple(red2, green2, blue2, alpha2)) {
-                    telemetry.addLine("Purple Detected");
-                    hasDetectedColor = true;
-                    sorterList.add(new Artifact('p', sorter.getPosition()));
-                } else if (isGreen(red, green, blue, alpha) || isGreen(red2, green2, blue2, alpha2)) {
-                    telemetry.addLine("Green Detected");
-                    hasDetectedColor = true;
-                    sorterList.add(new Artifact('g', sorter.getPosition()));
-                }
-            }
-            telemetry.addData("Did it detect color?", hasDetectedColor);
-            telemetry.update();
-        }
-    }
-
     // push will wait 750ms to push up, then wait for less time to go back down.
     public void push() {
-        pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-        telemetry.addLine("Pusher up");
-        isPusherUp = true;
-        pushTime.reset();
+        if (sorterSpinTime.milliseconds() >= 1500) {
+            pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+            telemetry.addLine("Pusher up");
+            isPusherUp = true;
+            pushTime.reset();
+        }
     }
 
     public void pushDown() {
@@ -148,80 +123,61 @@ public class SorterSubsystem {
         if (this.sorterList.isEmpty()){
             return;
         }
+        if (!isPusherUp){
+            sorter.setPosition(this.sorterList.get(0).getPosition());
+            telemetry.addData("Pushing out this ball", this.sorterList.get(0));
+            telemetry.update();
+        }
 
-        this.waitForSpinAndPush(0);
+        this.sorterList.remove(0);
     }
 
-    public void outtakeBall(char colorToRemove) {
-        if (this.sorterList.isEmpty()) {
-            telemetry.addLine("No ball in sorter");
-            telemetry.update();
-            return;
-        }
-
-        telemetry.addData("color to remove", colorToRemove);
-        this.spinToBallAndPush(colorToRemove);
-    }
-
-
-    // outtakeBallWithPattern only works with pattern read from tag.
-    // However reading from tag means we must execute the steps right away.
-    // Otherwise pattern will be continously read. There is no good stopping point in teleop.
-    public void outtakeBallWithPattern() {
-        if (this.pattern.isEmpty()){
-            telemetry.addLine("Pattern is empty");
-            telemetry.update();
-            return;
-        }
-        if (this.sorterList.isEmpty()) {
-            telemetry.addLine("No ball in sorter");
-            telemetry.update();
-            return;
-        }
-
-        telemetry.addData("current pattern", this.pattern);
-        char colorToRemove = this.pattern.get(0);
-        telemetry.addData("color to remove", colorToRemove);
-
-        this.spinToBallAndPush(colorToRemove);
-        this.pattern.remove(0);
-    }
-
-    private void spinToBallAndPush(char colorToRemove) {
-        int ballIndexToRemoveFromSorter = -1;
-        telemetry.addData("num balls left", this.sorterList.size());
-        for (int i = 0; i < this.sorterList.size(); i++){
-            if (this.sorterList.get(i).getColor() == colorToRemove){
-                ballIndexToRemoveFromSorter = i;
-                break;
-            }
-        }
-
-        if (ballIndexToRemoveFromSorter == -1){
-            telemetry.addData("color not found: ", colorToRemove);
-            telemetry.update();
-            return;
-        }
-
-        this.waitForSpinAndPush(ballIndexToRemoveFromSorter);
-        this.waitForSpinAndPush(ballIndexToRemoveFromSorter);
-    }
-
-    private void waitForSpinAndPush(int ballIndexToRemoveFromSorter) { //
-        if (ballIndexToRemoveFromSorter >= this.sorterList.size()) {
-            telemetry.addLine("index " + ballIndexToRemoveFromSorter + " >= " + this.sorterList.size());
-            telemetry.update();
-            return;
-        }
-
-        if (!isPusherUp) {
-            sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
-            telemetry.addLine("index" + ballIndexToRemoveFromSorter);
-        } else {
-            telemetry.addLine("pusher is up, CANNOT turn sorter");
-        }
-        this.push();
-
-        this.sorterList.remove(ballIndexToRemoveFromSorter);
-    }
+    // Test outtakeBall after quickFire
+    // outtakeBall fires a ball from pattern
+//    public void outtakeBall() {
+//        if (this.pattern.isEmpty()){
+//            telemetry.addLine("Pattern is empty");
+//            telemetry.update();
+//            return;
+//        }
+//        if (this.sorterList.isEmpty()) {
+//            telemetry.addLine("No ball in sorter");
+//            telemetry.update();
+//            return;
+//        }
+//
+//        telemetry.addData("current pattern", this.pattern);
+//        char colorToRemove = this.pattern.get(0);
+//        telemetry.addData("color to remove", colorToRemove);
+//        telemetry.update();
+//
+//        int ballIndexToRemoveFromSorter = -1;
+//        telemetry.addData("num balls left", this.sorterList.size());
+//        for (int i = 0; i < this.sorterList.size(); i++){
+//            if (this.sorterList.get(i).getColor() == colorToRemove){
+//                ballIndexToRemoveFromSorter = i;
+//                break;
+//            }
+//        }
+//        telemetry.update();
+//
+//        if (ballIndexToRemoveFromSorter == -1){
+//            telemetry.addData("color not found: ", colorToRemove);
+//            telemetry.update();
+//            return;
+//        }
+//
+//        for(int i = 0; i <= MAX_NUM_BALLS; i++){
+//            if (!isPusherUp) {
+//                sorter.setPosition(this.sorterList.get(ballIndexToRemoveFromSorter).getPosition());
+//                telemetry.addLine("sorter moving" + i);
+//                push();
+//                telemetry.addLine("pusher moved" + i);
+//                telemetry.update();
+//            }
+//        }
+//
+//        this.sorterList.remove(ballIndexToRemoveFromSorter);
+//        this.pattern.remove(0);
+//    }
 }

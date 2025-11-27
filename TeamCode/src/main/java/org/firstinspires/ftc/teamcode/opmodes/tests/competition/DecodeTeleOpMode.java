@@ -2,9 +2,12 @@ package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
@@ -17,14 +20,30 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private double theta;
     private DcMotor intake;
     private DcMotor shooter;
+    private Servo pusher;
     private Servo hood;
+    private Servo light;
     private SorterSubsystem sorterSubsystem;
-    private long lastFireTime;
+    private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
-
+    private long lastFireTime;
     private long lastOuttakeTime;
 
     boolean isManualPushOn;
+
+    private final ElapsedTime sorterTimer = new ElapsedTime();
+
+    private final ElapsedTime pusherTimer = new ElapsedTime();
+
+    private final double FAR_HOOD = 0.5;
+    private final int FAR_SHOOT_SPEED = 3900;
+    private final double MID_HOOD = 0.6;
+    private final int MID_SHOOT_SPEED = 3000;
+    private final double CLOSE_HOOD = 0.846;
+    private final int CLOSE_SHOOT_SPEED = 2500;
+
+
+    double sorterPosition = 0.0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -46,6 +65,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean toggleOuttakeSorter = false;
 
         double hoodPos = 0.846;
+        double sorterPosition = 0.0;
         double shootSpeed = 4000;
 
         hw = Hardware.getInstance(hardwareMap);
@@ -63,10 +83,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
         hood = hw.hood;
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
-            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
+            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
         }
 
-        while (opModeInInit()) {
+        while (opModeInInit()){
             telemetry.update();
         }
         // Wait for start button to be pressed
@@ -80,55 +100,22 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
-            // Manually spin sorter plate.
-
-            boolean shouldIntakeGreen = gamepad1.dpad_left;
-            boolean shouldIntakePurple = gamepad1.dpad_right;
-            if (shouldIntakeGreen || shouldIntakePurple) {
-                double durationIntake = (System.nanoTime() - lastIntakeTime) / 1E9;
-                char curColor = 'g';
-                if (shouldIntakePurple) {
-                    curColor = 'p';
-                }
-                if (durationIntake >= 0.7) {
-                    sorterSubsystem.intakeBall(curColor);
-                    lastIntakeTime = System.nanoTime();
-                }
-            }
-
-            // Manually outtake ball.
-            boolean shouldOuttakePurple = gamepad1.left_trigger > 0;
-            boolean shouldOuttakeGreen = gamepad1.b;
-            if (shouldOuttakePurple || shouldOuttakeGreen) {
-                double durationOuttake = (System.nanoTime() - lastOuttakeTime) / 1E9;
-                char curColor = 'g';
-                if (shouldOuttakePurple) {
-                    curColor = 'p';
-                }
-                if (durationOuttake >= 0.7) {
-                    sorterSubsystem.outtakeBall(curColor);
-                    isManualPushOn = false;
-                    lastOuttakeTime = System.nanoTime();
-                }
-            }
-            if (gamepad1.a) { // Press A to quick fire.
-                double durationFire = (System.nanoTime() - lastFireTime) / 1E9;
-                if (durationFire >= 0.7) {
-                    sorterSubsystem.quickFire();
-                    isManualPushOn = false;
-                    lastFireTime = System.nanoTime();
-                }
-            }
-
-            if (!isManualPushOn) {
-                sorterSubsystem.pushDown(); // Will push down if the pusher is up by outtake.
-            }
-
             curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
-                if (isIntakeMotorOn) {
+                if (isIntakeMotorOn){
+                    intake.setPower(0.8);
+                } else {
+                    intake.setPower(0);
+                }
+            }
+
+            curLeftTrigger = gamepad1.left_trigger> 0;
+            if (curLeftTrigger && !prevLeftTrigger){
+                isOuttakeMotorOn = !isOuttakeMotorOn;
+
+                if (isOuttakeMotorOn){
                     intake.setPower(-0.8);
                 } else {
                     intake.setPower(0);
@@ -136,6 +123,18 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             prevRightTrigger = curRightTrigger;
 
+
+            if (gamepad2.b && sorterTimer.milliseconds() > 1000){
+                sorterPosition = (sorterPosition+1)%3;
+                sorterTimer.reset();
+                if (sorterPosition == 0) {
+                    hw.sorter.setPosition(0.085);//60 degrees
+                } else if (sorterPosition == 1) {
+                    hw.sorter.setPosition(0.515);//60 degrees
+                } else if (sorterPosition == 2) {
+                    hw.sorter.setPosition(0.96);//60 degrees
+                }
+            }
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
@@ -152,12 +151,32 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             previousYState = currentYState;
 
+            // Pusher
+            if (togglePusher && pusherTimer.milliseconds() >= 500) {
+                hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                togglePusher = false;
+            }
+
             currentXState = gamepad1.x;
             if (currentXState && !previousXState) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
             }
             previousXState = currentXState;
 
+            // CLOSE
+            if (gamepad2.a) {
+                hood.setPosition(CLOSE_HOOD);
+                shootSpeed = CLOSE_SHOOT_SPEED;
+            }
+            //MID
+            if (gamepad2.x) {
+                hood.setPosition(MID_HOOD);
+                shootSpeed = MID_SHOOT_SPEED;
+            }
+            //FAR
+            if (gamepad2.y){
+                hood.setPosition(FAR_HOOD);
+                shootSpeed = FAR_SHOOT_SPEED;
 
             curRB = gamepad1.right_bumper;
             if (curRB) {
