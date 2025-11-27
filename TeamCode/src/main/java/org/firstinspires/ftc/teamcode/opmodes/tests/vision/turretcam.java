@@ -36,7 +36,7 @@ public class turretcam extends LinearOpMode {
         turretcam.setDirection(CRServo.Direction.FORWARD);
 
         if (USE_WEBCAM)
-            setManualExposure(7, 250);
+            setManualExposure(3, 250);
 
         telemetry.update();
         waitForStart();
@@ -81,7 +81,7 @@ public class turretcam extends LinearOpMode {
             }
 
             // If Left Bumper is being pressed, AND we have found the desired target, Drive to target Automatically .
-            if (gamepad1.left_bumper && targetFound) {
+//            if (gamepad1.left_bumper && targetFound) {
                 if (targetFound) {
 
                     // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
@@ -112,7 +112,7 @@ public class turretcam extends LinearOpMode {
                 //        sleep(10);
             }
         }
-    }
+//    }
 
     private void initAprilTag() {
         aprilTag = new AprilTagProcessor.Builder().build();
