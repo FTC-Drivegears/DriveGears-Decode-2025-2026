@@ -19,18 +19,14 @@ public class SorterSubsystem {
     public final ColorSensor colourSensor2;
 
     public final Telemetry telemetry;
-    private final Servo pusher;
 
     // Color sensors do not work. One reports 0 values. Another one reported 646 for red, 2000 for other numbers.
 //    public final ColorSensor colourSensor;
 //    public final ColorSensor colourSensor2;
-
-    public final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
 
-    private final ElapsedTime pushTime = new ElapsedTime();
     private final ElapsedTime pushTime = new ElapsedTime();
     private final ElapsedTime sorterSpinTime = new ElapsedTime();
 
@@ -40,6 +36,10 @@ public class SorterSubsystem {
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.1, 0.43, 0.875};
+
+    boolean detectedPurple = false;
+
+    boolean detectedGreen = false;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -75,6 +75,7 @@ public class SorterSubsystem {
 
 //        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
         turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
+        int numIntakeBalls = 0;
         numIntakeBalls++;
         telemetry.update();
 
@@ -94,10 +95,6 @@ public class SorterSubsystem {
             telemetry.update();
         }
         telemetry.update();
-    }
-
-    boolean isGreen(int red, int green, int blue, int alpha) {
-        return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
     }
 
     // push will wait 750ms to push up, then wait for less time to go back down.
@@ -130,6 +127,56 @@ public class SorterSubsystem {
         }
 
         this.sorterList.remove(0);
+    }
+
+    boolean isGreen(int red, int green, int blue, int alpha) {
+        return red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65;
+    }
+
+    boolean isPurple(int red, int green, int blue, int alpha){
+
+    }
+    public void detectColor(){
+        detectColorTime.reset();
+        boolean hasDetectedColor = false;
+        while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
+            int red = colourSensor.red();
+            int red2 = colourSensor2.red();
+
+            int green = colourSensor.green();
+            int green2 = colourSensor2.green();
+
+            int blue = colourSensor.blue();
+            int blue2 = colourSensor2.blue();
+
+            int alpha = colourSensor.alpha();
+            int alpha2 = colourSensor2.alpha();
+
+            detectColorTime.reset();
+            while (!hasDetectedColor && detectColorTime.milliseconds() <= 2000) {
+                if (isPurple(red, green, blue, alpha) || isPurple(red2, green, blue2, alpha2)) {
+                    telemetry.addLine("Purple Detected");
+                    hasDetectedColor = true;
+                    detectedPurple = true;
+                } else if (isGreen(red,green,blue,alpha) || isGreen(red2, green2, blue2, alpha)) {
+                    telemetry.addLine("Green Detected");
+                    hasDetectedColor = true;
+                    detectedGreen = true;
+
+                }
+
+            }
+            telemetry.addData("Did it detect color?", hasDetectedColor);
+            telemetry.addData("Am I seeing purple?", detectedPurple);
+            telemetry.addData("Am I seeing green?", detectedGreen);
+            telemetry.addData("red", red);
+            telemetry.addData("red2", red2);
+            telemetry.addData("green", green);
+            telemetry.addData("green2", green2);
+            telemetry.addData("blue2", blue2);
+            telemetry.addData("blue", blue);
+            telemetry.update();
+        }
     }
 
     // Test outtakeBall after quickFire

@@ -60,5 +60,4 @@ public class Specifications {
     public static final String TURRET = "turret";
 
     public static final String WEBCAM_1 = "Webcam 1";
-    public static final String IMU = "IMU";
 }

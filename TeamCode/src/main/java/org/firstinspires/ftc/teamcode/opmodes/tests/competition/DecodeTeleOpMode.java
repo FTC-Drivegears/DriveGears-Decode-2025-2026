@@ -83,10 +83,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
         hood = hw.hood;
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
-            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
+            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
         }
 
-        while (opModeInInit()){
+        while (opModeInInit()) {
             telemetry.update();
         }
         // Wait for start button to be pressed
@@ -104,18 +104,18 @@ public class DecodeTeleOpMode extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
-                if (isIntakeMotorOn){
+                if (isIntakeMotorOn) {
                     intake.setPower(0.8);
                 } else {
                     intake.setPower(0);
                 }
             }
 
-            curLeftTrigger = gamepad1.left_trigger> 0;
-            if (curLeftTrigger && !prevLeftTrigger){
+            curLeftTrigger = gamepad1.left_trigger > 0;
+            if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
-                if (isOuttakeMotorOn){
+                if (isOuttakeMotorOn) {
                     intake.setPower(-0.8);
                 } else {
                     intake.setPower(0);
@@ -124,8 +124,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
             prevRightTrigger = curRightTrigger;
 
 
-            if (gamepad2.b && sorterTimer.milliseconds() > 1000){
-                sorterPosition = (sorterPosition+1)%3;
+            if (gamepad2.b && sorterTimer.milliseconds() > 1000) {
+                sorterPosition = (sorterPosition + 1) % 3;
                 sorterTimer.reset();
                 if (sorterPosition == 0) {
                     hw.sorter.setPosition(0.085);//60 degrees
@@ -144,7 +144,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     isManualPushOn = true;
                     pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                     sorterSubsystem.setIsPusherUp(true);
-                } else{
+                } else {
                     pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                     sorterSubsystem.setIsPusherUp(false);
                 }
@@ -174,67 +174,67 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 shootSpeed = MID_SHOOT_SPEED;
             }
             //FAR
-            if (gamepad2.y){
+            if (gamepad2.y) {
                 hood.setPosition(FAR_HOOD);
                 shootSpeed = FAR_SHOOT_SPEED;
 
-            curRB = gamepad1.right_bumper;
-            if (curRB) {
-                if (hoodPos <= 0.359) {
-                    hoodPos = 0.359;
-                } else {
-                    hoodPos -= 0.001;
+                curRB = gamepad1.right_bumper;
+                if (curRB) {
+                    if (hoodPos <= 0.359) {
+                        hoodPos = 0.359;
+                    } else {
+                        hoodPos -= 0.001;
+                    }
+                    hood.setPosition(hoodPos);
                 }
-                hood.setPosition(hoodPos);
-            }
 
-            curLB = gamepad1.left_bumper;
-            if (curLB) {
-                if (hoodPos >= 0.846) {
-                    hoodPos = 0.846;
-                } else {
-                    hoodPos += 0.001;
+                curLB = gamepad1.left_bumper;
+                if (curLB) {
+                    if (hoodPos >= 0.846) {
+                        hoodPos = 0.846;
+                    } else {
+                        hoodPos += 0.001;
+                    }
+                    hood.setPosition(hoodPos);
                 }
-                hood.setPosition(hoodPos);
-            }
 
-            if (gamepad1.dpad_up) {
-                if (shootSpeed >= 6000.0) {
-                    shootSpeed = 6000.0;
-                } else {
+                if (gamepad1.dpad_up) {
+                    if (shootSpeed >= 6000.0) {
+                        shootSpeed = 6000.0;
+                    } else {
 //                    shootSpeed += 0.0001;
-                    shootSpeed += 150.0;
-                    sleep(500);
+                        shootSpeed += 150.0;
+                        sleep(500);
+                    }
                 }
-            }
 
-            if (gamepad1.dpad_down) {
-                if (shootSpeed <= 0.0) {
-                    shootSpeed = 0.0;
-                } else {
+                if (gamepad1.dpad_down) {
+                    if (shootSpeed <= 0.0) {
+                        shootSpeed = 0.0;
+                    } else {
 //                    shootSpeed -= 0.0001;
-                    shootSpeed -= 150.0;
-                    sleep(500);
+                        shootSpeed -= 150.0;
+                        sleep(500);
 //0.8 default shooter speed
+                    }
                 }
-            }
 
-            if (gamepad1.start) {
-                mecanumCommand.resetPinPointOdometry();
-            }
+                if (gamepad1.start) {
+                    mecanumCommand.resetPinPointOdometry();
+                }
 
-            if (isOuttakeMotorOn) {
-                shooterSubsystem.setMaxRPM(shootSpeed);
-                if (shooterSubsystem.spinup()) {
-                    light.setPosition(1.0);
+                if (isOuttakeMotorOn) {
+                    shooterSubsystem.setMaxRPM(shootSpeed);
+                    if (shooterSubsystem.spinup()) {
+                        light.setPosition(1.0);
+                    } else {
+                        light.setPosition(0.0);
+                    }
+
                 } else {
+                    shooterSubsystem.stopShooter();
                     light.setPosition(0.0);
                 }
-
-            } else {
-                shooterSubsystem.stopShooter();
-                light.setPosition(0.0);
-            }
 
 //            telemetry.addData("Hood pos: ", hoodPos);
 //            telemetry.addLine("---------------------------------");
@@ -242,7 +242,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //            telemetry.addData("Y", mecanumCommand.getY());
 //            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
 //            telemetry.addData("Outtake speed: ", shootSpeed);
-            telemetry.update();
+                telemetry.update();
+            }
         }
     }
 }
