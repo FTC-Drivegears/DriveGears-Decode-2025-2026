@@ -24,11 +24,10 @@ public class Hardware {
     public final DcMotorEx intake;
     public final DcMotorEx shooter;
     public final Servo hood;
-
     public final Servo sorter;
     public final Servo pusher;
-    public final NormalizedColorSensor colourSensor1;
-    public final NormalizedColorSensor colourSensor2;
+//    public final NormalizedColorSensor colourSensor1;
+//    public final NormalizedColorSensor colourSensor2;
     public Servo light;
 
     public CameraName Webcam_1;
@@ -42,8 +41,8 @@ public class Hardware {
         this.lb = hwMap.get(DcMotorEx.class, Specifications.BKLF_MOTOR); //leftback
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
 
-        this.colourSensor1 = hwMap.get(NormalizedColorSensor.class, Specifications.COLOUR_SENSOR1);
-        this.colourSensor2 = hwMap.get(NormalizedColorSensor.class, Specifications.COLOUR_SENSOR2);
+//        this.colourSensor1 = hwMap.get(NormalizedColorSensor.class, Specifications.COLOUR_SENSOR1);
+//        this.colourSensor2 = hwMap.get(NormalizedColorSensor.class, Specifications.COLOUR_SENSOR2);
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
 

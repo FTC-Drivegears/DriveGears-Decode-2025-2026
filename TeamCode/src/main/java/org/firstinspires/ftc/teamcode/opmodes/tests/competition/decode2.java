@@ -23,6 +23,7 @@ public class decode2 extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private Servo light;
+
     private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
@@ -88,13 +89,10 @@ public class decode2 extends LinearOpMode {
         shooter = hw.shooter;
         hood = hw.hood;
 
-
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
-
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
-            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
+            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
         }
 
         while (opModeInInit()){

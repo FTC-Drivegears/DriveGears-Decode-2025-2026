@@ -13,14 +13,17 @@ import org.firstinspires.ftc.teamcode.Hardware;
 
 @Autonomous(name = "ColorSensorTest")
 public class ColorSensorTest extends LinearOpMode {
+    private Hardware hw;
     public NormalizedColorSensor colourSensor1;
     public NormalizedColorSensor colourSensor2;
     private final ElapsedTime detectColorTime = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
-        colourSensor1 = hardwareMap.get(NormalizedColorSensor.class, "colourSensor1");
-        colourSensor2 = hardwareMap.get(NormalizedColorSensor.class, "colourSensor2");
+
+        hw = Hardware.getInstance(hardwareMap);
+        this.colourSensor1 = hw.colourSensor1;
+        this.colourSensor2 = hw.colourSensor2;
 
         while (opModeInInit()) {
             telemetry.update();
