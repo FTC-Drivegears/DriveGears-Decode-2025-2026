@@ -55,7 +55,5 @@ public class Specifications {
 
     public static final String PUSHER = "pusher";
 
-    public static final String TURRET = "turret";
-
     public static final String WEBCAM_1 = "Webcam 1";
 }
