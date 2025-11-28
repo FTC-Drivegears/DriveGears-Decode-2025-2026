@@ -63,7 +63,6 @@ public class decode2 extends LinearOpMode {
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
-        boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
         boolean rightTriggerPressed = false;
         boolean leftTriggerPressed = false;
@@ -189,49 +188,25 @@ public class decode2 extends LinearOpMode {
 //            }
 
             if (gamepad1.b && sorterTimer.milliseconds() > 1000){
-                sorterPosition = (sorterPosition+1)%3;
+                sorterSubsystem.manualSpin();
                 sorterTimer.reset();
-                if (sorterPosition == 0) {
-                    hw.sorter.setPosition(0.085);//60 degrees
-                }
-                else if (sorterPosition == 1) {
-                    hw.sorter.setPosition(0.515);//60 degrees
-                }
-                else if (sorterPosition == 2) {
-                    hw.sorter.setPosition(0.96);//60 degrees
-                }
             }
-
-//            currentYState = gamepad1.y;
-//            if (currentYState && !previousYState){
-//                togglePusher = !togglePusher;
-//
-//                if (togglePusher){
-//                    pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-//                    sorterSubsystem.setIsPusherUp(true);
-//                }else{
-//                    pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-//                    sorterSubsystem.setIsPusherUp(false);
-//                }
-//            }
-//            previousYState = currentYState;
-
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
                 // Start pulse only if not already pulsing
-                if (!togglePusher) {
+                if (!sorterSubsystem.getIsPusherUp()) {
+                    sorterSubsystem.setIsPusherUp(true);
                     hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                     pusherTimer.reset();
-                    togglePusher = true;
                 }
             }
             previousYState = currentYState;
 
             // Pusher
-            if (togglePusher && pusherTimer.milliseconds() >= 500) {
+            if (sorterSubsystem.getIsPusherUp() && pusherTimer.milliseconds() >= 500) {
                 hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                togglePusher = false;
+                sorterSubsystem.setIsPusherUp(false);
             }
 
             currentXState = gamepad1.x;
@@ -303,7 +278,6 @@ public class decode2 extends LinearOpMode {
             telemetry.addData("X", mecanumCommand.getX());
             telemetry.addData("Y", mecanumCommand.getY());
             telemetry.addData("Theta", mecanumCommand.getOdoHeading());
-            telemetry.addData("Pusher State", togglePusher);
             telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }

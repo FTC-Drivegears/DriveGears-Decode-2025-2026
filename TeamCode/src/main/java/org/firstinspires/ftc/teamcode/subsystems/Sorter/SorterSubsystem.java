@@ -31,9 +31,10 @@ public class SorterSubsystem {
     private final ElapsedTime spinForIntakeTime = new ElapsedTime();
     private final ElapsedTime spinForOuttakeTime = new ElapsedTime();
     private final ElapsedTime detectColorTime = new ElapsedTime();
-    public boolean isPusherUp = false; // pusher is down
+    private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
-    private final double[] sorterPositions = new double[]{0.1, 0.43, 0.875};
+    private final double[] sorterPositions = new double[]{0.085, 0.515, 0.96};
+    private int sorterPositionIndex;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -55,6 +56,21 @@ public class SorterSubsystem {
 
     public void setIsPusherUp(boolean isPusherUp) {
         this.isPusherUp = isPusherUp;
+    }
+
+    public boolean getIsPusherUp(){
+        return this.isPusherUp;
+    }
+
+    public void manualSpin(){
+        if (sorterPositionIndex >= 3) {
+            sorterPositionIndex = 0;
+        }
+        if (isPusherUp){
+            return;
+        }
+        this.sorter.setPosition(sorterPositions[sorterPositionIndex]);
+        sorterPositionIndex++;
     }
 
     public void intakeBall(char color) {
@@ -86,6 +102,10 @@ public class SorterSubsystem {
         }
 
         telemetry.update();
+    }
+
+    public void detectColor() {
+
     }
 
     boolean isPurple(int red, int green, int blue, int alpha) {
