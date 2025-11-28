@@ -149,7 +149,6 @@ public class SorterSubsystem {
                 sorterList.add(new Artifact('G', sorter.getPosition()));
                 turnSorter();
             }
-
         }
 
         else {
