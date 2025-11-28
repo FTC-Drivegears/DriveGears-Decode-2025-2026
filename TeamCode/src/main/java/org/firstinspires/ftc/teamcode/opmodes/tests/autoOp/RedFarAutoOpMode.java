@@ -411,7 +411,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(70, -35, -Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(78, -35, -Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -424,7 +424,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, -45, -Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(78, -45, -Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -439,7 +439,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, -58, -Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(78, -58, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -454,7 +454,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 6: //move to third ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(65, -85, -Math.PI / 2); //go to place to intake third artifact
+                                mecanumCommand.moveToPos(78, -85, -Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -662,7 +662,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(131, -35, -Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(144, -35, -Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -675,7 +675,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(131, -45, -Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(144, -45, -Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -690,7 +690,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(131, -58, -Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(144, -58, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -705,7 +705,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 6: //move to third ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(126, -85, -Math.PI / 2); //go to place to intake third artifact
+                                mecanumCommand.moveToPos(144, -85, -Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
