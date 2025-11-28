@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 @TeleOp
-public class TurnOrien extends LinearOpMode {
+public class TagOrien extends LinearOpMode {
     private Hardware hw;
     private MecanumCommand mecanumCommand;
     final double TURN_GAIN = 0.5;
