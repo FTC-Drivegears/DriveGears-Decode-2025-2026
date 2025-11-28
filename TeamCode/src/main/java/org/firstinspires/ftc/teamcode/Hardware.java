@@ -23,7 +23,6 @@ public class Hardware {
     public final DcMotorEx intake;
     public final DcMotorEx shooter;
     public final Servo hood;
-
     public final Servo sorter;
     public final Servo pusher;
     public Servo light;

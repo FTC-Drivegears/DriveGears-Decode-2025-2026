@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
-import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
+//import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
@@ -23,7 +23,7 @@ public class decode2 extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private Servo light;
-    private SorterSubsystem sorterSubsystem;
+//    private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
     private long lastFireTime;
@@ -93,10 +93,10 @@ public class decode2 extends LinearOpMode {
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
-
-        if (sorterSubsystem == null) { // sorterSubsystem is only set once
-            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
-        }
+//
+//        if (sorterSubsystem == null) { // sorterSubsystem is only set once
+//            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
+//        }
 
         while (opModeInInit()){
             if (gamepad1.a){
