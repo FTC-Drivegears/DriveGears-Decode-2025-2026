@@ -87,6 +87,18 @@ public class LogitechVisionSubsystem {
         return Double.NaN;
     }
 
+    public Double getTargetYaw() {
+        if (tagProcessor == null) return null;
+        List<AprilTagDetection> detections = tagProcessor.getDetections();
+        if (detections == null) return null;
+
+        for (AprilTagDetection detects : detections) {
+            if (detects != null && detects.metadata != null && detects.id == this.targetID) {
+                return detects.ftcPose.bearing;
+            }
+        }
+        return null;
+    }
     public double targetApril() {
         return targetApril(null);
     }
