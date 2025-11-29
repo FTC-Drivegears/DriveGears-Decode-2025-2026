@@ -123,7 +123,6 @@ public class decode2 extends LinearOpMode {
 
             if (gamepad2.left_trigger > 0) {
                 if (targetFound) {
-
                     double error = headingError;
                     double deadzone = 1.0;
 
