@@ -38,7 +38,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
     //Pusher variables
     private static final double PUSHER_UP = 0.2;
     private static final double PUSHER_DOWN = 1.0;
-    private static final long PUSHER_TIME = 250;
+    private static final long PUSHER_TIME = 200;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
 
@@ -221,9 +221,10 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
+                    intakeFlag = true;
                     shooterSubsystem.setMaxRPM(3800);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.4714);
+                    mecanumCommand.moveToPos(26, -6, 0.4014);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -245,7 +246,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -254,7 +255,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -301,7 +302,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -310,7 +311,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -357,7 +358,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -366,7 +367,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -418,7 +419,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 1: //turn on intake
                             if (mecanumCommand.isPositionReached()) {
-                                intakeFlag = true;
                                 stage++;
                                 stageTimer.reset();
                             }
@@ -458,6 +458,10 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
+                                shooterSubsystem.setMaxRPM(3800);
+                                //mecanumCommand.moveToPos(26, -14, 0.5014);
+                                mecanumCommand.moveToPos(26, -6, 0.4014);
+                                hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
                             break;
@@ -466,10 +470,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     break;
 
                 case SECOND_SHOT:
-                    shooterSubsystem.setMaxRPM(3800);
-                    //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.4714);
-                    hood.setPosition(0.43); //replace with hood position
+
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
@@ -490,7 +491,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -499,7 +500,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -546,7 +547,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -555,7 +556,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -602,7 +603,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -611,7 +612,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -656,7 +657,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(142, 31, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(144, 25, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -669,7 +670,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 600) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(142, 50, Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(144, 50, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -684,7 +685,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 600) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(142, 68, Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(144, 68, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -699,10 +700,13 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 6:
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                intakeFlag = false;
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.THIRD_SHOT;
+                                shooterSubsystem.setMaxRPM(3800);
+                                //mecanumCommand.moveToPos(26, -14, 0.5014);
+                                mecanumCommand.moveToPos(26, -6, 0.4014);
+                                hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
                             break;
@@ -711,10 +715,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     break;
                 // 0 purple, 1 green, 2 purple
                 case THIRD_SHOT:
-                    shooterSubsystem.setMaxRPM(3800);
-                    //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.4714);
-                    hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
@@ -735,7 +735,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -744,7 +744,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -791,7 +791,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -800,7 +800,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -847,7 +847,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -856,7 +856,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 200) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -871,7 +871,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 750 && !isPusherUp) {
+                                        if (stageTimer.milliseconds() > 1250 && !isPusherUp) {
                                             if(sort(1)) {
                                                 stage++;
                                                 stageTimer.reset();

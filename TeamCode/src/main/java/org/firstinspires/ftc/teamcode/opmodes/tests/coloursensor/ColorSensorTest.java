@@ -22,8 +22,8 @@ public class ColorSensorTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         hw = Hardware.getInstance(hardwareMap);
-        colourSensor1 = hardwareMap.get(NormalizedColorSensor.class, "colourSensor1");
-        colourSensor2 = hardwareMap.get(NormalizedColorSensor.class, "colourSensor2");
+        this.colourSensor1 = hw.colourSensor1;
+        this.colourSensor2 = hw.colourSensor2;
 
         while (opModeInInit()) {
             telemetry.update();
