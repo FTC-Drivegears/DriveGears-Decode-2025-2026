@@ -36,7 +36,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
     //Pusher variables
     //Pusher variables
-    private static final double PUSHER_UP = 0.1;
+    private static final double PUSHER_UP = 0.0;
     private static final double PUSHER_DOWN = 1.0;
     private static final long PUSHER_TIME = 100;
     private static boolean isPusherUp = false;

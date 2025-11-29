@@ -36,9 +36,9 @@ public class RedFarAutoOpMode extends LinearOpMode {
 
     //Pusher variables
     //Pusher variables
-    private static final double PUSHER_UP = 0.2;
+    private static final double PUSHER_UP = 0.0;
     private static final double PUSHER_DOWN = 1.0;
-    private static final long PUSHER_TIME = 250;
+    private static final long PUSHER_TIME = 100;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
 
@@ -58,6 +58,8 @@ public class RedFarAutoOpMode extends LinearOpMode {
     private static final long INTAKE_WAIT = 700;
     private static boolean intakeWasOn = false;
 
+    private static int collectedCount = 0;
+
 
     private static double hoodPos = 0.359;
 
@@ -71,7 +73,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
     private static boolean currentPushState;
 
     private static int stage;
-    private PATTERN pattern = PATTERN.PPG_3;
+    PATTERN pattern = PATTERN.PPG_3; // default
 
 
     int detection;
@@ -134,7 +136,6 @@ public class RedFarAutoOpMode extends LinearOpMode {
 
 
 
-
     @Override
     public void runOpMode() throws InterruptedException {
         // create Hardware using hardwareMap
@@ -159,7 +160,6 @@ public class RedFarAutoOpMode extends LinearOpMode {
         AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
-        PATTERN pattern = PATTERN.PPG_3; // default
         boolean outtakeFlag = false;
         boolean intakeFlag = false;
 
@@ -221,7 +221,8 @@ public class RedFarAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    shooterSubsystem.setMaxRPM(3900);
+                    shooterSubsystem.setMaxRPM(3800);
+                    //mecanumCommand.moveToPos(26, -14, 0.5014);
                     mecanumCommand.moveToPos(26, 6, -0.4);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
@@ -244,7 +245,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -253,7 +254,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -300,7 +301,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100 && shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -309,7 +310,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -325,10 +326,10 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 7: // sort
                                         if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                                           if(sort(1)) {
-                                               stage++;
-                                               stageTimer.reset();
-                                           }
+                                            if(sort(1)) {
+                                                stage++;
+                                                stageTimer.reset();
+                                            }
                                         }
                                         break;
                                     case 10:
@@ -356,7 +357,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100&& shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -365,13 +366,13 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
-                                    case 4: // sort
+                                    case 4: //  sort
                                         if (stageTimer.milliseconds() > 500) {
                                             if(sort(2)) {
                                                 stage++;
@@ -381,7 +382,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 7: // sort
                                         if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                                            if(sort(0)){
+                                            if(sort(0)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -400,8 +401,8 @@ public class RedFarAutoOpMode extends LinearOpMode {
                     }
                     break;
                 case RESET: //set position for ball 1
-                     if(!isPusherUp && stageTimer.milliseconds() > 500){
-                        if(sort(0)){
+                    if(!isPusherUp && stageTimer.milliseconds() > 500){
+                        if(sort(0)) {
                             stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_1;
                         }
@@ -411,7 +412,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(78, -35, -Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(80, -32, -Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -424,13 +425,13 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(78, -45, -Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(80, -48, -Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 500 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(1)) {
                                     stageTimer.reset();
                                     stage++;
@@ -439,41 +440,37 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(78, -58, -Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(80, -63, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 5: //set position to third ball
                             if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
-                                if(sort(2)){
+                                if(sort(2)) {
                                     stageTimer.reset();
                                     stage++;
                                 }
                             }
                             break;
-                        case 6: //move to third ball
+                        case 6:
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(78, -85, -Math.PI / 2); //go to place to intake third artifact
-                                stageTimer.reset();
-                                stage++;
-                            }
-                            break;
-                        case 7:
-                                if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
+                                shooterSubsystem.setMaxRPM(3800);
+                                //mecanumCommand.moveToPos(26, -14, 0.5014);
+                                mecanumCommand.moveToPos(26, 6, -0.4);
+                                hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
                             break;
+
                     }
                     break;
 
                 case SECOND_SHOT:
-                    shooterSubsystem.setMaxRPM(3900);
-                    mecanumCommand.moveToPos(26, 6, -0.4);
-                    hood.setPosition(0.43); //replace with hood position
+
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
@@ -494,7 +491,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100&& shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -503,7 +500,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -550,7 +547,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100&& shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -559,7 +556,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -606,7 +603,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100&& shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -615,13 +612,13 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
-                                    case 4: // sort
+                                    case 4: //  sort
                                         if (stageTimer.milliseconds() > 500) {
                                             if(sort(2)) {
                                                 stage++;
@@ -631,7 +628,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 7: // sort
                                         if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                                            if(sort(0)){
+                                            if(sort(0)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -649,20 +646,18 @@ public class RedFarAutoOpMode extends LinearOpMode {
 
                     }
                     break;
-
                 case RESET_2: //set position for ball 1
                     if(!isPusherUp && stageTimer.milliseconds() > 500){
-                        if(sort(1)){
+                        if(sort(0)){
                             stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_2;
                         }
                     }
                     break;
-
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(144, -35, -Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(144, -32, -Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -674,56 +669,52 @@ public class RedFarAutoOpMode extends LinearOpMode {
                             }
                             break;
                         case 2: //intake first ball
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(144, -45, -Math.PI / 2); //go to place to intake first artifact
+                            if (stageTimer.milliseconds() > 600) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(14744, -48, -Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 3: //set position for second ball
-                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
-                                if(sort(0)) {
+                            if (stageTimer.milliseconds() > 500 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
+                                if(sort(1)) {
                                     stageTimer.reset();
                                     stage++;
                                 }
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(144, -58, -Math.PI / 2); //go to place to intake second artifact
+                            if (stageTimer.milliseconds() > 600) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(144, -63, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 5: //set position to third ball
                             if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
-                                if(sort(2)){
+                                if(sort(2)) {
                                     stageTimer.reset();
                                     stage++;
                                 }
                             }
                             break;
-                        case 6: //move to third ball
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(144, -85, -Math.PI / 2); //go to place to intake third artifact
-                                stageTimer.reset();
-                                stage++;
-                            }
-                            break;
-                        case 7:
+                        case 6:
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.THIRD_SHOT;
+                                shooterSubsystem.setMaxRPM(3800);
+                                //mecanumCommand.moveToPos(26, -14, 0.5014);
+                                mecanumCommand.moveToPos(26, 6, -0.4);
+                                hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
                             break;
+
                     }
                     break;
+                // 0 purple, 1 green, 2 purple
                 case THIRD_SHOT:
-                    shooterSubsystem.setMaxRPM(3900);
-                    mecanumCommand.moveToPos(26, 6, -0.4);
-                    hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
@@ -735,7 +726,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 1: // sort
                                         if (stageTimer.milliseconds() > 500) {
-                                            if(sort(0)) {
+                                            if(sort(1)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -744,7 +735,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100&& shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -753,7 +744,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -761,7 +752,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 4: // sort
                                         if (stageTimer.milliseconds() > 500) {
-                                            if(sort(1)) {
+                                            if(sort(2)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -769,7 +760,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 7: // sort
                                         if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                                            if(sort(2)) {
+                                            if(sort(0)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -791,7 +782,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 1: // sort
                                         if (stageTimer.milliseconds() > 500) {
-                                            if(sort(2)) {
+                                            if(sort(0)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -800,7 +791,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100&& shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -809,7 +800,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
@@ -817,7 +808,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 4: // sort
                                         if (stageTimer.milliseconds() > 500) {
-                                            if(sort(0)) {
+                                            if(sort(1)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -825,7 +816,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 7: // sort
                                         if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                                            if(sort(1)) {
+                                            if(sort(2)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -847,7 +838,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                         break;
                                     case 1: // sort
                                         if (stageTimer.milliseconds() > 500) {
-                                            if(sort(1)) {
+                                            if(sort(2)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -856,7 +847,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 2: //push on
                                     case 5:
                                     case 8:
-                                        if (stageTimer.milliseconds() > 250 && shooterSubsystem.isRPMReached()) {
+                                        if (stageTimer.milliseconds() > 100&& shooterSubsystem.isRPMReached()) {
                                             halfPush(true);
                                             stage++;
                                             stageTimer.reset();
@@ -865,23 +856,23 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                     case 3: //push off
                                     case 6:
                                     case 9:
-                                        if (stageTimer.milliseconds() > 250) {
+                                        if (stageTimer.milliseconds() > 400) {
                                             halfPush(false);
                                             stage++;
                                             stageTimer.reset();
                                         }
                                         break;
-                                    case 4: // sort
+                                    case 4: //  sort
                                         if (stageTimer.milliseconds() > 500) {
-                                            if(sort(2)) {
+                                            if(sort(0)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                                            if(sort(0)){
+                                        if (stageTimer.milliseconds() > 1250 && !isPusherUp) {
+                                            if(sort(1)) {
                                                 stage++;
                                                 stageTimer.reset();
                                             }
@@ -899,11 +890,10 @@ public class RedFarAutoOpMode extends LinearOpMode {
 
                     }
                     break;
-
                 case FINISH:
                     outtakeFlag = false;
                     intakeFlag = false;
-                    mecanumCommand.moveToPos(60, 0, 0);
+                    mecanumCommand.moveToPos(60, 0, 0); //replace with box position
                     mecanumCommand.stop();
                     break;
 
