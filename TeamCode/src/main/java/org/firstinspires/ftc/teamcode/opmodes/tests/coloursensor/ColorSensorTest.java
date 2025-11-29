@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import org.firstinspires.ftc.teamcode.Hardware;
 
 @Autonomous(name = "ColorSensorTest")
@@ -21,8 +22,8 @@ public class ColorSensorTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         hw = Hardware.getInstance(hardwareMap);
-//        this.colourSensor1 = hw.colourSensor1;
-//        this.colourSensor2 = hw.colourSensor2;
+        this.colourSensor1 = hw.colourSensor1;
+        this.colourSensor2 = hw.colourSensor2;
 
         while (opModeInInit()) {
             telemetry.update();
@@ -41,24 +42,19 @@ public class ColorSensorTest extends LinearOpMode {
 
             NormalizedRGBA colors = colourSensor1.getNormalizedColors();
             NormalizedRGBA colors2 = colourSensor2.getNormalizedColors();
+            float hue = JavaUtil.colorToHue(colors.toColor());
+            float hue2 = JavaUtil.colorToHue(colors2.toColor());
 
-            boolean isPurple = (colors.blue > 0.25f) &&
-                    (colors.red > 0.15f) &&
-                    (colors.blue > colors.green * 1.2f);
+            if (hue < 163 && hue > 150 || hue2 < 163 && hue2 > 150){
+                telemetry.addData("Color", "Green");
+            }
+            else if (hue < 350 && hue > 165 || hue2 < 350 && hue2 > 165){
+                telemetry.addData("Color", "Purple");
+            }
+            else{
+                telemetry.addLine("Nothing is here");
+            }
 
-            boolean isPurple2 = (colors2.blue > 0.25f)
-                    && (colors2.red > 0.15f)
-                    && (colors2.blue > colors2.green * 1.2f);
-
-            boolean isGreen = (colors.green >0.2f)
-                    && (colors.green > colors.red * 1.3f)
-                    && (colors.green > colors.blue * 1.3f)
-                    && (colors.red < 0.5f) && (colors.blue < 0.5f);
-
-            boolean isGreen2 = (colors2.green >0.2f)
-                    && (colors2.green > colors2.red * 1.3f)
-                    && (colors2.green > colors2.blue * 1.3f)
-                    && (colors2.red < 0.5f) && (colors2.blue < 0.5f);
 
             telemetry.addData("Red:", colors.red);
             telemetry.addData("Red2:", colors2.red);
@@ -66,10 +62,6 @@ public class ColorSensorTest extends LinearOpMode {
             telemetry.addData("Green2:", colors2.green);
             telemetry.addData("Blue:", colors.blue);
             telemetry.addData("Blue2:", colors2.blue);
-            telemetry.addData("Am I seeing purple", isPurple);
-            telemetry.addData("Am I seeing purple on second cs", isPurple2);
-            telemetry.addData("Am I seeing purple", isGreen);
-            telemetry.addData("Am I seeing purple on second cs", isGreen2);
 
             telemetry.update();
 

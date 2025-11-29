@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
-//import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
@@ -23,7 +23,8 @@ public class decode2 extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private Servo light;
-//    private SorterSubsystem sorterSubsystem;
+
+    private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
     private long lastIntakeTime;
     private long lastFireTime;
@@ -63,7 +64,6 @@ public class decode2 extends LinearOpMode {
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
-        boolean togglePusher = false;
         boolean toggleOuttakeSorter = false;
         boolean rightTriggerPressed = false;
         boolean leftTriggerPressed = false;
@@ -89,14 +89,11 @@ public class decode2 extends LinearOpMode {
         shooter = hw.shooter;
         hood = hw.hood;
 
-
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
-//
-//        if (sorterSubsystem == null) { // sorterSubsystem is only set once
-//            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "pgg");
-//        }
+        if (sorterSubsystem == null) { // sorterSubsystem is only set once
+            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
+        }
 
         while (opModeInInit()){
             if (gamepad1.a){
@@ -189,49 +186,25 @@ public class decode2 extends LinearOpMode {
 //            }
 
             if (gamepad1.b && sorterTimer.milliseconds() > 1000){
-                sorterPosition = (sorterPosition+1)%3;
+                sorterSubsystem.manualSpin();
                 sorterTimer.reset();
-                if (sorterPosition == 0) {
-                    hw.sorter.setPosition(0.085);//60 degrees
-                }
-                else if (sorterPosition == 1) {
-                    hw.sorter.setPosition(0.515);//60 degrees
-                }
-                else if (sorterPosition == 2) {
-                    hw.sorter.setPosition(0.96);//60 degrees
-                }
             }
-
-//            currentYState = gamepad1.y;
-//            if (currentYState && !previousYState){
-//                togglePusher = !togglePusher;
-//
-//                if (togglePusher){
-//                    pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-//                    sorterSubsystem.setIsPusherUp(true);
-//                }else{
-//                    pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-//                    sorterSubsystem.setIsPusherUp(false);
-//                }
-//            }
-//            previousYState = currentYState;
-
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
                 // Start pulse only if not already pulsing
-                if (!togglePusher) {
+                if (!sorterSubsystem.getIsPusherUp()) {
+                    sorterSubsystem.setIsPusherUp(true);
                     hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                     pusherTimer.reset();
-                    togglePusher = true;
                 }
             }
             previousYState = currentYState;
 
             // Pusher
-            if (togglePusher && pusherTimer.milliseconds() >= 500) {
+            if (sorterSubsystem.getIsPusherUp() && pusherTimer.milliseconds() >= 500) {
                 hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                togglePusher = false;
+                sorterSubsystem.setIsPusherUp(false);
             }
 
             currentXState = gamepad1.x;
@@ -303,7 +276,6 @@ public class decode2 extends LinearOpMode {
             telemetry.addData("X", mecanumCommand.getX());
             telemetry.addData("Y", mecanumCommand.getY());
             telemetry.addData("Theta", mecanumCommand.getOdoHeading());
-            telemetry.addData("Pusher State", togglePusher);
             telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }
