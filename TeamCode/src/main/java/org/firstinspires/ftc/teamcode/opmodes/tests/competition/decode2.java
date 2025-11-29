@@ -79,6 +79,14 @@ public class decode2 extends LinearOpMode {
         DRIVETYPE drivetype = DRIVETYPE.FIELDORIENTED;
 
         hw = Hardware.getInstance(hardwareMap);
+        frontLeftDrive = hw.lf;
+        frontRightDrive = hw.rf;
+        backLeftDrive = hw.lb;
+        backRightDrive = hw.rb;
+        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
 
         mecanumCommand = new MecanumCommand(hw);
@@ -118,11 +126,11 @@ public class decode2 extends LinearOpMode {
         while (opModeIsActive()) {
             Double headingError = vision.getTargetYaw();
             boolean targetFound = (headingError != null);
+
             double turn;
 
-            if (gamepad2.left_trigger > 0 && tagOrientTimer.milliseconds() > 700) {
+            if (gamepad2.left_trigger > 0) {
                 if (targetFound) {
-
                     double error = headingError;
 
                     double deadzone = 1.0; //tune
@@ -150,17 +158,19 @@ public class decode2 extends LinearOpMode {
                 }
                 telemetry.update();
                 moveRobot(0, 0, turn);
-                
+
                 tagOrientTimer.reset();
+            } else {
+                if (drivetype == DRIVETYPE.FIELDORIENTED) {
+                    theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+                } else if (drivetype == DRIVETYPE.ROBOTORIENTED) {
+                    theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+                }
             }
 
             mecanumCommand.processOdometry();
 
-            if (drivetype == DRIVETYPE.FIELDORIENTED) {
-                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-            } else if (drivetype == DRIVETYPE.ROBOTORIENTED){
-                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-            }
+
 
             if (gamepad1.right_trigger > 0) {
                 if (!rightTriggerPressed) {
