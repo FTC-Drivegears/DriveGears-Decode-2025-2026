@@ -458,6 +458,10 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
+                                shooterSubsystem.setMaxRPM(3800);
+                                //mecanumCommand.moveToPos(26, -14, 0.5014);
+                                mecanumCommand.moveToPos(26, -6, 0.4014);
+                                hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
                             break;
@@ -466,10 +470,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     break;
 
                 case SECOND_SHOT:
-                    shooterSubsystem.setMaxRPM(3800);
-                    //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.4014);
-                    hood.setPosition(0.43); //replace with hood position
+
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
@@ -702,6 +703,10 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.THIRD_SHOT;
+                                shooterSubsystem.setMaxRPM(3800);
+                                //mecanumCommand.moveToPos(26, -14, 0.5014);
+                                mecanumCommand.moveToPos(26, -6, 0.4014);
+                                hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
                             break;
@@ -710,10 +715,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     break;
                 // 0 purple, 1 green, 2 purple
                 case THIRD_SHOT:
-                    shooterSubsystem.setMaxRPM(3800);
-                    //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.4014);
-                    hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
