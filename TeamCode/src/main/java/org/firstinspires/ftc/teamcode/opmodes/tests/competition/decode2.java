@@ -40,6 +40,8 @@ public class decode2 extends LinearOpMode {
 
     private final ElapsedTime colorSensingTimer = new ElapsedTime();
 
+    private final ElapsedTime tagOrientTimer = new ElapsedTime();
+
     //Shooter Presets
     private final double FAR_HOOD = 0.4;
     private final int FAR_SHOOT_SPEED = 3700;
@@ -116,35 +118,40 @@ public class decode2 extends LinearOpMode {
         while (opModeIsActive()) {
             Double headingError = vision.getTargetYaw();
             boolean targetFound = (headingError != null);
+            double turn;
 
-            double turn = 0;
+            if (gamepad2.left_trigger > 0 && tagOrientTimer.milliseconds() > 700) {
+                if (targetFound) {
 
-            if (gamepad1.left_bumper && targetFound) {
+                    double error = headingError;
 
-                double error = headingError;
+                    double deadzone = 1.0; //tune
+                    if (Math.abs(error) < deadzone) {
+                        turn = 0;
+                        previousTurn = 0;
+                        telemetry.addLine("ALIGNED");
 
-                double deadzone = 2.0; //tune
-                if (Math.abs(error) < deadzone) {
-                    turn = 0;
-                    previousTurn = 0;
-                    telemetry.addLine("ALIGNED");
+                    } else {
+                        double actualTurn = error * TURN_GAIN;
+                        actualTurn = Range.clip(actualTurn, -MAX_AUTO_TURN, MAX_AUTO_TURN);
+
+                        double SMOOTHING = 0.6;
+                        turn = actualTurn * (1 - SMOOTHING) + previousTurn * SMOOTHING;
+                        previousTurn = turn;
+
+                        telemetry.addData("AUTO TURN", "%.2f", turn);
+                        telemetry.addData("Yaw Error", "%.2f°", error);
+                    }
 
                 } else {
-                    double actualTurn = error * TURN_GAIN;
-                    actualTurn = Range.clip(actualTurn, -MAX_AUTO_TURN, MAX_AUTO_TURN);
-
-                    double SMOOTHING = 0.6;
-                    turn = actualTurn * (1 - SMOOTHING) + previousTurn * SMOOTHING;
+                    turn = -gamepad1.right_stick_x / 3.0;
                     previousTurn = turn;
-
-                    telemetry.addData("AUTO TURN", "%.2f", turn);
-                    telemetry.addData("Yaw Error", "%.2f°", error);
+                    telemetry.addData("MANUAL TURN", "%.2f", turn);
                 }
-
-            } else {
-                turn = -gamepad1.right_stick_x / 3.0;
-                previousTurn = turn;
-                telemetry.addData("MANUAL TURN", "%.2f", turn);
+                telemetry.update();
+                moveRobot(0, 0, turn);
+                
+                tagOrientTimer.reset();
             }
 
             mecanumCommand.processOdometry();
@@ -273,5 +280,21 @@ public class decode2 extends LinearOpMode {
             telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }
+    }
+    public void moveRobot(double x, double y, double yaw) {
+        double fl = x - y - yaw;
+        double fr = x + y + yaw;
+        double bl = x + y - yaw;
+        double br = x - y + yaw;
+
+        double max = Math.max(1.0,
+                Math.max(Math.abs(fl),
+                        Math.max(Math.abs(fr),
+                                Math.max(Math.abs(bl), Math.abs(br)))));
+
+        frontLeftDrive.setPower(fl / max);
+        frontRightDrive.setPower(fr / max);
+        backLeftDrive.setPower(bl / max);
+        backRightDrive.setPower(br / max);
     }
 }
