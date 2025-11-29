@@ -56,7 +56,7 @@ public class decode2 extends LinearOpMode {
     private DcMotorEx backRightDrive;
     private LogitechVisionSubsystem vision;
 
-    private enum DRIVETYPE{
+    private enum DRIVETYPE {
         ROBOTORIENTED, FIELDORIENTED
     }
 
@@ -76,7 +76,7 @@ public class decode2 extends LinearOpMode {
         double hoodPos = 0.846;
         double shootSpeed = 4000;
 
-        DRIVETYPE drivetype = DRIVETYPE.FIELDORIENTED;
+        DRIVETYPE drivetype = DRIVETYPE.ROBOTORIENTED;
 
         hw = Hardware.getInstance(hardwareMap);
 
@@ -98,15 +98,15 @@ public class decode2 extends LinearOpMode {
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
         if (sorterSubsystem == null) { // sorterSubsystem is only set once
-            sorterSubsystem = new SorterSubsystem(hw,this, telemetry, "");
+            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
         }
 
-        while (opModeInInit()){
-            if (gamepad1.a){
+        while (opModeInInit()) {
+            if (gamepad1.a) {
                 drivetype = DRIVETYPE.FIELDORIENTED;
             }
 
-            if (gamepad1.b){
+            if (gamepad1.b) {
                 drivetype = DRIVETYPE.ROBOTORIENTED;
             }
 
@@ -118,19 +118,19 @@ public class decode2 extends LinearOpMode {
         while (opModeIsActive()) {
             Double headingError = vision.getTargetYaw();
             boolean targetFound = (headingError != null);
-            double turn;
 
-            if (gamepad2.left_trigger > 0 && tagOrientTimer.milliseconds() > 700) {
+            double turn = 0;
+
+            if (gamepad2.left_trigger > 0) {
                 if (targetFound) {
 
                     double error = headingError;
+                    double deadzone = 1.0;
 
-                    double deadzone = 1.0; //tune
                     if (Math.abs(error) < deadzone) {
                         turn = 0;
                         previousTurn = 0;
                         telemetry.addLine("ALIGNED");
-
                     } else {
                         double actualTurn = error * TURN_GAIN;
                         actualTurn = Range.clip(actualTurn, -MAX_AUTO_TURN, MAX_AUTO_TURN);
@@ -139,28 +139,35 @@ public class decode2 extends LinearOpMode {
                         turn = actualTurn * (1 - SMOOTHING) + previousTurn * SMOOTHING;
                         previousTurn = turn;
 
-                        telemetry.addData("AUTO TURN", "%.2f", turn);
+                        telemetry.addData("Auto turn", "%.2f", turn);
                         telemetry.addData("Yaw Error", "%.2f°", error);
                     }
 
                 } else {
                     turn = -gamepad1.right_stick_x / 3.0;
                     previousTurn = turn;
-                    telemetry.addData("MANUAL TURN", "%.2f", turn);
+                    telemetry.addData("Turn manually", "%.2f", turn);
                 }
+
                 telemetry.update();
-                moveRobot(0, 0, turn);
-                
+                mecanumCommand.robotOrientedMove(0, 0, turn);
                 tagOrientTimer.reset();
+
+            } else {
+                mecanumCommand.robotOrientedMove(
+                        gamepad1.left_stick_y,
+                        gamepad1.left_stick_x,
+                        gamepad1.right_stick_x
+                );
             }
 
             mecanumCommand.processOdometry();
 
-            if (drivetype == DRIVETYPE.FIELDORIENTED) {
-                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-            } else if (drivetype == DRIVETYPE.ROBOTORIENTED){
-                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-            }
+//            if (drivetype == DRIVETYPE.FIELDORIENTED) {
+//                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+//            } else if (drivetype == DRIVETYPE.ROBOTORIENTED) {
+//                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+//            }
 
             if (gamepad1.right_trigger > 0) {
                 if (!rightTriggerPressed) {
@@ -171,8 +178,7 @@ public class decode2 extends LinearOpMode {
                     else
                         intake.setPower(0);
                 }
-            }
-            else
+            } else
                 rightTriggerPressed = false;
 
             if (gamepad1.left_trigger > 0) {
@@ -184,8 +190,7 @@ public class decode2 extends LinearOpMode {
                     else
                         intake.setPower(0);
                 }
-            }
-            else
+            } else
                 leftTriggerPressed = false;
 
 
@@ -202,12 +207,12 @@ public class decode2 extends LinearOpMode {
                 }
             }
 
-            if (gamepad1.dpad_down && sorterTimer.milliseconds() > 1000){
+            if (gamepad1.dpad_down && sorterTimer.milliseconds() > 1000) {
                 sorterSubsystem.manualSpin();
                 sorterTimer.reset();
             }
 
-            if (colorSensingTimer.milliseconds() > 200){
+            if (colorSensingTimer.milliseconds() > 200) {
                 sorterSubsystem.detectColor();
                 colorSensingTimer.reset();
             }
@@ -230,71 +235,73 @@ public class decode2 extends LinearOpMode {
             }
 
             currentXState = gamepad1.x;
-            if (currentXState && !previousXState){
+            if (currentXState && !previousXState) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
             }
             previousXState = currentXState;
 
             // CLOSE
-            if (gamepad2.x){
+            if (gamepad2.x) {
                 hood.setPosition(CLOSE_HOOD);
                 shootSpeed = CLOSE_SHOOT_SPEED;
 
             }
             //MID
-            if (gamepad2.y){
+            if (gamepad2.y) {
                 hood.setPosition(MID_HOOD);
                 shootSpeed = MID_SHOOT_SPEED;
-            }
 
-            //FAR
-            if (gamepad2.b){
-                hood.setPosition(FAR_HOOD);
-                shootSpeed = FAR_SHOOT_SPEED;
-            }
+               // public void moveRobot (double x, double y, double yaw) {
 
-            if (gamepad1.start){
-                mecanumCommand.resetPinPointOdometry();
-            }
+//        double fl = x - y - yaw;
+//        double fr = x + y + yaw;
+//        double bl = x + y - yaw;
+//        double br = x - y + yaw;
+//
+//        double max = Math.max(1.0,
+//                Math.max(Math.abs(fl),
+//                        Math.max(Math.abs(fr),
+//                                Math.max(Math.abs(bl), Math.abs(br)))));
+//
+//        frontLeftDrive.setPower(fl / max);
+//        frontRightDrive.setPower(fr / max);
+//        backLeftDrive.setPower(bl / max);
+//        backRightDrive.setPower(br / max);
+//    }
+                }
 
-            if (isOuttakeMotorOn){
-                shooterSubsystem.setMaxRPM(shootSpeed);
-                if (shooterSubsystem.spinup()){
-                    light.setPosition(1.0);
+                //FAR
+                if (gamepad2.b) {
+                    hood.setPosition(FAR_HOOD);
+                    shootSpeed = FAR_SHOOT_SPEED;
+                }
+
+                if (gamepad1.start) {
+                    mecanumCommand.resetPinPointOdometry();
+                }
+
+                if (isOuttakeMotorOn) {
+                    shooterSubsystem.setMaxRPM(shootSpeed);
+                    if (shooterSubsystem.spinup()) {
+                        light.setPosition(1.0);
+                    } else {
+                        light.setPosition(0.0);
+                    }
+
                 } else {
+                    shooterSubsystem.stopShooter();
                     light.setPosition(0.0);
                 }
 
-            }else{
-                shooterSubsystem.stopShooter();
-                light.setPosition(0.0);
+                telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+                telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
+                telemetry.addData("Hood pos: ", hoodPos);
+                telemetry.addLine("---------------------------------");
+                telemetry.addData("X", mecanumCommand.getX());
+                telemetry.addData("Y", mecanumCommand.getY());
+                telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+                telemetry.addData("Outtake speed: ", shootSpeed);
+                telemetry.update();
             }
-
-            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
-            telemetry.addData("Hood pos: ", hoodPos);
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("X", mecanumCommand.getX());
-            telemetry.addData("Y", mecanumCommand.getY());
-            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
-            telemetry.addData("Outtake speed: ", shootSpeed);
-            telemetry.update();
         }
     }
-    public void moveRobot(double x, double y, double yaw) {
-        double fl = x - y - yaw;
-        double fr = x + y + yaw;
-        double bl = x + y - yaw;
-        double br = x - y + yaw;
-
-        double max = Math.max(1.0,
-                Math.max(Math.abs(fl),
-                        Math.max(Math.abs(fr),
-                                Math.max(Math.abs(bl), Math.abs(br)))));
-
-        frontLeftDrive.setPower(fl / max);
-        frontRightDrive.setPower(fr / max);
-        backLeftDrive.setPower(bl / max);
-        backRightDrive.setPower(br / max);
-    }
-}
