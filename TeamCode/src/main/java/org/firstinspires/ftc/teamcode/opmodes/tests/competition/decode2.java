@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -18,6 +20,9 @@ public class decode2 extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private Hardware hw;
     private double theta;
+    final double TURN_GAIN = 0.5;
+    final double MAX_AUTO_TURN = 0.3; //max speed
+    private double previousTurn = 0; //last turn value
     private DcMotor intake;
     private DcMotor shooter;
     private Servo pusher;
@@ -43,6 +48,12 @@ public class decode2 extends LinearOpMode {
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
 
+    private DcMotorEx frontLeftDrive;
+    private DcMotorEx frontRightDrive;
+    private DcMotorEx backLeftDrive;
+    private DcMotorEx backRightDrive;
+    private LogitechVisionSubsystem vision;
+
     private enum DRIVETYPE{
         ROBOTORIENTED, FIELDORIENTED
     }
@@ -51,21 +62,12 @@ public class decode2 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         boolean previousXState = false;
         boolean previousYState = false;
-        boolean prevRightTrigger = false;
-        boolean prevLeftTrigger = false;
-        boolean prevRB = false;
-        boolean prevLB = false;
 
         boolean currentXState;
         boolean currentYState;
-        boolean curRightTrigger;
-        boolean curLeftTrigger;
-        boolean curRB;
-        boolean curLB;
 
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
-        boolean toggleOuttakeSorter = false;
         boolean rightTriggerPressed = false;
         boolean leftTriggerPressed = false;
 
@@ -74,10 +76,12 @@ public class decode2 extends LinearOpMode {
 
         DRIVETYPE drivetype = DRIVETYPE.FIELDORIENTED;
 
-
         hw = Hardware.getInstance(hardwareMap);
+
+
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
+        vision = new LogitechVisionSubsystem(hw, "BLUE");
         pusher = hw.pusher;
         light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
@@ -110,6 +114,39 @@ public class decode2 extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            Double headingError = vision.getTargetYaw();
+            boolean targetFound = (headingError != null);
+
+            double turn = 0;
+
+            if (gamepad1.left_bumper && targetFound) {
+
+                double error = headingError;
+
+                double deadzone = 2.0; //tune
+                if (Math.abs(error) < deadzone) {
+                    turn = 0;
+                    previousTurn = 0;
+                    telemetry.addLine("ALIGNED");
+
+                } else {
+                    double actualTurn = error * TURN_GAIN;
+                    actualTurn = Range.clip(actualTurn, -MAX_AUTO_TURN, MAX_AUTO_TURN);
+
+                    double SMOOTHING = 0.6;
+                    turn = actualTurn * (1 - SMOOTHING) + previousTurn * SMOOTHING;
+                    previousTurn = turn;
+
+                    telemetry.addData("AUTO TURN", "%.2f", turn);
+                    telemetry.addData("Yaw Error", "%.2f°", error);
+                }
+
+            } else {
+                turn = -gamepad1.right_stick_x / 3.0;
+                previousTurn = turn;
+                telemetry.addData("MANUAL TURN", "%.2f", turn);
+            }
+
             mecanumCommand.processOdometry();
 
             if (drivetype == DRIVETYPE.FIELDORIENTED) {
@@ -158,7 +195,6 @@ public class decode2 extends LinearOpMode {
                 }
             }
 
-            // TO DO
             if (gamepad1.dpad_down && sorterTimer.milliseconds() > 1000){
                 sorterSubsystem.manualSpin();
                 sorterTimer.reset();
@@ -237,6 +273,5 @@ public class decode2 extends LinearOpMode {
             telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
         }
-
     }
 }
