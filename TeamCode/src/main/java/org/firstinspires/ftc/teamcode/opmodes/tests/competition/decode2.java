@@ -26,13 +26,14 @@ public class decode2 extends LinearOpMode {
 
     private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
-    private long lastIntakeTime;
-    private long lastFireTime;
-    private long lastOuttakeTime;
 
     private final ElapsedTime sorterTimer = new ElapsedTime();
 
+    private final ElapsedTime outtakeTimer = new ElapsedTime();
+
     private final ElapsedTime pusherTimer = new ElapsedTime();
+
+    private final ElapsedTime colorSensingTimer = new ElapsedTime();
 
     //Shooter Presets
     private final double FAR_HOOD = 0.4;
@@ -69,7 +70,6 @@ public class decode2 extends LinearOpMode {
         boolean leftTriggerPressed = false;
 
         double hoodPos = 0.846;
-        double sorterPosition = 0.0;
         double shootSpeed = 4000;
 
         DRIVETYPE drivetype = DRIVETYPE.FIELDORIENTED;
@@ -106,7 +106,7 @@ public class decode2 extends LinearOpMode {
 
             telemetry.update();
         }
-// Wait for start button to be pressed
+
         waitForStart();
 
         while (opModeIsActive()) {
@@ -145,49 +145,28 @@ public class decode2 extends LinearOpMode {
                 leftTriggerPressed = false;
 
 
-//            curLeftTrigger = gamepad1.left_trigger > 0;
-//            if (curLeftTrigger && !prevLeftTrigger){ // Press left to outtake;
-//                toggleOuttakeSorter = !toggleOuttakeSorter;
-//
-//                if (toggleOuttakeSorter){
-//                    double durationOuttake = (System.nanoTime() - lastOuttakeTime)/1E9;
-//                    if (durationOuttake >= 1) {
-//                        telemetry.addLine("outtake");
-//                        //sorterSubsystem.outtakeBall();
-//                        lastOuttakeTime = System.nanoTime();
-//                        telemetry.update();
-//                    }
-//                }
-//            }
+            boolean right = gamepad1.dpad_right;
+            boolean left = gamepad1.dpad_left;
+            if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
+                if (outtakeTimer.milliseconds() > 500) {
+                    char curColor = 'g';
+                    if (left) {
+                        curColor = 'p';
+                    }
+                    sorterSubsystem.outtakeBall(curColor);
+                    outtakeTimer.reset();
+                }
+            }
 
-//            boolean up = gamepad1.dpad_up;
-//            boolean down = gamepad1.dpad_down;
-//            if (up || down) { // Press up to intake g, down to intake p.
-//                double durationIntake = (System.nanoTime() - lastIntakeTime)/1E9;
-//                char curColor = 'g';
-//                if (down) {
-//                    curColor = 'p';
-//                }
-//                if (durationIntake >= 2) {
-//                    telemetry.addData("mockInputBall", curColor);
-//                    sorterSubsystem.intakeBall(curColor);
-//                    lastIntakeTime = System.nanoTime();
-//                    telemetry.update();
-//                }
-//            }
-//            if (gamepad1.a){ // Press A to quick fire.
-//                double durationFire = (System.nanoTime() - lastFireTime)/1E9;
-//                if (durationFire >= 1) {
-//                    telemetry.addLine("quick firing");
-//                    sorterSubsystem.quickFire();
-//                    lastFireTime = System.nanoTime();
-//                    telemetry.update();
-//                }
-//            }
-
-            if (gamepad1.b && sorterTimer.milliseconds() > 1000){
+            // TO DO
+            if (gamepad1.dpad_down && sorterTimer.milliseconds() > 1000){
                 sorterSubsystem.manualSpin();
                 sorterTimer.reset();
+            }
+
+            if (colorSensingTimer.milliseconds() > 200){
+                sorterSubsystem.detectColor();
+                colorSensingTimer.reset();
             }
 
             currentYState = gamepad1.y;
@@ -213,27 +192,6 @@ public class decode2 extends LinearOpMode {
             }
             previousXState = currentXState;
 
-//            curRB = gamepad1.right_bumper;
-//            if(curRB){
-//                if(hoodPos <= 0.359){
-//                    hoodPos = 0.359;
-//                }
-//                else{
-//                    hoodPos -= 0.001;
-//                }
-//                hood.setPosition(hoodPos);
-//            }
-//
-//            curLB = gamepad1.left_bumper;
-//            if(curLB){
-//                if(hoodPos >= 0.846){
-//                    hoodPos = 0.846;
-//                }
-//                else{
-//                    hoodPos += 0.001;
-//                }
-//                hood.setPosition(hoodPos);
-//            }
             // CLOSE
             if (gamepad2.x){
                 hood.setPosition(CLOSE_HOOD);
