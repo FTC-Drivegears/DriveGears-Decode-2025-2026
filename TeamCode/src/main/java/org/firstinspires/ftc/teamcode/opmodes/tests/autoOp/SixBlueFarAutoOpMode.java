@@ -215,8 +215,9 @@ public class SixBlueFarAutoOpMode extends LinearOpMode {
             switch (autoState) {
                 case FIRST_SHOT:
                     shooterSubsystem.setMaxRPM(3800);
+                    intakeFlag = true;
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.4714);
+                    mecanumCommand.moveToPos(26, -6, 0.4014);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -396,20 +397,19 @@ public class SixBlueFarAutoOpMode extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(70, 35, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(80, 32, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
                         case 1: //turn on intake
                             if (mecanumCommand.isPositionReached()) {
-                                intakeFlag = true;
                                 stage++;
                                 stageTimer.reset();
                             }
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 800) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, 45, Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(80, 45, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -423,7 +423,7 @@ public class SixBlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, 58, Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(80, 58, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -437,7 +437,7 @@ public class SixBlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 6: //move to third ball
                             if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, 85, Math.PI / 2); //go to place to intake third artifact
+                                mecanumCommand.moveToPos(80, 85, Math.PI / 2); //go to place to intake third artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -457,7 +457,7 @@ public class SixBlueFarAutoOpMode extends LinearOpMode {
 
                 case SECOND_SHOT:
                     //mecanumCommand.moveToPos(26, -14, 0.5014); //move to whatever position we used to go to
-                    mecanumCommand.moveToPos(26, -6, 0.43014);
+//                    mecanumCommand.moveToPos(26, -6, 0.40;eu014);
                     shooterSubsystem.setMaxRPM(3800);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {

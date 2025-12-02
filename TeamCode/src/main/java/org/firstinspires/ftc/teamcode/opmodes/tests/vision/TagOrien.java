@@ -29,15 +29,15 @@ public class TagOrien extends LinearOpMode {
 
         vision = new LogitechVisionSubsystem(hw, "BLUE"); // or red
 
-        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "lf");
-        frontRightDrive = hardwareMap.get(DcMotorEx.class, "rf");
-        backLeftDrive = hardwareMap.get(DcMotorEx.class, "lb");
-        backRightDrive = hardwareMap.get(DcMotorEx.class, "rb");
-
-        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+//        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "lf");
+//        frontRightDrive = hardwareMap.get(DcMotorEx.class, "rf");
+//        backLeftDrive = hardwareMap.get(DcMotorEx.class, "lb");
+//        backRightDrive = hardwareMap.get(DcMotorEx.class, "rb");
+//
+//        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+//        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+//        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+//        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
         waitForStart();
 
@@ -62,7 +62,7 @@ public class TagOrien extends LinearOpMode {
                     double actualTurn = error * TURN_GAIN;
                     actualTurn = Range.clip(actualTurn, -MAX_AUTO_TURN, MAX_AUTO_TURN);
 
-                    double SMOOTHING = 0.6;
+                    double SMOOTHING = 0.4;
                     turn = actualTurn * (1 - SMOOTHING) + previousTurn * SMOOTHING;
                     previousTurn = turn;
 
@@ -77,25 +77,21 @@ public class TagOrien extends LinearOpMode {
             }
 
             telemetry.update();
-            moveRobot(0, 0, turn);
+            mecanumCommand.robotOrientedMove(0, 0,turn);
 
             sleep(10);
         }
     }
-    public void moveRobot(double x, double y, double yaw) {
-        double fl = x - y - yaw;
-        double fr = x + y + yaw;
-        double bl = x + y - yaw;
-        double br = x - y + yaw;
-
-        double max = Math.max(1.0,
-                Math.max(Math.abs(fl),
-                        Math.max(Math.abs(fr),
-                                Math.max(Math.abs(bl), Math.abs(br)))));
-
-        frontLeftDrive.setPower(fl / max);
-        frontRightDrive.setPower(fr / max);
-        backLeftDrive.setPower(bl / max);
-        backRightDrive.setPower(br / max);
-    }
+//    public void moveRobot(double x, double y, double yaw) {
+//        double fl = x - y - yaw;
+//        double fr = x + y + yaw;
+//        double bl = x + y - yaw;
+//        double br = x - y + yaw;
+//
+//        double max = Math.max(1.0,
+//                Math.max(Math.abs(fl),
+//                        Math.max(Math.abs(fr),
+//                                Math.max(Math.abs(bl), Math.abs(br)))));
+//
+//    }
 }

@@ -211,6 +211,13 @@ public class MecanumCommand {
         mecanumSubsystem.motorProcessNoEncoder();
     }
 
+    public void pivot (double power){
+        hw.lf.setPower(power);
+        hw.lb.setPower(power);
+        hw.rb.setPower(-power);
+        hw.rf.setPower(-power);
+    }
+
     public void stop(){
         mecanumSubsystem.stop(true);
     }

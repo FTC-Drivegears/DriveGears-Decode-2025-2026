@@ -17,9 +17,9 @@ public class LogitechVisionSubsystem {
     private final CameraName Webcam_1;
     private String ALLIANCE;
     public String OBELISK = "UNKNOWN";
-    private int targetID = -1;
-    private double x_Value = Double.NaN;
-    private AprilTagProcessor tagProcessor;
+    private static int targetID = -1;
+    private static double x_Value = Double.NaN;
+    private static AprilTagProcessor tagProcessor;
     private VisionPortal visionPortal;
 
     public LogitechVisionSubsystem(Hardware hw, String alliance) {
@@ -68,23 +68,27 @@ public class LogitechVisionSubsystem {
         return OBELISK;
     }
 
-    public double targetApril(Telemetry telemetry) {
+    public static double targetApril(Telemetry telemetry) {
         if (tagProcessor == null) return Double.NaN;
         List<AprilTagDetection> currentDetections = tagProcessor.getDetections();
         if (currentDetections == null) return Double.NaN;
 
         for (AprilTagDetection detection : currentDetections) {
-            if (detection != null && detection.metadata != null && detection.id == this.targetID) {
+            if (detection != null && detection.metadata != null && detection.id == targetID) {
                 if (telemetry != null) {
                     telemetry.addData("April tag height", detection.ftcPose.z);
                     telemetry.addData("April tag angle", detection.ftcPose.yaw);
-                    telemetry.addData("April tag id", this.targetID);
+                    telemetry.addData("April tag id", targetID);
                 }
-                this.x_Value = detection.ftcPose.x;
-                return this.x_Value;
+                x_Value = detection.ftcPose.x;
+                return x_Value;
             }
         }
         return Double.NaN;
+    }
+
+    public static double targetApril() {
+        return targetApril(null);
     }
 
     public Double getTargetYaw() {
@@ -98,9 +102,6 @@ public class LogitechVisionSubsystem {
             }
         }
         return null;
-    }
-    public double targetApril() {
-        return targetApril(null);
     }
 
     public void telemetryAprilTag(Telemetry telemetry) {

@@ -15,8 +15,8 @@ import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
-@TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
-public class decode2 extends LinearOpMode {
+@TeleOp(name = "DecodeTeleOpMode3", group = "TeleOp")
+public class decode3 extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private Hardware hw;
     private double theta;
@@ -49,6 +49,7 @@ public class decode2 extends LinearOpMode {
     private final int MID_SHOOT_SPEED = 3050;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
+
     private LogitechVisionSubsystem vision;
 
     private enum DRIVETYPE {
@@ -78,10 +79,9 @@ public class decode2 extends LinearOpMode {
 
         hw = Hardware.getInstance(hardwareMap);
 
-
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
-        vision = new LogitechVisionSubsystem(hw, "BLUE");
+        vision = new LogitechVisionSubsystem(hw, "RED");
         pusher = hw.pusher;
         light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
@@ -101,11 +101,11 @@ public class decode2 extends LinearOpMode {
 
         while (opModeInInit()) {
             if (gamepad1.a) {
-                drivetype = DRIVETYPE.FIELDORIENTED;
+                drivetype = DRIVETYPE.ROBOTORIENTED;
             }
 
-            if (gamepad1.b) {
-                drivetype = DRIVETYPE.ROBOTORIENTED;
+            if (gamepad1.y) {
+                drivetype = DRIVETYPE.FIELDORIENTED;
             }
 
             telemetry.update();
@@ -114,13 +114,15 @@ public class decode2 extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-//            Double headingError = vision.getTargetYaw();
-//            boolean targetFound = (headingError != null);
-//
-//            double turn = 0;
-//
+
+            Double headingError = vision.getTargetYaw();
+            boolean targetFound = (headingError != null);
+
+            double turn = 0;
+
 //            if (gamepad2.left_trigger > 0) {
 //                if (targetFound) {
+//
 //                    double error = headingError;
 //                    double deadzone = 1.0;
 //
@@ -157,29 +159,28 @@ public class decode2 extends LinearOpMode {
 //                        gamepad1.right_stick_x
 //                );
 //            }
-//
-//            mecanumCommand.processOdometry();
+            if (gamepad2.left_bumper && !previousAimButton) {
+                autoAimState = !autoAimState;   // toggle on *edge* of button press
+            }
+            previousAimButton = gamepad2.left_bumper;
 
-//            if (gamepad2.left_bumper && !previousAimButton) {
-//                autoAimState = !autoAimState;   // toggle on *edge* of button press
-//            }
-//            previousAimButton = gamepad2.left_bumper;
-//
-//            if (autoAimState) {
-//                if (LogitechVisionSubsystem.tagProcessor() > 5) {
-//                    mecanumCommand.pivot(0.2);
-//                } else if (LogitechVisionSubsystem.tagProcessor() < -5) {
-//                    mecanumCommand.pivot(-0.2);
-//                } else {
-//                    mecanumCommand.pivot(0);
-//                }
-//            }
+            if (autoAimState) {
+                if (LogitechVisionSubsystem.targetApril(telemetry) > 5) {
+                    mecanumCommand.pivot(0.2);
+                } else if (LogitechVisionSubsystem.targetApril(telemetry) < -5) {
+                    mecanumCommand.pivot(-0.2);
+                } else {
+                    mecanumCommand.pivot(0);
+                }
+            }
+
+            mecanumCommand.processOdometry();
 
 //            if (drivetype == DRIVETYPE.FIELDORIENTED) {
 //                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-//            } else if (drivetype == DRIVETYPE.ROBOTORIENTED) {
-//                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-//            }
+            if (drivetype == DRIVETYPE.ROBOTORIENTED) {
+                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            }
 
             if (gamepad1.right_trigger > 0) {
                 if (!rightTriggerPressed) {
@@ -263,7 +264,7 @@ public class decode2 extends LinearOpMode {
                 hood.setPosition(MID_HOOD);
                 shootSpeed = MID_SHOOT_SPEED;
 
-               // public void moveRobot (double x, double y, double yaw) {
+                // public void moveRobot (double x, double y, double yaw) {
 
 //        double fl = x - y - yaw;
 //        double fr = x + y + yaw;
@@ -280,40 +281,40 @@ public class decode2 extends LinearOpMode {
 //        backLeftDrive.setPower(bl / max);
 //        backRightDrive.setPower(br / max);
 //    }
-                }
+            }
 
-                //FAR
-                if (gamepad2.b) {
-                    hood.setPosition(FAR_HOOD);
-                    shootSpeed = FAR_SHOOT_SPEED;
-                }
+            //FAR
+            if (gamepad2.b) {
+                hood.setPosition(FAR_HOOD);
+                shootSpeed = FAR_SHOOT_SPEED;
+            }
 
-                if (gamepad1.start) {
-                    mecanumCommand.resetPinPointOdometry();
-                }
+            if (gamepad1.start) {
+                mecanumCommand.resetPinPointOdometry();
+            }
 
-                if (isOuttakeMotorOn) {
-                    shooterSubsystem.setMaxRPM(shootSpeed);
-                    if (shooterSubsystem.spinup()) {
-                        light.setPosition(1.0);
-                    } else {
-                        light.setPosition(0.0);
-                    }
-
+            if (isOuttakeMotorOn) {
+                shooterSubsystem.setMaxRPM(shootSpeed);
+                if (shooterSubsystem.spinup()) {
+                    light.setPosition(1.0);
                 } else {
-                    shooterSubsystem.stopShooter();
                     light.setPosition(0.0);
                 }
 
-                telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-                telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
-                telemetry.addData("Hood pos: ", hoodPos);
-                telemetry.addLine("---------------------------------");
-                telemetry.addData("X", mecanumCommand.getX());
-                telemetry.addData("Y", mecanumCommand.getY());
-                telemetry.addData("Theta", mecanumCommand.getOdoHeading());
-                telemetry.addData("Outtake speed: ", shootSpeed);
-                telemetry.update();
+            } else {
+                shooterSubsystem.stopShooter();
+                light.setPosition(0.0);
             }
+
+            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
+            telemetry.addData("Hood pos: ", hoodPos);
+            telemetry.addLine("---------------------------------");
+            telemetry.addData("X", mecanumCommand.getX());
+            telemetry.addData("Y", mecanumCommand.getY());
+            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+            telemetry.addData("Outtake speed: ", shootSpeed);
+            telemetry.update();
         }
     }
+}

@@ -215,7 +215,8 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    shooterSubsystem.setMaxRPM(3900);
+                    intakeFlag = true;
+                    shooterSubsystem.setMaxRPM(3800);
                     mecanumCommand.moveToPos(26, 6, -0.4);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
@@ -396,20 +397,19 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(70, -35, -Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(80, -32, -Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
                         case 1: //turn on intake
                             if (mecanumCommand.isPositionReached()) {
-                                intakeFlag = true;
                                 stage++;
                                 stageTimer.reset();
                             }
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 800) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, -45, -Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(80, -48, -Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -423,7 +423,7 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 1500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(70, -58, -Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(80, -64, -Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -435,16 +435,8 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                                 stage++;
                             }
                             break;
-                        case 6: //move to third ball
+                        case 6:
                             if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(65, -85, -Math.PI / 2); //go to place to intake third artifact
-                                stageTimer.reset();
-                                stage++;
-                            }
-                            break;
-                        case 7:
-                            if (stageTimer.milliseconds() > 1000) { //replace with whatever time you think is appropriate
-                                intakeFlag = false;
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
@@ -457,7 +449,6 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                 case SECOND_SHOT:
                     //mecanumCommand.moveToPos(26, -14, 0.5014); //move to whatever position we used to go to
                     mecanumCommand.moveToPos(26, 6, -0.4);
-                    shooterSubsystem.setMaxRPM(3900);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -501,7 +492,7 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 2000) {
                                             sort(2);
                                             stage++;
                                             stageTimer.reset();
@@ -555,7 +546,7 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 2000) {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
@@ -609,7 +600,7 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                                         }
                                         break;
                                     case 7: // sort
-                                        if (stageTimer.milliseconds() > 1500) {
+                                        if (stageTimer.milliseconds() > 2000) {
                                             sort(0);
                                             stage++;
                                             stageTimer.reset();
@@ -628,9 +619,11 @@ public class SixRedFarAutoOpMode extends LinearOpMode {
                     }
                     break;
                 case FINISH:
-                    mecanumCommand.moveToPos(60, 0, 0); //replace with box position
-                    mecanumCommand.stop();
-                    break;
+                    if(stageTimer.milliseconds() >= 500) {
+                        mecanumCommand.moveToPos(60, 0, 0); //replace with box position
+                        mecanumCommand.stop();
+                        break;
+                    }
 
             }
         }

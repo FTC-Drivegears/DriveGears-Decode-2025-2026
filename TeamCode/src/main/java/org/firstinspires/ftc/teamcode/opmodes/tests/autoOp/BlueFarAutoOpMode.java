@@ -221,6 +221,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
+                    intakeFlag = true;
                     shooterSubsystem.setMaxRPM(3800);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
                     mecanumCommand.moveToPos(26, -6, 0.4014);
@@ -418,7 +419,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 1: //turn on intake
                             if (mecanumCommand.isPositionReached()) {
-                                intakeFlag = true;
                                 stage++;
                                 stageTimer.reset();
                             }
@@ -663,7 +663,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                             break;
                         case 1: //turn on intake
                             if (mecanumCommand.isPositionReached()) {
-                                intakeFlag = true;
                                 stage++;
                                 stageTimer.reset();
                             }
