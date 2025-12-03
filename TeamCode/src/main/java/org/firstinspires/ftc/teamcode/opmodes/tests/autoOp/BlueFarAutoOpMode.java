@@ -217,8 +217,6 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
             processTelemetry();
 
-
-
             switch (autoState) {
                 case FIRST_SHOT:
                     intakeFlag = true;

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -30,6 +31,7 @@ public class Hardware {
 
     public final NormalizedColorSensor colourSensor2;
     public Servo light;
+    public Limelight3A limelight;
 
     public CameraName Webcam_1;
 
@@ -50,6 +52,7 @@ public class Hardware {
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
         this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
+        this.limelight = hwMap.get(Limelight3A.class, Specifications.LIME_LIGHT);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);

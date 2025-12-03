@@ -37,7 +37,7 @@ public class Specifications {
     public static final String BKLF_MOTOR = "lb";
     public static final String BKRT_MOTOR = "rb";
 
-    public static final String LIME_LIGHT = "lime";
+    public static final String LIME_LIGHT = "limelight";
 
     public static final String LIGHT = "light";
 

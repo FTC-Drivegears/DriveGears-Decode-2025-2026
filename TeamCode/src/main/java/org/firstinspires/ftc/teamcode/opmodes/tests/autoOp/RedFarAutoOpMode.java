@@ -413,7 +413,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(80, -32, -Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(80, -30, -Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
