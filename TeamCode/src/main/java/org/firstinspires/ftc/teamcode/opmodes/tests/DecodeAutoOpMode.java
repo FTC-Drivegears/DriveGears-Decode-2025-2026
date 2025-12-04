@@ -33,6 +33,7 @@ public class DecodeAutoOpMode extends LinearOpMode {
                 telemetry.addData("Artifacts", sorterSubsystem.getSorterIndex(i));
             }*/
             telemetry.update();
+            sorterSubsystem.detectColour();
 
             // After intake it needs to detect 3 balls that enter the robot
 

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class SorterSubsystem {
     private final Servo sorter;
 
-    private final ColorSensor colourSensor2;
+    private final ColorSensor colourSensor1;
     private final Telemetry telemetry;
     private final LinearOpMode opMode;
 
@@ -33,38 +33,38 @@ public class SorterSubsystem {
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
         this.sorter = hw.sorter;
-        this.colourSensor2 = hw.colour;
+        this.colourSensor1 = hw.colour;
         this.opMode = opMode;
         this.telemetry = telemetry;
         pattern = new ArrayList<>();
     }
 
     public void detectColour() {
-        int red = colourSensor2.red();
-        green = colourSensor2.green();
-        blue = colourSensor2.blue();
-        alpha = colourSensor2.alpha();
+        /*int red = colourSensor1.red();
+        int green = colourSensor1.green();
+        int blue = colourSensor1.blue();
+        int alpha = colourSensor1.alpha();*/
         //If the sorter is full it stops
         if (sorterList.size() == 3) {
             return;
         }
 
         // Purple ball is detected
-        if (red > 50 && red < 65 && green < 95 && green > 80 && blue < 95 && blue > 78 && alpha < 85 && alpha > 70) {
+        if (red / green > 0.6) {
             telemetry.addLine("Purple Detected");
             telemetry.update();
             if (!detectedColor) {
                 detectedColor = true;
                 sorterList.add(new Artifact("Purple", sorter.getPosition()));
-                turnsorter();
+                //turnsorter();
             } //green detected
-        } else if (red < 55 && red > 40 && green < 110 && green > 90 && blue < 90 && blue > 70 && alpha < 85 && alpha > 65) {
+        } else if (red / green < 0.55) {
             telemetry.addLine("Green Detected");
             telemetry.update();
             if (!detectedColor) {
                 detectedColor = true;
                 sorterList.add(new Artifact("Green", sorter.getPosition()));
-                turnsorter();
+                //turnsorter();
             }
 
         } else {
@@ -128,18 +128,18 @@ public class SorterSubsystem {
         pattern.add(art3);
     }
 
-    public int getRed() { return red; }
+    public int getRed() { return colourSensor1.red(); }
 
     public int getGreen(){
-        return green;
+        return colourSensor1.green();
     }
 
     public int getBlue(){
-        return blue;
+        return colourSensor1.blue();
     }
 
     public int getAlpha(){
-        return alpha;
+        return colourSensor1.alpha();
     }
 
     public double getPosition() {
