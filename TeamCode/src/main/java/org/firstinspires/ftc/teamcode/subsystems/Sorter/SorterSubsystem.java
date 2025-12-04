@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class SorterSubsystem {
     private final Servo sorter;
 
-    private final ColorSensor colourSensor;
+    private final ColorSensor colourSensor2;
     private final Telemetry telemetry;
     private final LinearOpMode opMode;
 
@@ -33,17 +33,17 @@ public class SorterSubsystem {
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
         this.sorter = hw.sorter;
-        this.colourSensor = hw.colour;
+        this.colourSensor2 = hw.colour;
         this.opMode = opMode;
         this.telemetry = telemetry;
         pattern = new ArrayList<>();
     }
 
     public void detectColour() {
-        red = colourSensor.red();
-        green = colourSensor.green();
-        blue = colourSensor.blue();
-        alpha = colourSensor.alpha();
+        int red = colourSensor2.red();
+        green = colourSensor2.green();
+        blue = colourSensor2.blue();
+        alpha = colourSensor2.alpha();
         //If the sorter is full it stops
         if (sorterList.size() == 3) {
             return;
@@ -128,9 +128,7 @@ public class SorterSubsystem {
         pattern.add(art3);
     }
 
-    public int getRed(){
-        return red;
-    }
+    public int getRed() { return red; }
 
     public int getGreen(){
         return green;

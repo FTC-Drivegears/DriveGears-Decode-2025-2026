@@ -28,10 +28,10 @@ public class DecodeAutoOpMode extends LinearOpMode {
             telemetry.addData("Blue", sorterSubsystem.getBlue());
             telemetry.addData("Alpha", sorterSubsystem.getAlpha());
             telemetry.addData("Amount of Artifacts", sorterSubsystem.getNumBalls());
-            telemetry.addData("position", sorterSubsystem.getPosition());
-            for (int i = 0; i < sorterSubsystem.getNumBalls(); i++) {
+            //telemetry.addData("position", sorterSubsystem.getPosition());
+           /* for (int i = 0; i < sorterSubsystem.getNumBalls(); i++) {
                 telemetry.addData("Artifacts", sorterSubsystem.getSorterIndex(i));
-            }
+            }*/
             telemetry.update();
 
             // After intake it needs to detect 3 balls that enter the robot

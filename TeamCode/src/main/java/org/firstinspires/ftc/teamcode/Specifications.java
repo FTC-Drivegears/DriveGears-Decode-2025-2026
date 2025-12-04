@@ -65,7 +65,7 @@ public class Specifications {
     public static final String HANGING_MOTOR = "hangingMotor";
     public static final String HANGING_MOTOR_AUX = "hangingMotorAux";
 
-    public static final String COLOUR_SENSOR = "colourSensor";
+    public static final String COLOUR_SENSOR = "colourSensor2";
 
     public static final String SORTER = "sorter";
 
