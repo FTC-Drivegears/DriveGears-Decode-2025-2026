@@ -284,6 +284,9 @@ public class BlueFarAutoOpMode extends LinearOpMode {
         int position = 0;
         stage = 0;
 
+        autoState = AUTO_STATE.FIRST_SHOT;
+        pattern = PATTERN.PPG_3;
+
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
 
@@ -343,7 +346,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    setup(26, -6, 0.4014, 3800, 0.43, true, false);
+                    setup(26, -6, 0.4014, 3800, 0.43, true, true);
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
@@ -397,7 +400,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     }
                     break;
                 case COLLECTION_2:
-                    collection(80, 32, Math.PI/2, 1, 2, AUTO_STATE.THIRD_SHOT);
+                    collection(144, 32, Math.PI/2, 1, 2, AUTO_STATE.THIRD_SHOT);
                     break;
                 // 0 purple, 1 green, 2 purple
                 case THIRD_SHOT:
@@ -435,6 +438,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
         telemetry.addData("Theta", mecanumCommand.getOdoHeading());
         telemetry.addData("Shooter: ", shooterSubsystem.getShooterVelocity());
         telemetry.addData("Stage: ", stage);
+        telemetry.addData("Auto state: ", autoState);
         telemetry.update();
     }
 
