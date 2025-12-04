@@ -434,6 +434,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
         telemetry.addData("Y", mecanumCommand.getY());
         telemetry.addData("Theta", mecanumCommand.getOdoHeading());
         telemetry.addData("Shooter: ", shooterSubsystem.getShooterVelocity());
+        telemetry.addData("Stage: ", stage);
         telemetry.update();
     }
 
