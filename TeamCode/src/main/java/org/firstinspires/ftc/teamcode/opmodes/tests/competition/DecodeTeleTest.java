@@ -287,7 +287,10 @@ public class DecodeTeleTest extends LinearOpMode {
                 telemetry.update();
 
             } else {
-                if (gamepad2.right_trigger > 0) {
+                llmotor.setPower(0);
+            }
+
+            if (gamepad2.right_trigger > 0) {
                     llmotor.setPower(-1);
                 } else {
                     llmotor.setPower(0);
@@ -298,7 +301,7 @@ public class DecodeTeleTest extends LinearOpMode {
                 } else {
                     llmotor.setPower(0);
                 }
-            }
+
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
