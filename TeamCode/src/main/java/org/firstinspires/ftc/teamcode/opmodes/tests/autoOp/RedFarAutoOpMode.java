@@ -224,7 +224,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                     intakeFlag = true;
                     shooterSubsystem.setMaxRPM(3700);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, 6, -0.4);
+                    mecanumCommand.moveToPos(26, 6, -0.35);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -460,7 +460,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                 autoState = AUTO_STATE.SECOND_SHOT;
                                 shooterSubsystem.setMaxRPM(3800);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
-                                mecanumCommand.moveToPos(26, 6, -0.4);
+                                mecanumCommand.moveToPos(26, 6, -0.35);
                                 hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
@@ -704,7 +704,7 @@ public class RedFarAutoOpMode extends LinearOpMode {
                                 autoState = AUTO_STATE.THIRD_SHOT;
                                 shooterSubsystem.setMaxRPM(3800);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
-                                mecanumCommand.moveToPos(26, 6, -0.4);
+                                mecanumCommand.moveToPos(26, 6, -0.35);
                                 hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
