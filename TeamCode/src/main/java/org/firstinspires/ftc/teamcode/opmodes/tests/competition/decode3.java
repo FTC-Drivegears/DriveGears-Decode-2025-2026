@@ -263,24 +263,6 @@ public class decode3 extends LinearOpMode {
             if (gamepad2.y) {
                 hood.setPosition(MID_HOOD);
                 shootSpeed = MID_SHOOT_SPEED;
-
-                // public void moveRobot (double x, double y, double yaw) {
-
-//        double fl = x - y - yaw;
-//        double fr = x + y + yaw;
-//        double bl = x + y - yaw;
-//        double br = x - y + yaw;
-//
-//        double max = Math.max(1.0,
-//                Math.max(Math.abs(fl),
-//                        Math.max(Math.abs(fr),
-//                                Math.max(Math.abs(bl), Math.abs(br)))));
-//
-//        frontLeftDrive.setPower(fl / max);
-//        frontRightDrive.setPower(fr / max);
-//        backLeftDrive.setPower(bl / max);
-//        backRightDrive.setPower(br / max);
-//    }
             }
 
             //FAR

@@ -44,6 +44,7 @@ public class Specifications {
     public static final String PIN_POINT_ODOMETRY = "odo";
 
     public static final String INTAKE = "intake";
+    public static final String LLMOTOR = "llmotor";
 
     public static final String COLOUR_SENSOR1 = "colourSensor1";
     public static final String COLOUR_SENSOR2 = "colourSensor2";
