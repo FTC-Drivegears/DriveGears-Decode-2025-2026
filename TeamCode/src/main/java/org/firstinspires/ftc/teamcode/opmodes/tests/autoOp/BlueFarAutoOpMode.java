@@ -252,7 +252,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     stageTimer.reset();
                     stage = 0;
                     autoState = state;
-                    setup(26, -6, 0.4014, 3800, 0.43, true, false);
+                    setup(26, -6, 0.4014, 3800, 0.43, true, true);
                     break;
                 }
                 break;
