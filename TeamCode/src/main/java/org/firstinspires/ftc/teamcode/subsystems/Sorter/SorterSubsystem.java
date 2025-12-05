@@ -12,8 +12,8 @@ import java.util.ArrayList;
 
 public class SorterSubsystem {
     private final Servo sorter;
-
-    private final ColorSensor colourSensor1;
+    private final ColorSensor colour1;
+    private final ColorSensor colour2;
     private final Telemetry telemetry;
     private final LinearOpMode opMode;
 
@@ -21,29 +21,31 @@ public class SorterSubsystem {
 
     private ArrayList<Artifact> sorterList = new ArrayList<Artifact>();
 
-    private int red;
+    private double red;
 
-    private int blue;
+    private double blue;
 
-    private int green;
+    private double green;
 
-    private int alpha;
+    private double alpha;
 
     boolean detectedColor = false;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry){
         this.sorter = hw.sorter;
-        this.colourSensor1 = hw.colour;
+        this.colour1 = hw.colour1;
+        this.colour2 = hw.colour2;
         this.opMode = opMode;
         this.telemetry = telemetry;
         pattern = new ArrayList<>();
     }
 
     public void detectColour() {
-        /*int red = colourSensor1.red();
-        int green = colourSensor1.green();
-        int blue = colourSensor1.blue();
-        int alpha = colourSensor1.alpha();*/
+        double red = colour1.red();
+        double green = colour1.green();
+        double blue = colour1.blue();
+        double alpha = colour1.alpha();
+
         //If the sorter is full it stops
         if (sorterList.size() == 3) {
             return;
@@ -52,26 +54,25 @@ public class SorterSubsystem {
         // Purple ball is detected
         if (red / green > 0.6) {
             telemetry.addLine("Purple Detected");
-            telemetry.update();
-            if (!detectedColor) {
-                detectedColor = true;
-                sorterList.add(new Artifact("Purple", sorter.getPosition()));
-                //turnsorter();
-            } //green detected
+//            if (!detectedColor) {
+//                detectedColor = true;
+//                sorterList.add(new Artifact("Purple", sorter.getPosition()));
+//                //turnsorter();
+
+            //green detected
         } else if (red / green < 0.55) {
             telemetry.addLine("Green Detected");
-            telemetry.update();
-            if (!detectedColor) {
-                detectedColor = true;
-                sorterList.add(new Artifact("Green", sorter.getPosition()));
-                //turnsorter();
-            }
-
+//            if (!detectedColor) {
+//                detectedColor = true;
+//                sorterList.add(new Artifact("Green", sorter.getPosition()));
+            //turnsorter();
         } else {
-            opMode.sleep(300);
+            telemetry.addLine("No Colour Detected");
             detectedColor = false;
         }
+        telemetry.update();
     }
+
 
     public void turnsorter() {
         //If the sorterList is full it stops
@@ -128,18 +129,18 @@ public class SorterSubsystem {
         pattern.add(art3);
     }
 
-    public int getRed() { return colourSensor1.red(); }
+    public int getRed() { return colour1.red(); }
 
     public int getGreen(){
-        return colourSensor1.green();
+        return colour1.green();
     }
 
     public int getBlue(){
-        return colourSensor1.blue();
+        return colour1.blue();
     }
 
     public int getAlpha(){
-        return colourSensor1.alpha();
+        return colour1.alpha();
     }
 
     public double getPosition() {

@@ -20,7 +20,9 @@ public class Hardware {
 
     public final Servo sorter;
 
-    public final ColorSensor colour;
+    public final ColorSensor colour1;
+    public final ColorSensor colour2;
+
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
@@ -32,7 +34,8 @@ public class Hardware {
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
 
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
-        this.colour = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
+        this.colour1 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR1);
+        this.colour2 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR2);
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
     }

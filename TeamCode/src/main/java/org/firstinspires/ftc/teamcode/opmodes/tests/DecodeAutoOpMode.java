@@ -17,7 +17,8 @@ public class DecodeAutoOpMode extends LinearOpMode {
         hw = Hardware.getInstance(hardwareMap);
         sorterSubsystem = new SorterSubsystem(hw, this, telemetry);
 
-        hw.colour.enableLed(true);
+        hw.colour1.enableLed(true);
+        hw.colour2.enableLed(true);
 
         waitForStart();
 
