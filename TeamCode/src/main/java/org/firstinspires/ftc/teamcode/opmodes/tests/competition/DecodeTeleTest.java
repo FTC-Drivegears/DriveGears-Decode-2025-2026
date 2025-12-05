@@ -287,31 +287,26 @@ public class DecodeTeleTest extends LinearOpMode {
                 telemetry.update();
 
             } else {
-                llmotor.setPower(0);
-            }
-
-            if (gamepad2.right_trigger > 0) {
-                    llmotor.setPower(-1);
-                } else {
-                    llmotor.setPower(0);
-                }
-
                 if (gamepad2.left_trigger > 0) {
                     llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);
                 }
-
-
-            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
-            telemetry.addData("Hood pos: ", hoodPos);
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("X", mecanumCommand.getX());
-            telemetry.addData("Y", mecanumCommand.getY());
-            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
-            telemetry.addData("Outtake speed: ", shootSpeed);
-            telemetry.update();
+                if (gamepad2.right_trigger > 0) {
+                    llmotor.setPower(-0.5);
+                } else {
+                    llmotor.setPower(0);
+                }
+            }
+                telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+                telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
+                telemetry.addData("Hood pos: ", hoodPos);
+                telemetry.addLine("---------------------------------");
+                telemetry.addData("X", mecanumCommand.getX());
+                telemetry.addData("Y", mecanumCommand.getY());
+                telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+                telemetry.addData("Outtake speed: ", shootSpeed);
+                telemetry.update();
         }
     }
 }
