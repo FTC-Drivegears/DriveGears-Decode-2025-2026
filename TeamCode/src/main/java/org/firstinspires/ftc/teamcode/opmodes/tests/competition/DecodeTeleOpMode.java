@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
-@TeleOp(name = "DecodeTeleOpMode3", group = "TeleOp")
+@TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private Hardware hw;
