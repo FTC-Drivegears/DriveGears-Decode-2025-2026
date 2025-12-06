@@ -277,23 +277,25 @@ public class DecodeTeleTest extends LinearOpMode {
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
                 if (tx > 5) {
-                    llmotor.setPower(0.2);
+                    llmotor.setPower(-0.4);
                 } else if (tx < -5) {
-                    llmotor.setPower(-0.2);
+                    llmotor.setPower(0.4);
                 } else {
                     llmotor.setPower(0);
                 }
+
                 telemetry.addData("tx", tx);
                 telemetry.update();
 
             } else {
+                llmotor.setPower(0);
                 if (gamepad2.left_trigger > 0) {
-                    llmotor.setPower(0.5);
+                    llmotor.setPower(1);
                 } else {
                     llmotor.setPower(0);
                 }
                 if (gamepad2.right_trigger > 0) {
-                    llmotor.setPower(-0.5);
+                    llmotor.setPower(-1);
                 } else {
                     llmotor.setPower(0);
                 }
