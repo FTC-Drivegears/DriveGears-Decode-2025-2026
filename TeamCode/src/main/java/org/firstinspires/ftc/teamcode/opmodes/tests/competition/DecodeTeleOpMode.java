@@ -42,7 +42,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     //Shooter Presets
     private final double FAR_HOOD = 0.4;
-    private final int FAR_SHOOT_SPEED = 3700;
+//    private final int FAR_SHOOT_SPEED = 3700;
+private final int FAR_SHOOT_SPEED = 2000;
     private final double MID_HOOD = 0.6;
     private final int MID_SHOOT_SPEED = 3050;
     private final double CLOSE_HOOD = 0.846;

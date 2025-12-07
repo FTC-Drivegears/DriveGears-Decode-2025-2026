@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
+package org.firstinspires.ftc.teamcode.opmodes.tests.vision;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
@@ -156,29 +155,29 @@ public class DecodeTeleTest extends LinearOpMode {
                 theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             }
 
-            if (gamepad1.right_trigger > 0) {
-                if (!rightTriggerPressed) {
-                    rightTriggerPressed = true;
-                    isIntakeMotorOn = !isIntakeMotorOn;
-                    if (isIntakeMotorOn)
-                        intake.setPower(0.8);
-                    else
-                        intake.setPower(0);
-                }
-            } else
-                rightTriggerPressed = false;
-
-            if (gamepad1.left_trigger > 0) {
-                if (!leftTriggerPressed) {
-                    leftTriggerPressed = true;
-                    isIntakeMotorOn = !isIntakeMotorOn;
-                    if (isIntakeMotorOn)
-                        intake.setPower(-0.8);
-                    else
-                        intake.setPower(0);
-                }
-            } else
-                leftTriggerPressed = false;
+//            if (gamepad1.right_trigger > 0) {
+//                if (!rightTriggerPressed) {
+//                    rightTriggerPressed = true;
+//                    isIntakeMotorOn = !isIntakeMotorOn;
+//                    if (isIntakeMotorOn)
+//                        intake.setPower(0.8);
+//                    else
+//                        intake.setPower(0);
+//                }
+//            } else
+//                rightTriggerPressed = false;
+//
+//            if (gamepad1.left_trigger > 0) {
+//                if (!leftTriggerPressed) {
+//                    leftTriggerPressed = true;
+//                    isIntakeMotorOn = !isIntakeMotorOn;
+//                    if (isIntakeMotorOn)
+//                        intake.setPower(-0.8);
+//                    else
+//                        intake.setPower(0);
+//                }
+//            } else
+//                leftTriggerPressed = false;
 
 
             boolean right = gamepad1.dpad_right;
@@ -274,12 +273,13 @@ public class DecodeTeleTest extends LinearOpMode {
 
             LLResult result = limelight.getLatestResult();
 
+
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
-                if (tx > 5) {
-                    llmotor.setPower(-0.4);
-                } else if (tx < -5) {
-                    llmotor.setPower(0.4);
+                if (tx > 3) {
+                    llmotor.setPower(-0.5);
+                } else if (tx < -3) {
+                    llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);
                 }
@@ -288,18 +288,15 @@ public class DecodeTeleTest extends LinearOpMode {
                 telemetry.update();
 
             } else {
-                llmotor.setPower(0);
-                if (gamepad2.left_trigger > 0) {
-                    llmotor.setPower(1);
-                } else {
-                    llmotor.setPower(0);
-                }
-                if (gamepad2.right_trigger > 0) {
-                    llmotor.setPower(-1);
+                if (gamepad2.dpad_right) {
+                    llmotor.setPower(-0.5);
+                } else if (gamepad2.dpad_left) {
+                    llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);
                 }
             }
+
                 telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
                 telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
                 telemetry.addData("Hood pos: ", hoodPos);
