@@ -55,6 +55,10 @@ private final int FAR_SHOOT_SPEED = 2000;
         ROBOTORIENTED, FIELDORIENTED
     }
 
+    static void quickFire(int pos1, int pos2, int pos3){
+
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
         boolean previousXState = false;
