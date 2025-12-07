@@ -289,9 +289,9 @@ public class DecodeTeleTest extends LinearOpMode {
 
             } else {
                 if (gamepad2.dpad_right) {
-                    llmotor.setPower(-0.5);
+                    llmotor.setPower(-0.4);
                 } else if (gamepad2.dpad_left) {
-                    llmotor.setPower(0.5);
+                    llmotor.setPower(0.4);
                 } else {
                     llmotor.setPower(0);
                 }

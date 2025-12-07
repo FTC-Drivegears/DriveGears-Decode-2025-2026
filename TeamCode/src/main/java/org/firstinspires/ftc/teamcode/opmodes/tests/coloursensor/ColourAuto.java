@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.util.Artifact;
 import java.util.ArrayList;
@@ -21,7 +22,9 @@ public class ColourAuto extends LinearOpMode {
     @Override
     public void runOpMode() {
         ColorSensor colourSensor;
-        colourSensor = hardwareMap.get(ColorSensor.class, "colour");
+        colourSensor1 = hardwareMap.get(NormalizedColorSensor.class, "colour1");
+        colourSensor2 = hardwareMap.get(NormalizedColorSensor.class, "colour2");
+
         Servo servo = hardwareMap.get(Servo.class, "servo");
         colourSensor.enableLed(true);
 
