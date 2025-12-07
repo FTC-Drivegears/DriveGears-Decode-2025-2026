@@ -28,6 +28,13 @@ public class SorterSubsystem {
     private double green;
 
     private double alpha;
+    private double red2;
+
+    private double blue2;
+
+    private double green2;
+
+    private double alpha2;
 
     boolean detectedColor = false;
 
@@ -45,6 +52,10 @@ public class SorterSubsystem {
         double green = colour1.green();
         double blue = colour1.blue();
         double alpha = colour1.alpha();
+        double red2 = colour2.red();
+        double green2 = colour2.green();
+        double blue2 = colour2.blue();
+        double alpha2 = colour2.alpha();
 
         //If the sorter is full it stops
         if (sorterList.size() == 3) {
@@ -52,7 +63,7 @@ public class SorterSubsystem {
         }
 
         // Purple ball is detected
-        if (red / green > 0.6) {
+        if (red / green > 0.6 && red2 / green2 > 0.6) {
             telemetry.addLine("Purple Detected");
 //            if (!detectedColor) {
 //                detectedColor = true;
@@ -60,7 +71,7 @@ public class SorterSubsystem {
 //                //turnsorter();
 
             //green detected
-        } else if (red / green < 0.55) {
+        } else if (red / green < 0.55 && red2 / green2 < 0.5) {
             telemetry.addLine("Green Detected");
 //            if (!detectedColor) {
 //                detectedColor = true;
@@ -140,6 +151,20 @@ public class SorterSubsystem {
     }
 
     public int getAlpha(){
+        return colour1.alpha();
+    }
+
+    public int getRed2() { return colour1.red(); }
+
+    public int getGreen2(){
+        return colour1.green();
+    }
+
+    public int getBlue2(){
+        return colour1.blue();
+    }
+
+    public int getAlpha2(){
         return colour1.alpha();
     }
 

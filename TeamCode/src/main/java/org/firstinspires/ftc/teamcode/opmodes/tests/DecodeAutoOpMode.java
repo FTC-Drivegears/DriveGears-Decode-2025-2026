@@ -29,6 +29,11 @@ public class DecodeAutoOpMode extends LinearOpMode {
             telemetry.addData("Blue", sorterSubsystem.getBlue());
             telemetry.addData("Alpha", sorterSubsystem.getAlpha());
             telemetry.addData("Amount of Artifacts", sorterSubsystem.getNumBalls());
+            telemetry.addData("Red", sorterSubsystem.getRed2());
+            telemetry.addData("Green", sorterSubsystem.getGreen2());
+            telemetry.addData("Blue", sorterSubsystem.getBlue2());
+            telemetry.addData("Alpha", sorterSubsystem.getAlpha2());
+
             //telemetry.addData("position", sorterSubsystem.getPosition());
            /* for (int i = 0; i < sorterSubsystem.getNumBalls(); i++) {
                 telemetry.addData("Artifacts", sorterSubsystem.getSorterIndex(i));
