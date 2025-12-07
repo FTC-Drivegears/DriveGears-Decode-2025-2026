@@ -57,6 +57,7 @@ public class LimelightTurret extends LinearOpMode {
                 } else {
                     llmotor.setPower(0);
                 }
+
                 if (gamepad2.right_trigger > 0) {
                     llmotor.setPower(-1);
                 } else {

@@ -54,6 +54,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
         ROBOTORIENTED, FIELDORIENTED
     }
 
+    static void quickFire(int pos1, int pos2, int pos3){
+
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
         boolean previousXState = false;
