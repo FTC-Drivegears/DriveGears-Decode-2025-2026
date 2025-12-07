@@ -19,7 +19,7 @@ public class ShooterSubsystem {
 
     double seconds_In_A_Minute = 60.0;
 
-    double kpShooter = 3;
+    double kpShooter = 0.3;
 
     public ShooterSubsystem(Hardware hw) {
         this.hw = hw;
