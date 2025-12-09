@@ -6,16 +6,16 @@ package org.firstinspires.ftc.teamcode.subsystems.mecanum;
 public class MecanumConstants {
 
     // --- Position PID Constants ---
-    public static double kpx = 0.04;
-    public static double kdx = 0.00225;
+    public static double kpx = 0.03; //0.04;
+    public static double kdx = 0.0;//0.00225;
     public static double kix = 0.0;
 
-    public static double kpy = 0.04;
-    public static double kdy = 0.00225;
+    public static double kpy = 0.03;//0.04;
+    public static double kdy = 0.0;//0.00225;
     public static double kiy = 0.0;
 
-    public static double kptheta = 1.7;
-    public static double kdtheta = 0.023;
+    public static double kptheta = 1.5;//1.7;
+    public static double kdtheta = 0;//0.023;
     public static double kitheta = 0.0;
 
     // --- Cascade PID Constants (Position Layer) ---

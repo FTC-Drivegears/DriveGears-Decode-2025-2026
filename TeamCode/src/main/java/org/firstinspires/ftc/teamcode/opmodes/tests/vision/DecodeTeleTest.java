@@ -1,7 +1,7 @@
-package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
+package org.firstinspires.ftc.teamcode.opmodes.tests.vision;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -9,14 +9,15 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLStatus;
 
-@TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
-public class decode2 extends LinearOpMode {
+@TeleOp
+public class DecodeTeleTest extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private Hardware hw;
     private double theta;
@@ -25,6 +26,9 @@ public class decode2 extends LinearOpMode {
     private double previousTurn = 0; //last turn value
     private DcMotor intake;
     private DcMotor shooter;
+    private DcMotorEx llmotor;
+    private Limelight3A limelight;
+
     private Servo pusher;
     private Servo hood;
     private Servo light;
@@ -49,6 +53,7 @@ public class decode2 extends LinearOpMode {
     private final int MID_SHOOT_SPEED = 3050;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
+
     private LogitechVisionSubsystem vision;
 
     private enum DRIVETYPE {
@@ -78,10 +83,9 @@ public class decode2 extends LinearOpMode {
 
         hw = Hardware.getInstance(hardwareMap);
 
-
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
-        vision = new LogitechVisionSubsystem(hw, "BLUE");
+        vision = new LogitechVisionSubsystem(hw, "RED");
         pusher = hw.pusher;
         light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
@@ -95,17 +99,25 @@ public class decode2 extends LinearOpMode {
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        if (sorterSubsystem == null) { // sorterSubsystem is only set once
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        llmotor = hardwareMap.get(DcMotorEx.class, "llmotor");
+        limelight.pipelineSwitch(7);
+        limelight.start();
+
+        telemetry.addLine("waiting for start");
+        telemetry.update();
+
+        if (sorterSubsystem == null) {
             sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
         }
 
         while (opModeInInit()) {
             if (gamepad1.a) {
-                drivetype = DRIVETYPE.FIELDORIENTED;
+                drivetype = DRIVETYPE.ROBOTORIENTED;
             }
 
-            if (gamepad1.b) {
-                drivetype = DRIVETYPE.ROBOTORIENTED;
+            if (gamepad1.y) {
+                drivetype = DRIVETYPE.FIELDORIENTED;
             }
 
             telemetry.update();
@@ -114,96 +126,58 @@ public class decode2 extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-//            Double headingError = vision.getTargetYaw();
-//            boolean targetFound = (headingError != null);
-//
-//            double turn = 0;
-//
-//            if (gamepad2.left_trigger > 0) {
-//                if (targetFound) {
-//                    double error = headingError;
-//                    double deadzone = 1.0;
-//
-//                    if (Math.abs(error) < deadzone) {
-//                        turn = 0;
-//                        previousTurn = 0;
-//                        telemetry.addLine("ALIGNED");
-//                    } else {
-//                        double actualTurn = error * TURN_GAIN;
-//                        actualTurn = Range.clip(actualTurn, -MAX_AUTO_TURN, MAX_AUTO_TURN);
-//
-//                        double SMOOTHING = 0.6;
-//                        turn = actualTurn * (1 - SMOOTHING) + previousTurn * SMOOTHING;
-//                        previousTurn = turn;
-//
-//                        telemetry.addData("Auto turn", "%.2f", turn);
-//                        telemetry.addData("Yaw Error", "%.2f°", error);
-//                    }
-//
-//                } else {
-//                    turn = -gamepad1.right_stick_x / 3.0;
-//                    previousTurn = turn;
-//                    telemetry.addData("Turn manually", "%.2f", turn);
-//                }
-//
-//                telemetry.update();
-//                mecanumCommand.robotOrientedMove(0, 0, turn);
-//                tagOrientTimer.reset();
-//
-//            } else {
-//                mecanumCommand.robotOrientedMove(
-//                        gamepad1.left_stick_y,
-//                        gamepad1.left_stick_x,
-//                        gamepad1.right_stick_x
-//                );
-//            }
-//
-//            mecanumCommand.processOdometry();
 
-//            if (gamepad2.left_bumper && !previousAimButton) {
-//                autoAimState = !autoAimState;   // toggle on *edge* of button press
-//            }
-//            previousAimButton = gamepad2.left_bumper;
-//
-//            if (autoAimState) {
-//                if (LogitechVisionSubsystem.tagProcessor() > 5) {
-//                    mecanumCommand.pivot(0.2);
-//                } else if (LogitechVisionSubsystem.tagProcessor() < -5) {
-//                    mecanumCommand.pivot(-0.2);
-//                } else {
-//                    mecanumCommand.pivot(0);
-//                }
-//            }
+            Double headingError = vision.getTargetYaw();
+            boolean targetFound = (headingError != null);
+
+            double turn = 0;
+
+            if (gamepad2.left_bumper && !previousAimButton) {
+                autoAimState = !autoAimState;   // toggle on *edge* of button press
+            }
+            previousAimButton = gamepad2.left_bumper;
+
+            if (autoAimState) {
+                if (LogitechVisionSubsystem.targetApril(telemetry) > 5) {
+                    mecanumCommand.pivot(0.2);
+                } else if (LogitechVisionSubsystem.targetApril(telemetry) < -5) {
+                    mecanumCommand.pivot(-0.2);
+                } else {
+                    mecanumCommand.pivot(0);
+                }
+            }
+
+            mecanumCommand.processOdometry();
 
 //            if (drivetype == DRIVETYPE.FIELDORIENTED) {
 //                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-//            } else if (drivetype == DRIVETYPE.ROBOTORIENTED) {
-//                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-//            }
+            if (drivetype == DRIVETYPE.ROBOTORIENTED) {
+                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            }
 
-            if (gamepad1.right_trigger > 0) {
-                if (!rightTriggerPressed) {
-                    rightTriggerPressed = true;
-                    isIntakeMotorOn = !isIntakeMotorOn;
-                    if (isIntakeMotorOn)
-                        intake.setPower(0.8);
-                    else
-                        intake.setPower(0);
-                }
-            } else
-                rightTriggerPressed = false;
-
-            if (gamepad1.left_trigger > 0) {
-                if (!leftTriggerPressed) {
-                    leftTriggerPressed = true;
-                    isIntakeMotorOn = !isIntakeMotorOn;
-                    if (isIntakeMotorOn)
-                        intake.setPower(-0.8);
-                    else
-                        intake.setPower(0);
-                }
-            } else
-                leftTriggerPressed = false;
+//            if (gamepad1.right_trigger > 0) {
+//                if (!rightTriggerPressed) {
+//                    rightTriggerPressed = true;
+//                    isIntakeMotorOn = !isIntakeMotorOn;
+//                    if (isIntakeMotorOn)
+//                        intake.setPower(0.8);
+//                    else
+//                        intake.setPower(0);
+//                }
+//            } else
+//                rightTriggerPressed = false;
+//
+//            if (gamepad1.left_trigger > 0) {
+//                if (!leftTriggerPressed) {
+//                    leftTriggerPressed = true;
+//                    isIntakeMotorOn = !isIntakeMotorOn;
+//                    if (isIntakeMotorOn)
+//                        intake.setPower(-0.8);
+//                    else
+//                        intake.setPower(0);
+//                }
+//            } else
+//                leftTriggerPressed = false;
 
 
             boolean right = gamepad1.dpad_right;
@@ -262,48 +236,66 @@ public class decode2 extends LinearOpMode {
             if (gamepad2.y) {
                 hood.setPosition(MID_HOOD);
                 shootSpeed = MID_SHOOT_SPEED;
+            }
 
-               // public void moveRobot (double x, double y, double yaw) {
+            //FAR
+            if (gamepad2.b) {
+                hood.setPosition(FAR_HOOD);
+                shootSpeed = FAR_SHOOT_SPEED;
+            }
 
-//        double fl = x - y - yaw;
-//        double fr = x + y + yaw;
-//        double bl = x + y - yaw;
-//        double br = x - y + yaw;
-//
-//        double max = Math.max(1.0,
-//                Math.max(Math.abs(fl),
-//                        Math.max(Math.abs(fr),
-//                                Math.max(Math.abs(bl), Math.abs(br)))));
-//
-//        frontLeftDrive.setPower(fl / max);
-//        frontRightDrive.setPower(fr / max);
-//        backLeftDrive.setPower(bl / max);
-//        backRightDrive.setPower(br / max);
-//    }
-                }
+            if (gamepad1.start) {
+                mecanumCommand.resetPinPointOdometry();
+            }
 
-                //FAR
-                if (gamepad2.b) {
-                    hood.setPosition(FAR_HOOD);
-                    shootSpeed = FAR_SHOOT_SPEED;
-                }
-
-                if (gamepad1.start) {
-                    mecanumCommand.resetPinPointOdometry();
-                }
-
-                if (isOuttakeMotorOn) {
-                    shooterSubsystem.setMaxRPM(shootSpeed);
-                    if (shooterSubsystem.spinup()) {
-                        light.setPosition(1.0);
-                    } else {
-                        light.setPosition(0.0);
-                    }
-
+            if (isOuttakeMotorOn) {
+                shooterSubsystem.setMaxRPM(shootSpeed);
+                if (shooterSubsystem.spinup()) {
+                    light.setPosition(1.0);
                 } else {
-                    shooterSubsystem.stopShooter();
                     light.setPosition(0.0);
                 }
+
+            } else {
+                shooterSubsystem.stopShooter();
+                light.setPosition(0.0);
+            }
+
+//turret
+            LLStatus status = limelight.getStatus();
+            telemetry.addData("LL Name", status.getName());
+            telemetry.addData("CPU", "%.1f %%", status.getCpu());
+            telemetry.addData("FPS", "%d", (int) status.getFps());
+            telemetry.addData("Pipeline", "%d (%s)",
+                    status.getPipelineIndex(),
+                    status.getPipelineType()
+            );
+
+            LLResult result = limelight.getLatestResult();
+
+
+            if (result != null && result.isValid()) {
+                double tx = result.getTx();
+                if (tx > 3) {
+                    llmotor.setPower(-0.5);
+                } else if (tx < -3) {
+                    llmotor.setPower(0.5);
+                } else {
+                    llmotor.setPower(0);
+                }
+
+                telemetry.addData("tx", tx);
+                telemetry.update();
+
+            } else {
+                if (gamepad2.dpad_right) {
+                    llmotor.setPower(-0.5);
+                } else if (gamepad2.dpad_left) {
+                    llmotor.setPower(0.5);
+                } else {
+                    llmotor.setPower(0);
+                }
+            }
 
                 telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
                 telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
@@ -314,6 +306,6 @@ public class decode2 extends LinearOpMode {
                 telemetry.addData("Theta", mecanumCommand.getOdoHeading());
                 telemetry.addData("Outtake speed: ", shootSpeed);
                 telemetry.update();
-            }
         }
     }
+}

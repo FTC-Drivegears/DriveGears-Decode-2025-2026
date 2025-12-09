@@ -37,13 +37,14 @@ public class Specifications {
     public static final String BKLF_MOTOR = "lb";
     public static final String BKRT_MOTOR = "rb";
 
-    public static final String LIME_LIGHT = "lime";
+    public static final String LIME_LIGHT = "limelight";
 
     public static final String LIGHT = "light";
 
     public static final String PIN_POINT_ODOMETRY = "odo";
 
     public static final String INTAKE = "intake";
+    public static final String LLMOTOR = "llmotor";
 
     public static final String COLOUR_SENSOR1 = "colourSensor1";
     public static final String COLOUR_SENSOR2 = "colourSensor2";
