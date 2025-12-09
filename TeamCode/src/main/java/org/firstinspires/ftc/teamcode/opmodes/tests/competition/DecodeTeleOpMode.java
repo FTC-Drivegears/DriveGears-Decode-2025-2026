@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -12,6 +16,7 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+
 
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
@@ -26,6 +31,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private Servo light;
+    private DcMotorEx llmotor;
+    private Limelight3A limelight;
 
     private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
@@ -37,8 +44,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private final ElapsedTime pusherTimer = new ElapsedTime();
 
     private final ElapsedTime colorSensingTimer = new ElapsedTime();
-
-    private final ElapsedTime tagOrientTimer = new ElapsedTime();
 
     //Shooter Presets
     private final double FAR_HOOD = 0.4;
@@ -96,6 +101,14 @@ private final int FAR_SHOOT_SPEED = 2000;
         shooter = hw.shooter;
         hood = hw.hood;
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        llmotor = hardwareMap.get(DcMotorEx.class, "llmotor");
+        limelight.pipelineSwitch(7);
+        limelight.start();
+
+        telemetry.addLine("waiting for start");
+        telemetry.update();
+
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
         if (sorterSubsystem == null) {
@@ -123,20 +136,20 @@ private final int FAR_SHOOT_SPEED = 2000;
 
             double turn = 0;
 
-            if (gamepad2.left_bumper && !previousAimButton) {
-                autoAimState = !autoAimState;   // toggle on *edge* of button press
-            }
-            previousAimButton = gamepad2.left_bumper;
-
-            if (autoAimState) {
-                if (LogitechVisionSubsystem.targetApril(telemetry) > 5) {
-                    mecanumCommand.pivot(0.2);
-                } else if (LogitechVisionSubsystem.targetApril(telemetry) < -5) {
-                    mecanumCommand.pivot(-0.2);
-                } else {
-                    mecanumCommand.pivot(0);
-                }
-            }
+//            if (gamepad2.left_bumper && !previousAimButton) {
+//                autoAimState = !autoAimState;   // toggle on *edge* of button press
+//            }
+//            previousAimButton = gamepad2.left_bumper;
+//
+//            if (autoAimState) {
+//                if (LogitechVisionSubsystem.targetApril(telemetry) > 5) {
+//                    mecanumCommand.pivot(0.2);
+//                } else if (LogitechVisionSubsystem.targetApril(telemetry) < -5) {
+//                    mecanumCommand.pivot(-0.2);
+//                } else {
+//                    mecanumCommand.pivot(0);
+//                }
+//            }
 
             mecanumCommand.processOdometry();
 
@@ -252,6 +265,44 @@ private final int FAR_SHOOT_SPEED = 2000;
                 light.setPosition(0.0);
             }
 
+//TURRET
+            LLStatus status = limelight.getStatus();
+            telemetry.addData("LL Name", status.getName());
+            telemetry.addData("CPU", "%.1f %%", status.getCpu());
+            telemetry.addData("FPS", "%d", (int) status.getFps());
+            telemetry.addData("Pipeline", "%d (%s)",
+                    status.getPipelineIndex(),
+                    status.getPipelineType()
+            );
+
+            LLResult result = limelight.getLatestResult();
+            if (result != null && result.isValid()) {
+                double tx = result.getTx();
+                if (tx > 3) {
+                    llmotor.setPower(-0.5);
+                } else if (tx < -3) {
+                    llmotor.setPower(0.5);
+                } else {
+                    llmotor.setPower(0);
+                }
+
+                telemetry.addData("tx", tx);
+                telemetry.update();
+
+            } else {
+                if (gamepad2.dpad_right) {
+                    llmotor.setPower(-0.4);
+                } else if (gamepad2.dpad_left) {
+                    llmotor.setPower(0.4);
+                } else {
+                    llmotor.setPower(0);
+                }
+            }
+
+        }  if (gamepad2.a) {
+            llmotor.setPower(0);
+        }
+
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.addData("Hood pos: ", hoodPos);
@@ -263,4 +314,3 @@ private final int FAR_SHOOT_SPEED = 2000;
             telemetry.update();
         }
     }
-}
