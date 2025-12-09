@@ -28,13 +28,15 @@ public class ColorSensorTest extends LinearOpMode {
         while (opModeInInit()) {
             telemetry.update();
         }
-        // Wait for start button to be pressed
+
         waitForStart();
 
         detectColorTime.reset();
 
-        boolean detectedPurple = false;
-        boolean detectedGreen = false;
+        boolean detectedPurple1 = false;
+        boolean detectedGreen1 = false;
+        boolean detectedPurple2 = false;
+        boolean detectedGreen2 = false;
 
         while (opModeIsActive()) {
             detectColorTime.reset();
@@ -54,7 +56,6 @@ public class ColorSensorTest extends LinearOpMode {
             else{
                 telemetry.addLine("Nothing is here");
             }
-
 
             telemetry.addData("Red:", colors.red);
             telemetry.addData("Red2:", colors2.red);
