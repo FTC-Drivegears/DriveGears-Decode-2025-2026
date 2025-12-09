@@ -219,7 +219,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                 break;
             case 2: //intake first ball
                 if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                    mecanumCommand.moveToPos(x, startY + 63, theta); //go to place to intake first artifact
+                    mecanumCommand.moveToPos(x, startY + 12, theta); //go to place to intake first artifact
                     stageTimer.reset();
                     stage++;
                 }
@@ -232,14 +232,14 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     }
                 }
                 break;
-//            case 4: //intake second ball
-//                if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-//                    mecanumCommand.moveToPos(x, startY + 31, theta); //go to place to intake second artifact
-//                    stageTimer.reset();
-//                    stage++;
-//                }
-//                break;
-            case 4: //set position to third ball
+            case 4: //intake second ball
+                if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
+                    mecanumCommand.moveToPos(x, startY + 31, theta); //go to place to intake second artifact
+                    stageTimer.reset();
+                    stage++;
+                }
+                break;
+            case 5: //set position to third ball
                 if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                     if(sort(pos3)) {
                         stageTimer.reset();
@@ -247,7 +247,7 @@ public class BlueFarAutoOpMode extends LinearOpMode {
                     }
                 }
                 break;
-            case 5:
+            case 6:
                 if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                     stageTimer.reset();
                     stage = 0;
