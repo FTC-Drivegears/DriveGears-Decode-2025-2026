@@ -278,9 +278,9 @@ private final int FAR_SHOOT_SPEED = 2000;
             LLResult result = limelight.getLatestResult();
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
-                if (tx > 3) {
+                if (tx > 5) {
                     llmotor.setPower(-0.5);
-                } else if (tx < -3) {
+                } else if (tx < -5) {
                     llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);

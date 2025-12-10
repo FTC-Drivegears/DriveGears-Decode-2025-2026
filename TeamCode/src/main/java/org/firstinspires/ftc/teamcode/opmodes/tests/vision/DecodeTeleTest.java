@@ -261,6 +261,13 @@ public class DecodeTeleTest extends LinearOpMode {
                 light.setPosition(0.0);
             }
 
+            //quickfire
+
+
+
+
+
+
 //turret
             LLStatus status = limelight.getStatus();
             telemetry.addData("LL Name", status.getName());
