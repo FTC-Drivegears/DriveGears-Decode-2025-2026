@@ -156,6 +156,8 @@ public class BlueFarAutoOp2 extends LinearOpMode {
         sorter = hw.sorter;
         hood = hw.hood;
         gate = hw.gate;
+        intake = hw.intake;
+        turret = hw.llmotor;
 
 
         sorter.setPosition(pos1);
