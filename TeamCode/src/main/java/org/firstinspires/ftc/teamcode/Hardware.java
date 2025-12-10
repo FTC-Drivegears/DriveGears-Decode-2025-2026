@@ -28,6 +28,7 @@ public class Hardware {
     public final Servo hood;
     public final Servo sorter;
     public final Servo pusher;
+    public final Servo gate;
     public final NormalizedColorSensor colourSensor1;
 
     public final NormalizedColorSensor colourSensor2;
@@ -60,6 +61,7 @@ public class Hardware {
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
         this.light = hwMap.get(Servo.class, Specifications.LIGHT);
+        this.gate = hwMap.get(Servo.class, Specifications.GATE);
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {

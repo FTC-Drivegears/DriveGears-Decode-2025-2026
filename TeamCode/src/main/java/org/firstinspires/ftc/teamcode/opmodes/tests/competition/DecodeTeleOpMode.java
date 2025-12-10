@@ -54,6 +54,9 @@ private final int FAR_SHOOT_SPEED = 2000;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
 
+    private static final double GATE_UP = 1.0;
+    private static final double GATE_DOWN = 0.0;
+
     private LogitechVisionSubsystem vision;
 
     private enum DRIVETYPE {
@@ -72,6 +75,7 @@ private final int FAR_SHOOT_SPEED = 2000;
         boolean currentXState;
         boolean currentYState;
 
+        boolean intaking = false;
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
         boolean rightTriggerPressed = false;
@@ -100,6 +104,7 @@ private final int FAR_SHOOT_SPEED = 2000;
         intake = hw.intake;
         shooter = hw.shooter;
         hood = hw.hood;
+        gate = hw.gate;
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         llmotor = hardwareMap.get(DcMotorEx.class, "llmotor");
@@ -159,14 +164,20 @@ private final int FAR_SHOOT_SPEED = 2000;
                 theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             }
 
+            //intake
             if (gamepad1.right_trigger > 0) {
                 if (!rightTriggerPressed) {
                     rightTriggerPressed = true;
                     isIntakeMotorOn = !isIntakeMotorOn;
-                    if (isIntakeMotorOn)
+                    if (isIntakeMotorOn) {
                         intake.setPower(0.8);
-                    else
+                        gate.setPosition(GATE_UP);
+                        intaking = true;
+                    } else {
                         intake.setPower(0);
+                        gate.setPosition(GATE_DOWN);
+                        intaking = false;
+                    }
                 }
             } else
                 rightTriggerPressed = false;
@@ -175,35 +186,38 @@ private final int FAR_SHOOT_SPEED = 2000;
                 if (!leftTriggerPressed) {
                     leftTriggerPressed = true;
                     isIntakeMotorOn = !isIntakeMotorOn;
-                    if (isIntakeMotorOn)
+                    if (isIntakeMotorOn) {
                         intake.setPower(-0.8);
-                    else
+                        gate.setPosition(GATE_UP);
+                    } else {
                         intake.setPower(0);
+                        gate.setPosition(GATE_DOWN);
+                    }
                 }
-            } else
+            } else{
                 leftTriggerPressed = false;
+            }
+
 
             boolean right = gamepad1.dpad_right;
             boolean left = gamepad1.dpad_left;
-            if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
-                if (outtakeTimer.milliseconds() > 500) {
-                    char curColor = 'g';
-                    if (left) {
-                        curColor = 'p';
-                    }
-                    sorterSubsystem.outtakeBall(curColor);
-                    outtakeTimer.reset();
-                }
-            }
-
-            if (gamepad1.dpad_down && sorterTimer.milliseconds() > 1000) {
-                sorterSubsystem.manualSpin();
-                sorterTimer.reset();
-            }
-
-            if (colorSensingTimer.milliseconds() > 200) {
+//            if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
+//                if (outtakeTimer.milliseconds() > 500) {
+//                    char curColor = 'g';
+//                    if (left) {
+//                        curColor = 'p';
+//                    }
+//                    sorterSubsystem.outtakeBall(curColor);
+//                    outtakeTimer.reset();
+//                }
+//            }
+            if (intaking && colorSensingTimer.milliseconds() > 500) {
                 sorterSubsystem.detectColor();
-                colorSensingTimer.reset();
+                if (sorterSubsystem.getIsBall()) {
+                    sorterSubsystem.turnToIntake('P');
+                    sorterSubsystem.setIsBall(false);
+                    colorSensingTimer.reset();
+                }
             }
 
             currentYState = gamepad1.y;
@@ -304,6 +318,7 @@ private final int FAR_SHOOT_SPEED = 2000;
         }
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+            telemetry.addData("colour?: ", sorterSubsystem.getIsBall());
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
             telemetry.addData("Hood pos: ", hoodPos);
             telemetry.addLine("---------------------------------");

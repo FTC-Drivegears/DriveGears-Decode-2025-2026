@@ -63,11 +63,17 @@ public class BlueFarAutoOp2 extends LinearOpMode {
 
     private static double hoodPos = 0.359;
 
+    private static final double GATE_UP = 1.0;
+    private static final double GATE_DOWN = 0.0;
+
     private static DcMotor shooter;
     private static Servo pusher;
     private static Servo hood;
     private static Servo sorter;
+    private static Servo gate;
     private static DcMotorEx intake;
+    private static DcMotorEx turret;
+
 
     private static boolean previousPushState = false;
     private static boolean currentPushState;
@@ -199,6 +205,11 @@ public class BlueFarAutoOp2 extends LinearOpMode {
             telemetry.update();
 
         }
+        while(opModeInInit()){
+            turret.setTargetPosition(0);
+            turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            turret.setPower(1);
+        }
 
         waitForStart();
 
@@ -208,7 +219,9 @@ public class BlueFarAutoOp2 extends LinearOpMode {
             mecanumCommand.processOdometry();
             shoot(outtakeFlag);
             intake(intakeFlag);
-
+            turret.setTargetPosition(0);
+            turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            turret.setPower(1);
             telemetry.addData("stage", stage);
             telemetry.addData("Pattern", pattern);
             telemetry.addData("position: ", position);
@@ -412,6 +425,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                     switch (stage) {
                         case 0: //align with artifacts
                             mecanumCommand.moveToPos(80, 32, Math.PI / 2); //align with artifacts
+                            gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
                             break;
@@ -455,6 +469,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
                                 stage = 0;
+                                gate.setPosition(GATE_DOWN);
                                 autoState = AUTO_STATE.SECOND_SHOT;
                                 shooterSubsystem.setMaxRPM(3800);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
@@ -655,7 +670,8 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(144, 32, Math.PI / 2); //align with artifacts
+                            gate.setPosition(GATE_UP);
+                            mecanumCommand.moveToPos(144, 26, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -699,6 +715,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
                                 stage = 0;
+                                gate.setPosition(GATE_DOWN);
                                 autoState = AUTO_STATE.THIRD_SHOT;
                                 shooterSubsystem.setMaxRPM(3800);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
@@ -888,6 +905,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                     }
                     break;
                 case FINISH:
+                    gate.setPosition(GATE_UP);
                     outtakeFlag = false;
                     intakeFlag = false;
                     mecanumCommand.moveToPos(60, 0, 0); //replace with box position
