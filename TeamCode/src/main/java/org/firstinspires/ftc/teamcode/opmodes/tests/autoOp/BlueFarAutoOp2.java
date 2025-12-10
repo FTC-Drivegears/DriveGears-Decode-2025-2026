@@ -63,8 +63,8 @@ public class BlueFarAutoOp2 extends LinearOpMode {
 
     private static double hoodPos = 0.359;
 
-    private static final double GATE_UP = 1.0;
-    private static final double GATE_DOWN = 0.0;
+    private static final double GATE_UP = 0.0;
+    private static final double GATE_DOWN = 0.5;
 
     private static DcMotor shooter;
     private static Servo pusher;
@@ -156,8 +156,6 @@ public class BlueFarAutoOp2 extends LinearOpMode {
         sorter = hw.sorter;
         hood = hw.hood;
         gate = hw.gate;
-        intake = hw.intake;
-        turret = hw.llmotor;
 
 
         sorter.setPosition(pos1);
@@ -209,11 +207,6 @@ public class BlueFarAutoOp2 extends LinearOpMode {
             telemetry.update();
 
         }
-        while(opModeInInit()){
-            turret.setTargetPosition(0);
-            turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            turret.setPower(1);
-        }
 
         waitForStart();
 
@@ -223,9 +216,6 @@ public class BlueFarAutoOp2 extends LinearOpMode {
             mecanumCommand.processOdometry();
             shoot(outtakeFlag);
             intake(intakeFlag);
-            turret.setTargetPosition(0);
-            turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            turret.setPower(1);
             telemetry.addData("stage", stage);
             telemetry.addData("Pattern", pattern);
             telemetry.addData("position: ", position);

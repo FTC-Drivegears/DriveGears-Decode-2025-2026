@@ -50,8 +50,8 @@ private final int FAR_SHOOT_SPEED = 2000;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
 
-    private static final double GATE_UP = 1.0;
-    private static final double GATE_DOWN = 0.0;
+    private static final double GATE_UP = 0.0;
+    private static final double GATE_DOWN = 0.5;
 
     private LogitechVisionSubsystem vision;
 
