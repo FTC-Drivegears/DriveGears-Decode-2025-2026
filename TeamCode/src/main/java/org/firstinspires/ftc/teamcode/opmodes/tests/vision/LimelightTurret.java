@@ -46,14 +46,13 @@ public class LimelightTurret extends LinearOpMode {
                 } else {
                     llmotor.setPower(0);
                 }
-
                 telemetry.addData("tx", tx);
                 telemetry.update();
 
             } else {
-                if (gamepad2.left_trigger > 0) {
+                if (gamepad2.dpad_right) {
                     llmotor.setPower(-0.5);
-                } else if (gamepad2.right_trigger > 0) {
+                } else if (gamepad2.dpad_left) {
                     llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);

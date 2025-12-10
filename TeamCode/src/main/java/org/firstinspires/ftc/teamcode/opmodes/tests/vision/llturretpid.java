@@ -60,7 +60,7 @@ public class llturretpid extends LinearOpMode {
 
                 double output = (kP * error) + (kD * derivative);
 
-                output = Math.max(Math.min(output, -0.5), 0.5);
+                output = Math.max(Math.min(output, 0.5), -0.5);
 
                 llmotor.setPower(output);
 

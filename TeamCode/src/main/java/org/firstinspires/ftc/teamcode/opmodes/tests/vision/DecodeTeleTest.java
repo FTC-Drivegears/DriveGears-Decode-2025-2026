@@ -272,29 +272,30 @@ public class DecodeTeleTest extends LinearOpMode {
             );
 
             LLResult result = limelight.getLatestResult();
+                if (result != null && result.isValid()) {
+                    double tx = result.getTx();
+                    if (tx > 3) {
+                        llmotor.setPower(-0.5);
+                    } else if (tx < -3) {
+                        llmotor.setPower(0.5);
+                    } else {
+                        llmotor.setPower(0);
+                    }
 
+                    telemetry.addData("tx", tx);
+                    telemetry.update();
 
-            if (result != null && result.isValid()) {
-                double tx = result.getTx();
-                if (tx > 3) {
-                    llmotor.setPower(-0.5);
-                } else if (tx < -3) {
-                    llmotor.setPower(0.5);
                 } else {
-                    llmotor.setPower(0);
+                    if (gamepad2.dpad_right) {
+                        llmotor.setPower(-0.4);
+                    } else if (gamepad2.dpad_left) {
+                        llmotor.setPower(0.4);
+                    } else {
+                        llmotor.setPower(0);
+                    }
                 }
-
-                telemetry.addData("tx", tx);
-                telemetry.update();
-
-            } else {
-                if (gamepad2.dpad_right) {
-                    llmotor.setPower(-0.5);
-                } else if (gamepad2.dpad_left) {
-                    llmotor.setPower(0.5);
-                } else {
-                    llmotor.setPower(0);
-                }
+            }  if (gamepad2.a) {
+                llmotor.setPower(0);
             }
 
                 telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
@@ -308,4 +309,4 @@ public class DecodeTeleTest extends LinearOpMode {
                 telemetry.update();
         }
     }
-}
+
