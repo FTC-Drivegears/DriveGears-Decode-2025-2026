@@ -31,6 +31,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private Servo light;
+    private Servo gate;
     private DcMotorEx llmotor;
     private Limelight3A limelight;
 
