@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.ArrayList;
 
@@ -40,9 +39,11 @@ public class SorterSubsystem {
     public NormalizedColorSensor colourSensor1;
     public NormalizedColorSensor colourSensor2;
 
-    private boolean isPurple = false;
+    public boolean isPurple = false;
 
-    private boolean isGreen = false;
+    public boolean isGreen = false;
+
+    private boolean isBall = false;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -91,7 +92,6 @@ public class SorterSubsystem {
         // fail-safe
         if (this.sorterList.size() == MAX_NUM_BALLS){
             telemetry.addLine("Cannot intake any more balls, max capacity");
-            telemetry.update();
             return;
         }
 
@@ -99,7 +99,7 @@ public class SorterSubsystem {
 
     }
 
-    private void turnToIntake(char color) { // turn sorter before intaking a ball
+    public void turnToIntake(char color) { // turn sorter before intaking a ball
         if (!isPusherUp && sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
             if (curSorterPositionIndex >= MAX_NUM_BALLS) {
                 curSorterPositionIndex = 0;
@@ -114,8 +114,22 @@ public class SorterSubsystem {
         } else {
             telemetry.addLine("pusher is up, CANNOT turn sorter");
         }
+    }
 
-        telemetry.update();
+    public void turnForIntake() { // turn sorter before intaking a ball
+        if (!isPusherUp && sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
+            if (curSorterPositionIndex >= MAX_NUM_BALLS) {
+                curSorterPositionIndex = 0;
+            }
+
+            telemetry.addLine("I am pressing dpad left yes");
+            sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+            sorterSpinTime.reset();
+            spinForIntakeTime.reset();
+            curSorterPositionIndex++;
+        } else {
+            telemetry.addLine("pusher is up, CANNOT turn sorter");
+        }
     }
 
     public void detectColor() {
@@ -143,7 +157,13 @@ public class SorterSubsystem {
         else{
             telemetry.addLine("Nothing is here");
         }
-        telemetry.update();
+
+        if (isGreen || isPurple) {
+            isBall = true;
+        }
+
+        else
+            isBall = false;
     }
 
     // push will wait 750ms to push up, then wait for less time to go back down.
@@ -173,10 +193,17 @@ public class SorterSubsystem {
 //        this.waitForSpinAndPush(0);
 //    }
 
+    public boolean getIsBall(){
+        return isBall;
+    }
+
+    public void setIsBall(boolean value){
+        isBall = value;
+    }
+
     public void outtakeBall(char colorToRemove) {
         if (this.sorterList.isEmpty()) {
             telemetry.addLine("No ball in sorter");
-            telemetry.update();
             return;
         }
 
