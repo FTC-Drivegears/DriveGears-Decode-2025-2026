@@ -26,6 +26,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private Servo light;
+    private Servo gate;
 
     private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
@@ -48,6 +49,9 @@ private final int FAR_SHOOT_SPEED = 2000;
     private final int MID_SHOOT_SPEED = 3050;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
+
+    private static final double GATE_UP = 1.0;
+    private static final double GATE_DOWN = 0.0;
 
     private LogitechVisionSubsystem vision;
 
@@ -96,6 +100,7 @@ private final int FAR_SHOOT_SPEED = 2000;
         intake = hw.intake;
         shooter = hw.shooter;
         hood = hw.hood;
+        gate = hw.gate;
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -154,10 +159,11 @@ private final int FAR_SHOOT_SPEED = 2000;
                     isIntakeMotorOn = !isIntakeMotorOn;
                     if (isIntakeMotorOn) {
                         intake.setPower(0.8);
+                        gate.setPosition(GATE_UP);
                         intaking = true;
-                    }
-                    else {
+                    } else {
                         intake.setPower(0);
+                        gate.setPosition(GATE_DOWN);
                         intaking = false;
                     }
                 }
@@ -168,13 +174,17 @@ private final int FAR_SHOOT_SPEED = 2000;
                 if (!leftTriggerPressed) {
                     leftTriggerPressed = true;
                     isIntakeMotorOn = !isIntakeMotorOn;
-                    if (isIntakeMotorOn)
+                    if (isIntakeMotorOn) {
                         intake.setPower(-0.8);
-                    else
+                        gate.setPosition(GATE_UP);
+                    } else {
                         intake.setPower(0);
+                        gate.setPosition(GATE_DOWN);
+                    }
                 }
-            } else
+            } else{
                 leftTriggerPressed = false;
+            }
 
 
             boolean right = gamepad1.dpad_right;
