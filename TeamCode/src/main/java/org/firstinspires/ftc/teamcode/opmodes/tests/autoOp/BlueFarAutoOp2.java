@@ -655,7 +655,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(144, 32, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(144, 26, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
