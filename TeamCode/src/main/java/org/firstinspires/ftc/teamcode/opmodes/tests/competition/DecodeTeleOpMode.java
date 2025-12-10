@@ -183,7 +183,6 @@ private final int FAR_SHOOT_SPEED = 2000;
             } else
                 leftTriggerPressed = false;
 
-
             boolean right = gamepad1.dpad_right;
             boolean left = gamepad1.dpad_left;
             if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
@@ -265,7 +264,8 @@ private final int FAR_SHOOT_SPEED = 2000;
                 light.setPosition(0.0);
             }
 
-//TURRET
+            //TURRET
+
             LLStatus status = limelight.getStatus();
             telemetry.addData("LL Name", status.getName());
             telemetry.addData("CPU", "%.1f %%", status.getCpu());
@@ -278,9 +278,9 @@ private final int FAR_SHOOT_SPEED = 2000;
             LLResult result = limelight.getLatestResult();
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
-                if (tx > 5) {
+                if (tx > 5.5) {
                     llmotor.setPower(-0.5);
-                } else if (tx < -5) {
+                } else if (tx < -5.5) {
                     llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);
