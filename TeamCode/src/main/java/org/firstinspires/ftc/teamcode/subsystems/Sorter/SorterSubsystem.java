@@ -79,13 +79,12 @@ public class SorterSubsystem {
     }
 
     public void manualSpin(){
-        if (sorterPositionIndex >= 3) {
-            sorterPositionIndex = 0;
-        }
         if (isPusherUp){
             return;
         }
-        this.curSorterPositionIndex = sorterPositionIndex;
+        if (sorterPositionIndex >= 3) {
+            sorterPositionIndex = 0;
+        }
         this.sorter.setPosition(sorterPositions[sorterPositionIndex]);
         sorterPositionIndex++;
     }

@@ -55,7 +55,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private final int CLOSE_SHOOT_SPEED = 2500;
 
     private static final double GATE_UP = 1.0;
-    private static final double GATE_DOWN = 0.5;
+    private static final double GATE_DOWN = 0.675;
 
     private LogitechVisionSubsystem vision;
 
@@ -111,6 +111,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.light.setPosition(0.0);
         hw.sorter.setPosition(0.085);
+        hw.gate.setPosition(GATE_DOWN);
         hw.hood.setPosition(hoodPos);
 
         intake = hw.intake;
@@ -211,7 +212,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 leftTriggerPressed = false;
             }
 
-            if (gamepad1.b && sorterTimer.milliseconds() > 1000){
+            if (gamepad1.b && sorterTimer.milliseconds() > 500){
+                sorterTimer.reset();
                 sorterSubsystem.manualSpin();
             }
 
