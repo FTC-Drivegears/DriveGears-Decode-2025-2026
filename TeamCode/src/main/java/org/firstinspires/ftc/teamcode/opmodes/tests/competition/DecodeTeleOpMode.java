@@ -315,9 +315,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
                 if (tx > 5.5) {
-                    llmotor.setPower(-0.5);
+                    llmotor.setPower(-0.8);
                 } else if (tx < -5.5) {
-                    llmotor.setPower(0.277);
+                    llmotor.setPower(0.8);
                 } else {
                     llmotor.setPower(0);
                 }
@@ -327,9 +327,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             } else {
                 if (gamepad2.dpad_right) {
-                    llmotor.setPower(-0.4);
+                    llmotor.setPower(-0.7);
                 } else if (gamepad2.dpad_left) {
-                    llmotor.setPower(0.4);
+                    llmotor.setPower(0.7);
                 } else {
                     llmotor.setPower(0);
                 }
