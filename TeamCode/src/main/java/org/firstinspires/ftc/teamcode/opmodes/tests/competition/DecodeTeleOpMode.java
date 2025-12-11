@@ -55,7 +55,7 @@ private final int FAR_SHOOT_SPEED = 2000;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
 
-    private static final double GATE_UP = 0.0;
+    private static final double GATE_UP = 1.0;
     private static final double GATE_DOWN = 0.5;
 
     private LogitechVisionSubsystem vision;
@@ -200,26 +200,28 @@ private final int FAR_SHOOT_SPEED = 2000;
             }
 
 
+
+
             boolean right = gamepad1.dpad_right;
             boolean left = gamepad1.dpad_left;
-//            if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
-//                if (outtakeTimer.milliseconds() > 500) {
-//                    char curColor = 'g';
-//                    if (left) {
-//                        curColor = 'p';
-//                    }
-//                    sorterSubsystem.outtakeBall(curColor);
-//                    outtakeTimer.reset();
-//                }
-//            }
-            if (intaking && colorSensingTimer.milliseconds() > 500) {
-                sorterSubsystem.detectColor();
-                if (sorterSubsystem.getIsBall()) {
-                    sorterSubsystem.turnToIntake('P');
-                    sorterSubsystem.setIsBall(false);
-                    colorSensingTimer.reset();
+            if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
+                if (outtakeTimer.milliseconds() > 500) {
+                    char curColor = 'g';
+                    if (left) {
+                        curColor = 'p';
+                    }
+                    sorterSubsystem.outtakeBall(curColor);
+                    outtakeTimer.reset();
                 }
             }
+//            if (intaking && colorSensingTimer.milliseconds() > 500) {
+//                sorterSubsystem.detectColor();
+//                if (sorterSubsystem.getIsBall()) {
+//                    sorterSubsystem.turnToIntake('P');
+//                    sorterSubsystem.setIsBall(false);
+//                    colorSensingTimer.reset();
+//                }
+//            }
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {

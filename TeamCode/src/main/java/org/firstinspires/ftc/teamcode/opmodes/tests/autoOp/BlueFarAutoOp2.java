@@ -63,8 +63,8 @@ public class BlueFarAutoOp2 extends LinearOpMode {
 
     private static double hoodPos = 0.359;
 
-    private static final double GATE_UP = 0.0;
-    private static final double GATE_DOWN = 0.5;
+    private static final double GATE_UP = 1.0;
+    private static final double GATE_DOWN = 0.675;
 
     private static DcMotor shooter;
     private static Servo pusher;
