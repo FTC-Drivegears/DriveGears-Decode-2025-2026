@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes.tests.autoOp;
+package org.firstinspires.ftc.teamcode.opmodes.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 
 @Autonomous (name = "Movement Test")
-public class MovementTester extends LinearOpMode {
+public class PositionTester extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
     private ElapsedTime resetTimer;

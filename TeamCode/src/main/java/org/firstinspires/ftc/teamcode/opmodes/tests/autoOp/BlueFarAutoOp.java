@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 
 @Autonomous (name = "Blue Auto 2")
-public class BlueFarAutoOp2 extends LinearOpMode {
+public class BlueFarAutoOp extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
     private ElapsedTime resetTimer;
