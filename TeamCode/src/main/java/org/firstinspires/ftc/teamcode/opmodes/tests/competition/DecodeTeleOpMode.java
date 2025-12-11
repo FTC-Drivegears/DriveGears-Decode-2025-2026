@@ -260,8 +260,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             previousXState = currentXState;
 
-            //QUICKFIRE
-            if (gamepad1.a) {
+            if (gamepad1.a && outtakeState == OUTTAKE.IDLE) {
                 outtakeState = OUTTAKE.PUSHUP1;
             }
 
@@ -362,7 +361,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 break;
 
             case PUSHDOWN1:
-                if (pusherTimer.milliseconds() >= 500) {
+                if (pusherTimer.milliseconds() >= 1000) {
                     sorterSubsystem.setIsPusherUp(false);
                     hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                     outtakeState = OUTTAKE.SORT1;
@@ -370,7 +369,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 break;
 
             case SORT1:
-                sorterSubsystem.outtakeToNextPos();
+                sorterSubsystem.turnToNextPos();
                 outtakeState = OUTTAKE.PUSHUP2;
             break;
 
@@ -382,7 +381,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 break;
 
             case PUSHDOWN2:
-                if (pusherTimer.milliseconds() >= 500) {
+                if (pusherTimer.milliseconds() >= 1000) {
                     sorterSubsystem.setIsPusherUp(false);
                     hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                     outtakeState = OUTTAKE.SORT2;
@@ -390,7 +389,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 break;
 
             case SORT2:
-                sorterSubsystem.outtakeToNextPos();
+                sorterSubsystem.turnToNextPos();
                 outtakeState = OUTTAKE.PUSHUP3;
                 break;
 
@@ -402,7 +401,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 break;
 
             case PUSHDOWN3:
-                if (pusherTimer.milliseconds() >= 500) {
+                if (pusherTimer.milliseconds() >= 1000) {
                     sorterSubsystem.setIsPusherUp(false);
                     hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                     outtakeState = OUTTAKE.IDLE;
