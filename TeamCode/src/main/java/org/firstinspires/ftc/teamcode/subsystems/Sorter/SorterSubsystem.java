@@ -36,6 +36,8 @@ public class SorterSubsystem {
     private final double[] sorterPositions = new double[]{0.085, 0.515, 0.96};
     private int sorterPositionIndex;
 
+
+
     public NormalizedColorSensor colourSensor1;
     public NormalizedColorSensor colourSensor2;
 
@@ -113,6 +115,13 @@ public class SorterSubsystem {
             curSorterPositionIndex++;
         } else {
             telemetry.addLine("pusher is up, CANNOT turn sorter");
+        }
+    }
+
+    public void turnToNextPos(){
+        if (curSorterPositionIndex <= MAX_NUM_BALLS){
+            sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+            curSorterPositionIndex++;
         }
     }
 

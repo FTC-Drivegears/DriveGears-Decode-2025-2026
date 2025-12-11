@@ -31,6 +31,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private Servo pusher;
     private Servo hood;
     private Servo light;
+    private Servo gate;
     private DcMotorEx llmotor;
     private Limelight3A limelight;
 
@@ -47,8 +48,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     //Shooter Presets
     private final double FAR_HOOD = 0.4;
-//    private final int FAR_SHOOT_SPEED = 3700;
-private final int FAR_SHOOT_SPEED = 2000;
+    //    private final int FAR_SHOOT_SPEED = 3700;
+    private final int FAR_SHOOT_SPEED = 2000;
     private final double MID_HOOD = 0.6;
     private final int MID_SHOOT_SPEED = 3050;
     private final double CLOSE_HOOD = 0.846;
@@ -63,7 +64,7 @@ private final int FAR_SHOOT_SPEED = 2000;
         ROBOTORIENTED, FIELDORIENTED
     }
 
-    static void quickFire(int pos1, int pos2, int pos3){
+    static void quickFire(int pos1, int pos2, int pos3) {
 
     }
 
@@ -194,13 +195,13 @@ private final int FAR_SHOOT_SPEED = 2000;
                         gate.setPosition(GATE_DOWN);
                     }
                 }
-            } else{
+            } else {
                 leftTriggerPressed = false;
             }
 
 
-            boolean right = gamepad1.dpad_right;
-            boolean left = gamepad1.dpad_left;
+//            boolean right = gamepad1.dpad_right;
+//            boolean left = gamepad1.dpad_left;
 //            if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
 //                if (outtakeTimer.milliseconds() > 500) {
 //                    char curColor = 'g';
@@ -215,7 +216,10 @@ private final int FAR_SHOOT_SPEED = 2000;
                 sorterSubsystem.detectColor();
                 if (sorterSubsystem.getIsBall()) {
                     sorterSubsystem.turnToIntake('P');
-                    sorterSubsystem.setIsBall(false);
+                    colorSensingTimer.reset();
+                }
+                if (sorterSubsystem.getIsBall()) {
+                    sorterSubsystem.turnToIntake('P');
                     colorSensingTimer.reset();
                 }
             }
@@ -243,6 +247,14 @@ private final int FAR_SHOOT_SPEED = 2000;
             }
             previousXState = currentXState;
 
+            //QUICKFIRE
+//            if (gamepad1.b) {
+//                sorter.setPosition();
+//
+//            }
+
+
+
             // CLOSE
             if (gamepad2.x) {
                 hood.setPosition(CLOSE_HOOD);
@@ -268,7 +280,7 @@ private final int FAR_SHOOT_SPEED = 2000;
             if (isOuttakeMotorOn) {
                 shooterSubsystem.setMaxRPM(shootSpeed);
                 if (shooterSubsystem.spinup()) {
-                    light.setPosition(1.0);
+                    light.setPosition(0.333);
                 } else {
                     light.setPosition(0.0);
                 }
@@ -295,7 +307,7 @@ private final int FAR_SHOOT_SPEED = 2000;
                 if (tx > 5.5) {
                     llmotor.setPower(-0.5);
                 } else if (tx < -5.5) {
-                    llmotor.setPower(0.5);
+                    llmotor.setPower(0.277);
                 } else {
                     llmotor.setPower(0);
                 }
@@ -313,9 +325,6 @@ private final int FAR_SHOOT_SPEED = 2000;
                 }
             }
 
-        }  if (gamepad2.a) {
-            llmotor.setPower(0);
-        }
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("colour?: ", sorterSubsystem.getIsBall());
@@ -329,3 +338,4 @@ private final int FAR_SHOOT_SPEED = 2000;
             telemetry.update();
         }
     }
+}
