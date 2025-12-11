@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsyst
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 
-@Autonomous (name = "Blue Auto 2")
+@Autonomous (name = "Blue Auto")
 public class BlueFarAutoOp extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
@@ -65,6 +65,10 @@ public class BlueFarAutoOp extends LinearOpMode {
 
     private static final double GATE_UP = 1.0;
     private static final double GATE_DOWN = 0.675;
+//
+//    private double initialHeading = 0.0;
+//    private int initialTurretPos = 0;
+//    private static final double TICKS_PER_RAD = 100.0;
 
     private static DcMotor shooter;
     private static Servo pusher;
@@ -159,6 +163,11 @@ public class BlueFarAutoOp extends LinearOpMode {
         intake = hw.intake;
         turret = hw.llmotor;
 
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turret.setTargetPosition(0);
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
 
         sorter.setPosition(pos1);
         pusher.setPosition(PUSHER_DOWN);
@@ -168,6 +177,12 @@ public class BlueFarAutoOp extends LinearOpMode {
         stage = 0;
 
         AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
+
+
+//        initialHeading = mecanumCommand.getOdoHeading();
+//        initialTurretPos = turret.getCurrentPosition();
+//        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
 
         logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
         boolean outtakeFlag = false;
@@ -216,6 +231,7 @@ public class BlueFarAutoOp extends LinearOpMode {
         while (opModeIsActive()) {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
+            turret.setPower(1.0);
             shoot(outtakeFlag);
             intake(intakeFlag);
             telemetry.addData("stage", stage);
@@ -224,11 +240,18 @@ public class BlueFarAutoOp extends LinearOpMode {
             telemetry.addData("sorterTimer: ", sorterTimer.milliseconds());
             telemetry.addData("stageTimer: ", stageTimer.milliseconds());
 
+//            double curHeading = mecanumCommand.getOdoHeading();
+//            double headingDelta = curHeading - initialHeading;
+//            int desiredTurretPos = initialTurretPos - (int)Math.round(headingDelta * TICKS_PER_RAD);
+//            turret.setTargetPosition(desiredTurretPos);
+//            turret.setPower(0.4);
+
+
+
             processTelemetry();
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    intakeFlag = true;
                     shooterSubsystem.setMaxRPM(3800);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
                     mecanumCommand.moveToPos(26, -6, 0.4014);
@@ -425,6 +448,8 @@ public class BlueFarAutoOp extends LinearOpMode {
                         if(sort(0)) {
                             stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_1;
+                            stage = 0;
+                            intakeFlag = true;
                         }
                     }
                     break;
@@ -476,6 +501,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                         case 6:
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
+                                intakeFlag = false;
                                 stage = 0;
                                 gate.setPosition(GATE_DOWN);
                                 autoState = AUTO_STATE.SECOND_SHOT;
@@ -680,10 +706,12 @@ public class BlueFarAutoOp extends LinearOpMode {
                     }
                     break;
                 case RESET_2: //set position for ball 1
-                    if(!isPusherUp && stageTimer.milliseconds() > 500){
+                    if(!isPusherUp && stageTimer.milliseconds() > 250){
                         if(sort(0)){
+                            stage = 0;
                             stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_2;
+                            intakeFlag = true;
                         }
                     }
                     break;
@@ -691,7 +719,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                     switch (stage) {
                         case 0: //align with artifacts
                             gate.setPosition(GATE_UP);
-                            mecanumCommand.moveToPos(144, 26, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(142, 26, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -702,8 +730,8 @@ public class BlueFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 2: //intake first ball
-                            if (stageTimer.milliseconds() > 600) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(144, 48, Math.PI / 2); //go to place to intake first artifact
+                            if (stageTimer.milliseconds() > 300) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(142, 48, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -717,8 +745,8 @@ public class BlueFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 600) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(144, 63, Math.PI / 2); //go to place to intake second artifact
+                            if (stageTimer.milliseconds() > 300) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(142, 63, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }

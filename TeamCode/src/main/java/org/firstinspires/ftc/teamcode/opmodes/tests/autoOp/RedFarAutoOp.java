@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsyst
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 
-@Autonomous (name = "Red Auto 2")
+@Autonomous (name = "Red Auto")
 public class RedFarAutoOp extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
