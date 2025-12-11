@@ -83,7 +83,7 @@ public class BlueFarAutoOp extends LinearOpMode {
     private static boolean currentPushState;
 
     private static int stage;
-    PATTERN pattern = PATTERN.PPG_3; // default
+    PATTERN pattern = PATTERN.PGP_2; // default
 
 
     int detection;
