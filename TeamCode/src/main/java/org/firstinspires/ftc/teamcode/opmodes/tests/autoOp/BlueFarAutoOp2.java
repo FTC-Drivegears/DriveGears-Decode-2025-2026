@@ -64,7 +64,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
     private static double hoodPos = 0.359;
 
     private static final double GATE_UP = 1.0;
-    private static final double GATE_DOWN = 0.0;
+    private static final double GATE_DOWN = 0.675;
 
     private static DcMotor shooter;
     private static Servo pusher;
@@ -155,11 +155,15 @@ public class BlueFarAutoOp2 extends LinearOpMode {
         pusher = hw.pusher;
         sorter = hw.sorter;
         hood = hw.hood;
+        gate = hw.gate;
         intake = hw.intake;
+        turret = hw.llmotor;
+
 
         sorter.setPosition(pos1);
         pusher.setPosition(PUSHER_DOWN);
         hood.setPosition(hoodPos);
+        gate.setPosition(GATE_DOWN);
         int position = 0;
         stage = 0;
 
@@ -205,11 +209,6 @@ public class BlueFarAutoOp2 extends LinearOpMode {
             telemetry.update();
 
         }
-        while(opModeInInit()){
-            turret.setTargetPosition(0);
-            turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            turret.setPower(1);
-        }
 
         waitForStart();
 
@@ -219,9 +218,6 @@ public class BlueFarAutoOp2 extends LinearOpMode {
             mecanumCommand.processOdometry();
             shoot(outtakeFlag);
             intake(intakeFlag);
-            turret.setTargetPosition(0);
-            turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            turret.setPower(1);
             telemetry.addData("stage", stage);
             telemetry.addData("Pattern", pattern);
             telemetry.addData("position: ", position);
@@ -424,7 +420,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(80, 32, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(83, 32, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
@@ -437,7 +433,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(80, 48, Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(83, 48, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -452,7 +448,7 @@ public class BlueFarAutoOp2 extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(80, 63, Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(83, 63, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }

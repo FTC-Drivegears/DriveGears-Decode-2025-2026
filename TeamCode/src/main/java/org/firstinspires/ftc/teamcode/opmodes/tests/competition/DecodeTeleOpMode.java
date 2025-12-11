@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.opmodes.tests.autoOp.BlueFarAutoOp2;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
@@ -56,7 +55,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private final int CLOSE_SHOOT_SPEED = 2500;
 
     private static final double GATE_UP = 1.0;
-    private static final double GATE_DOWN = 0.0;
+    private static final double GATE_DOWN = 0.5;
 
     private LogitechVisionSubsystem vision;
 
