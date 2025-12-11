@@ -11,12 +11,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.opmodes.tests.autoOp.BlueFarAutoOp2;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
-
 
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
@@ -64,9 +64,21 @@ public class DecodeTeleOpMode extends LinearOpMode {
         ROBOTORIENTED, FIELDORIENTED
     }
 
-    static void quickFire(int pos1, int pos2, int pos3) {
 
+    enum OUTTAKE {
+
+        PUSHUP1,
+        PUSHDOWN1,
+        SORT1,
+        PUSHUP2,
+        PUSHDOWN2,
+        SORT2,
+        PUSHUP3,
+        PUSHDOWN3,
+        IDLE
     }
+
+    OUTTAKE outtakeState = OUTTAKE.IDLE;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -158,6 +170,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //            }
 
             mecanumCommand.processOdometry();
+            quickfire();
 
 //            if (drivetype == DRIVETYPE.FIELDORIENTED) {
 //                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
@@ -173,11 +186,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     if (isIntakeMotorOn) {
                         intake.setPower(0.8);
                         gate.setPosition(GATE_UP);
-                        intaking = true;
+//                        intaking = true;
                     } else {
                         intake.setPower(0);
                         gate.setPosition(GATE_DOWN);
-                        intaking = false;
+//                        intaking = false;
                     }
                 }
             } else
@@ -199,6 +212,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 leftTriggerPressed = false;
             }
 
+            if (gamepad1.b && sorterTimer.milliseconds() > 1000){
+                sorterSubsystem.manualSpin();
+            }
+
 
 //            boolean right = gamepad1.dpad_right;
 //            boolean left = gamepad1.dpad_left;
@@ -212,17 +229,13 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //                    outtakeTimer.reset();
 //                }
 //            }
-            if (intaking && colorSensingTimer.milliseconds() > 500) {
-                sorterSubsystem.detectColor();
-                if (sorterSubsystem.getIsBall()) {
-                    sorterSubsystem.turnToIntake('P');
-                    colorSensingTimer.reset();
-                }
-                if (sorterSubsystem.getIsBall()) {
-                    sorterSubsystem.turnToIntake('P');
-                    colorSensingTimer.reset();
-                }
-            }
+//            if (intaking && colorSensingTimer.milliseconds() > 500) {
+//                sorterSubsystem.detectColor();
+//                if (sorterSubsystem.getIsBall()) {
+//                    sorterSubsystem.turnToIntake('P');
+//                    colorSensingTimer.reset();
+//                }
+//            }
 
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
@@ -248,12 +261,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
             previousXState = currentXState;
 
             //QUICKFIRE
-//            if (gamepad1.b) {
-//                sorter.setPosition();
-//
-//            }
-
-
+            if (gamepad1.a) {
+                OUTTAKE outtakeState = OUTTAKE.PUSHUP1;
+            }
 
             // CLOSE
             if (gamepad2.x) {
@@ -336,6 +346,68 @@ public class DecodeTeleOpMode extends LinearOpMode {
             telemetry.addData("Theta", mecanumCommand.getOdoHeading());
             telemetry.addData("Outtake speed: ", shootSpeed);
             telemetry.update();
+        }
+    }
+
+    public void quickfire () {
+        switch (outtakeState) {
+            case IDLE:
+                break;
+
+            case PUSHUP1:
+                hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                sorterSubsystem.setIsPusherUp(true);
+                pusherTimer.reset();
+                outtakeState = OUTTAKE.PUSHDOWN1;
+                break;
+
+            case PUSHDOWN1:
+                if (pusherTimer.milliseconds() >= 500) {
+                    sorterSubsystem.setIsPusherUp(false);
+                    hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                    outtakeState = OUTTAKE.SORT1;
+                }
+                break;
+
+            case SORT1:
+                sorterSubsystem.outtakeToNextPos();
+                outtakeState = OUTTAKE.PUSHUP2;
+            break;
+
+            case PUSHUP2:
+                hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                sorterSubsystem.setIsPusherUp(true);
+                pusherTimer.reset();
+                outtakeState = OUTTAKE.PUSHDOWN2;
+                break;
+
+            case PUSHDOWN2:
+                if (pusherTimer.milliseconds() >= 500) {
+                    sorterSubsystem.setIsPusherUp(false);
+                    hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                    outtakeState = OUTTAKE.SORT2;
+                }
+                break;
+
+            case SORT2:
+                sorterSubsystem.outtakeToNextPos();
+                outtakeState = OUTTAKE.PUSHUP3;
+                break;
+
+            case PUSHUP3:
+                hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                sorterSubsystem.setIsPusherUp(true);
+                pusherTimer.reset();
+                outtakeState = OUTTAKE.PUSHDOWN3;
+                break;
+
+            case PUSHDOWN3:
+                if (pusherTimer.milliseconds() >= 500) {
+                    sorterSubsystem.setIsPusherUp(false);
+                    hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                    outtakeState = OUTTAKE.IDLE;
+                }
+                break;
         }
     }
 }

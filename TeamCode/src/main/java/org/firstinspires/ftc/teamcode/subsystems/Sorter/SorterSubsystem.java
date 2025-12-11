@@ -125,6 +125,13 @@ public class SorterSubsystem {
         }
     }
 
+    public void outtakeToNextPos(){
+        if (curSorterPositionIndex >= 0){
+            curSorterPositionIndex--;
+            sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
+        }
+    }
+
     public void turnForIntake() { // turn sorter before intaking a ball
         if (!isPusherUp && sorter.getPosition() != 1) { // ensure the sorter cannot turn more than max
             if (curSorterPositionIndex >= MAX_NUM_BALLS) {
