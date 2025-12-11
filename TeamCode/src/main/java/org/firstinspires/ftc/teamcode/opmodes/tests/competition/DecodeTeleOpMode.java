@@ -47,15 +47,14 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
     //Shooter Presets
     private final double FAR_HOOD = 0.4;
-    //    private final int FAR_SHOOT_SPEED = 3700;
-    private final int FAR_SHOOT_SPEED = 2000;
+    private final int FAR_SHOOT_SPEED = 3700;
     private final double MID_HOOD = 0.6;
     private final int MID_SHOOT_SPEED = 3050;
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
 
     private static final double GATE_UP = 1.0;
-    private static final double GATE_DOWN = 0.5;
+    private static final double GATE_DOWN = 0.7;
 
     private LogitechVisionSubsystem vision;
 
@@ -261,7 +260,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             //QUICKFIRE
             if (gamepad1.a) {
-                OUTTAKE outtakeState = OUTTAKE.PUSHUP1;
+                outtakeState = OUTTAKE.PUSHUP1;
             }
 
             // CLOSE
