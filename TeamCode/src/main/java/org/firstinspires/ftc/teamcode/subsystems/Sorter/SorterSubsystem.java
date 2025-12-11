@@ -118,14 +118,14 @@ public class SorterSubsystem {
     }
 
     public void turnToNextPos(){
-        if (curSorterPositionIndex <= MAX_NUM_BALLS){
+        if (curSorterPositionIndex < MAX_NUM_BALLS){
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
             curSorterPositionIndex++;
         }
     }
 
     public void outtakeToNextPos(){
-        if (curSorterPositionIndex >= 0){
+        if (curSorterPositionIndex > 0){
             curSorterPositionIndex--;
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
         }
