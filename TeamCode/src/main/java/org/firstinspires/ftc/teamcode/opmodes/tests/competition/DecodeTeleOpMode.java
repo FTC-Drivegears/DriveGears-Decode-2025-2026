@@ -334,7 +334,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("colour?: ", sorterSubsystem.getIsBall());
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
@@ -364,16 +363,20 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 if (pusherTimer.milliseconds() >= 1000) {
                     sorterSubsystem.setIsPusherUp(false);
                     hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                    pusherTimer.reset();
                     outtakeState = OUTTAKE.SORT1;
                 }
                 break;
 
             case SORT1:
+                sorterTimer.reset();
                 sorterSubsystem.turnToNextPos();
                 outtakeState = OUTTAKE.PUSHUP2;
+
             break;
 
             case PUSHUP2:
+                if (sorterTimer.milliseconds() >= 1000)
                 hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                 sorterSubsystem.setIsPusherUp(true);
                 pusherTimer.reset();
@@ -386,6 +389,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                     outtakeState = OUTTAKE.SORT2;
                 }
+
                 break;
 
             case SORT2:
@@ -394,6 +398,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 break;
 
             case PUSHUP3:
+                if (sorterTimer.milliseconds() >= 1000)
                 hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                 sorterSubsystem.setIsPusherUp(true);
                 pusherTimer.reset();

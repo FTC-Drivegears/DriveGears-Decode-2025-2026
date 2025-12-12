@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LimelightSubsystem;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
@@ -18,7 +19,8 @@ public class BlueFarAutoOp extends LinearOpMode {
     private static ShooterSubsystem shooterSubsystem;
     private ElapsedTime resetTimer;
 
-    private LogitechVisionSubsystem logitechVisionSubsystem;
+//    private LogitechVisionSubsystem logitechVisionSubsystem;
+    private LimelightSubsystem limelightSubsystem;
 
 
     private double targetX = Double.NaN; // X position of alliance-specific tag
@@ -184,7 +186,8 @@ public class BlueFarAutoOp extends LinearOpMode {
 //        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
-        logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
+//        logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
+        limelightSubsystem = new LimelightSubsystem(hw, "BLUE");
         boolean outtakeFlag = false;
         boolean intakeFlag = false;
 
@@ -196,7 +199,8 @@ public class BlueFarAutoOp extends LinearOpMode {
 
         // Detect obelisk pattern
         while (!isStarted() && !isStopRequested()) {
-            String detected = logitechVisionSubsystem.pattern();
+//            String detected = logitechVisionSubsystem.pattern();
+            String detected = limelightSubsystem.pattern();
             String result = "";
             if (detected != null && !detected.equals("UNKNOWN")) {
                 switch (detected) {
@@ -216,7 +220,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                         break;
                 }
             }
-            targetX = logitechVisionSubsystem.targetApril(telemetry);
+//            targetX = logitechVisionSubsystem.targetApril(telemetry);
 
             telemetry.addData("Detected Obelisk", detected);
             telemetry.addData("Pattern", pattern);

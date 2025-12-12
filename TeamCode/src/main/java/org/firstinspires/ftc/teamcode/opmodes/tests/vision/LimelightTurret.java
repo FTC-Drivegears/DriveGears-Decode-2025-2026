@@ -5,11 +5,26 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import java.util.List;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
+import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @TeleOp
 public class LimelightTurret extends LinearOpMode {
     private DcMotorEx llmotor;
     private Limelight3A limelight;
+    private Hardware hw;
+    private String ALLIANCE;
+    public String OBELISK = "UNKNOWN";
+    private static int targetID = -1;
+    private static double x_Value = Double.NaN;
+    private static AprilTagProcessor tagProcessor;
+    private VisionPortal visionPortal;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -59,5 +74,6 @@ public class LimelightTurret extends LinearOpMode {
                 }
             }
         }
+
     }
 }
