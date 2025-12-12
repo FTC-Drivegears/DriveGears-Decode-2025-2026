@@ -34,9 +34,6 @@ public class SorterSubsystem {
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.085, 0.515, 0.96};
-    private int sorterPositionIndex;
-
-
 
     public NormalizedColorSensor colourSensor1;
     public NormalizedColorSensor colourSensor2;
@@ -82,11 +79,11 @@ public class SorterSubsystem {
         if (isPusherUp){
             return;
         }
-        if (sorterPositionIndex >= 3) {
-            sorterPositionIndex = 0;
+        if (curSorterPositionIndex >= 3) {
+            curSorterPositionIndex = 0;
         }
-        this.sorter.setPosition(sorterPositions[sorterPositionIndex]);
-        sorterPositionIndex++;
+        this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
+        curSorterPositionIndex++;
     }
 
     public void intakeBall(char color) {
@@ -129,6 +126,10 @@ public class SorterSubsystem {
             curSorterPositionIndex--;
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
         }
+    }
+
+    public int getCurSorterPositionIndex () {
+        return curSorterPositionIndex;
     }
 
     public void turnForIntake() { // turn sorter before intaking a ball

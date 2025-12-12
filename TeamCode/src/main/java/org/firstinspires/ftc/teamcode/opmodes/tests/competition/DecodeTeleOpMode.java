@@ -361,26 +361,26 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             case PUSHDOWN1:
                 if (pusherTimer.milliseconds() >= 1000) {
-                    sorterSubsystem.setIsPusherUp(false);
                     hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                    sorterSubsystem.setIsPusherUp(false);
                     pusherTimer.reset();
                     outtakeState = OUTTAKE.SORT1;
                 }
                 break;
 
             case SORT1:
-                sorterTimer.reset();
-                sorterSubsystem.turnToNextPos();
+                sorterSubsystem.outtakeToNextPos();
                 outtakeState = OUTTAKE.PUSHUP2;
-
+                sorterTimer.reset();
             break;
 
             case PUSHUP2:
-                if (sorterTimer.milliseconds() >= 1000)
-                hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                sorterSubsystem.setIsPusherUp(true);
-                pusherTimer.reset();
-                outtakeState = OUTTAKE.PUSHDOWN2;
+                if (sorterTimer.milliseconds() >= 1000) {
+                    hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    sorterSubsystem.setIsPusherUp(true);
+                    pusherTimer.reset();
+                    outtakeState = (sorterSubsystem.getCurSorterPositionIndex() > 0) ? OUTTAKE.SORT2 : OUTTAKE.IDLE;
+                }
                 break;
 
             case PUSHDOWN2:
@@ -398,11 +398,12 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 break;
 
             case PUSHUP3:
-                if (sorterTimer.milliseconds() >= 1000)
-                hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                sorterSubsystem.setIsPusherUp(true);
-                pusherTimer.reset();
-                outtakeState = OUTTAKE.PUSHDOWN3;
+                if (sorterTimer.milliseconds() >= 1000) {
+                    hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    sorterSubsystem.setIsPusherUp(true);
+                    pusherTimer.reset();
+                    outtakeState = OUTTAKE.PUSHDOWN3;
+                }
                 break;
 
             case PUSHDOWN3:
