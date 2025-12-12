@@ -360,7 +360,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     telemetry.addData("Y", mecanumCommand.getY());
                     telemetry.addData("Theta", mecanumCommand.getOdoHeading());
                     telemetry.addData("Outtake speed: ", shootSpeed);
-                    telemetry.addData("Outtake speed: ", sorterSubsystem.getCurSorterPositionIndex());
+                    telemetry.addData("Sorter: ", sorterSubsystem.getCurSorterPositionIndex());
                     telemetry.update();
 
             }
