@@ -98,6 +98,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
         boolean autoAimState = false;
         boolean previousAimButton = false;
 
+        boolean llDetection = true;
+
         DRIVETYPE drivetype = DRIVETYPE.ROBOTORIENTED;
 
         hw = Hardware.getInstance(hardwareMap);
@@ -212,7 +214,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 leftTriggerPressed = false;
             }
 
-            if (gamepad1.b && sorterTimer.milliseconds() > 500){
+            if (gamepad1.b && sorterTimer.milliseconds() > 500) {
                 sorterTimer.reset();
                 sorterSubsystem.manualSpin();
             }
@@ -301,119 +303,135 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
 
             //TURRET
-
-            LLStatus status = limelight.getStatus();
-            telemetry.addData("LL Name", status.getName());
-            telemetry.addData("CPU", "%.1f %%", status.getCpu());
-            telemetry.addData("FPS", "%d", (int) status.getFps());
-            telemetry.addData("Pipeline", "%d (%s)",
-                    status.getPipelineIndex(),
-                    status.getPipelineType()
-            );
-
-            LLResult result = limelight.getLatestResult();
-            if (result != null && result.isValid()) {
-                double tx = result.getTx();
-                if (tx > 5.5) {
-                    llmotor.setPower(-0.8);
-                } else if (tx < -5.5) {
-                    llmotor.setPower(0.8);
+            if (gamepad2.a) {
+                llDetection = false;
+                if (gamepad2.dpad_right) {
+                    llmotor.setPower(-0.5);
+                } else if (gamepad2.dpad_left) {
+                    llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);
                 }
-
-                telemetry.addData("tx", tx);
-                telemetry.update();
-
             } else {
-                if (gamepad2.dpad_right) {
-                    llmotor.setPower(-0.7);
-                } else if (gamepad2.dpad_left) {
-                    llmotor.setPower(0.7);
-                } else {
-                    llmotor.setPower(0);
+                llDetection = true;
+            }
+
+            if (llDetection) {
+                LLStatus status = limelight.getStatus();
+                telemetry.addData("LL Name", status.getName());
+                telemetry.addData("CPU", "%.1f %%", status.getCpu());
+                telemetry.addData("FPS", "%d", (int) status.getFps());
+                telemetry.addData("Pipeline", "%d (%s)",
+                        status.getPipelineIndex(),
+                        status.getPipelineType()
+                );
+
+                LLResult result = limelight.getLatestResult();
+                if (result != null && result.isValid()) {
+                    double tx = result.getTx();
+                    if (tx > 2.5) {
+                        llmotor.setPower(-0.2);
+                    } else if (tx < -2.5) {
+                        llmotor.setPower(0.2);
+                    } else {
+                        llmotor.setPower(0);
+                    }
+
+                    telemetry.addData("tx", tx);
+                    telemetry.update();
+//
+//                } else {
+//                    if (gamepad2.dpad_right) {
+//                        llmotor.setPower(-0.2);
+//                    } else if (gamepad2.dpad_left) {
+//                        llmotor.setPower(0.2);
+//                    } else {
+//                        llmotor.setPower(0);
+//                    }
                 }
             }
 
-            telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
-            telemetry.addData("colour?: ", sorterSubsystem.getIsBall());
-            telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
-            telemetry.addData("Hood pos: ", hoodPos);
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("X", mecanumCommand.getX());
-            telemetry.addData("Y", mecanumCommand.getY());
-            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
-            telemetry.addData("Outtake speed: ", shootSpeed);
-            telemetry.update();
+                    telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
+                    telemetry.addData("colour?: ", sorterSubsystem.getIsBall());
+                    telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
+                    telemetry.addData("Hood pos: ", hoodPos);
+                    telemetry.addLine("---------------------------------");
+                    telemetry.addData("X", mecanumCommand.getX());
+                    telemetry.addData("Y", mecanumCommand.getY());
+                    telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+                    telemetry.addData("Outtake speed: ", shootSpeed);
+                    telemetry.addData("Outtake speed: ", sorterSubsystem.getCurSorterPositionIndex());
+                    telemetry.update();
+
+            }
         }
-    }
 
-    public void quickfire () {
-        switch (outtakeState) {
-            case IDLE:
-                break;
+        public void quickfire () {
+            switch (outtakeState) {
+                case IDLE:
+                    break;
 
-            case PUSHUP1:
-                hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                sorterSubsystem.setIsPusherUp(true);
-                pusherTimer.reset();
-                outtakeState = OUTTAKE.PUSHDOWN1;
-                break;
-
-            case PUSHDOWN1:
-                if (pusherTimer.milliseconds() >= 1000) {
-                    hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                    sorterSubsystem.setIsPusherUp(false);
-                    pusherTimer.reset();
-                    outtakeState = OUTTAKE.SORT1;
-                }
-                break;
-
-            case SORT1:
-                sorterSubsystem.outtakeToNextPos();
-                outtakeState = OUTTAKE.PUSHUP2;
-                sorterTimer.reset();
-            break;
-
-            case PUSHUP2:
-                if (sorterTimer.milliseconds() >= 1000) {
+                case PUSHUP1:
                     hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
                     sorterSubsystem.setIsPusherUp(true);
                     pusherTimer.reset();
-                    outtakeState = (sorterSubsystem.getCurSorterPositionIndex() > 0) ? OUTTAKE.SORT2 : OUTTAKE.IDLE;
-                }
-                break;
+                    outtakeState = OUTTAKE.PUSHDOWN1;
+                    break;
 
-            case PUSHDOWN2:
-                if (pusherTimer.milliseconds() >= 1000) {
-                    sorterSubsystem.setIsPusherUp(false);
-                    hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                    outtakeState = OUTTAKE.SORT2;
-                }
+                case PUSHDOWN1:
+                    if (pusherTimer.milliseconds() >= 1000) {
+                        hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                        sorterSubsystem.setIsPusherUp(false);
+                        pusherTimer.reset();
+                        outtakeState = OUTTAKE.SORT1;
+                    }
+                    break;
 
-                break;
+                case SORT1:
+                    sorterSubsystem.outtakeToNextPos();
+                    outtakeState = OUTTAKE.PUSHUP2;
+                    sorterTimer.reset();
+                    break;
 
-            case SORT2:
-                sorterSubsystem.turnToNextPos();
-                outtakeState = OUTTAKE.PUSHUP3;
-                break;
+                case PUSHUP2:
+                    if (sorterTimer.milliseconds() >= 1000) {
+                        hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                        sorterSubsystem.setIsPusherUp(true);
+                        pusherTimer.reset();
+                        outtakeState = (sorterSubsystem.getCurSorterPositionIndex() > 0) ? OUTTAKE.SORT2 : OUTTAKE.IDLE;
+                    }
+                    break;
 
-            case PUSHUP3:
-                if (sorterTimer.milliseconds() >= 1000) {
-                    hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                    sorterSubsystem.setIsPusherUp(true);
-                    pusherTimer.reset();
-                    outtakeState = OUTTAKE.PUSHDOWN3;
-                }
-                break;
+                case PUSHDOWN2:
+                    if (pusherTimer.milliseconds() >= 1000) {
+                        sorterSubsystem.setIsPusherUp(false);
+                        hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                        outtakeState = OUTTAKE.SORT2;
+                    }
 
-            case PUSHDOWN3:
-                if (pusherTimer.milliseconds() >= 1000) {
-                    sorterSubsystem.setIsPusherUp(false);
-                    hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                    outtakeState = OUTTAKE.IDLE;
-                }
-                break;
+                    break;
+
+                case SORT2:
+                    sorterSubsystem.turnToNextPos();
+                    outtakeState = OUTTAKE.PUSHUP3;
+                    break;
+
+                case PUSHUP3:
+                    if (sorterTimer.milliseconds() >= 1000) {
+                        hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                        sorterSubsystem.setIsPusherUp(true);
+                        pusherTimer.reset();
+                        outtakeState = OUTTAKE.PUSHDOWN3;
+                    }
+                    break;
+
+                case PUSHDOWN3:
+                    if (pusherTimer.milliseconds() >= 1000) {
+                        sorterSubsystem.setIsPusherUp(false);
+                        hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                        outtakeState = OUTTAKE.IDLE;
+                    }
+                    break;
+            }
         }
-    }
 }
