@@ -120,6 +120,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         llmotor = hardwareMap.get(DcMotorEx.class, "llmotor");
+
         limelight.pipelineSwitch(7);
         limelight.start();
 
