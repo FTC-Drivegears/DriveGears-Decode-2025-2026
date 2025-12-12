@@ -457,7 +457,7 @@ public class SixBlueFarAutoOpMode extends LinearOpMode {
 
                 case SECOND_SHOT:
                     //mecanumCommand.moveToPos(26, -14, 0.5014); //move to whatever position we used to go to
-//                    mecanumCommand.moveToPos(26, -6, 0.40;eu014);
+                    mecanumCommand.moveToPos(26, -6, 0.4014);
                     shooterSubsystem.setMaxRPM(3800);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {

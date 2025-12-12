@@ -112,6 +112,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
         hw.sorter.setPosition(0.085);
         hw.gate.setPosition(GATE_DOWN);
         hw.hood.setPosition(hoodPos);
+        hw.llmotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         intake = hw.intake;
         shooter = hw.shooter;
