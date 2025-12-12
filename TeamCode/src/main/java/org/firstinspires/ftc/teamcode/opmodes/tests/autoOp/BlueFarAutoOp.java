@@ -110,20 +110,11 @@ public class BlueFarAutoOp extends LinearOpMode {
     }
 
     static boolean sort(int sp) {
-        if (!isPusherUp && pusherTimer.milliseconds() >= PUSHER_TIME) {
-            if (sp != currentSort) {
                 double pos = (sp == 0) ? pos1 : (sp == 1) ? pos2 : pos3;
                 sorter.setPosition(pos);
                 currentSort = sp;
                 sorterTimer.reset();
-                return false; // need to wait SORTER_TIME before reporting success
-            } else {
-                if (sorterTimer.milliseconds() >= SORTER_TIME) {
-                    return true;
-                }
-            }
-        }
-        return false;
+                return true;
     }
 
     static void shoot(boolean isOn) {
@@ -535,7 +526,7 @@ public class BlueFarAutoOp extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
-                if (stageTimer.milliseconds() > 200&& shooterSubsystem.isRPMReached()) {
+                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -552,7 +543,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                 }
                 break;
             case 4: // sort
-                if (stageTimer.milliseconds() > 500) {
+                if (stageTimer.milliseconds() > 600) {
                     if(sort(0)) {
                         stage++;
                         stageTimer.reset();
