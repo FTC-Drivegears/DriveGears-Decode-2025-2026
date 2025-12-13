@@ -186,13 +186,13 @@ public class DecodeTeleOpMode extends LinearOpMode {
                     rightTriggerPressed = true;
                     isIntakeMotorOn = !isIntakeMotorOn;
                     if (isIntakeMotorOn) {
-                        gate.setPosition(GATE_UP);
                         intake.setPower(0.8);
-                        intaking = true;
+                        gate.setPosition(GATE_UP);
+//                        intaking = true;
                     } else {
                         intake.setPower(0);
                         gate.setPosition(GATE_DOWN);
-                        intaking = false;
+//                        intaking = false;
                     }
                 }
             } else
@@ -232,7 +232,8 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //                    outtakeTimer.reset();
 //                }
 //            }
-            if (gamepad1.right_trigger > 0 && intaking && colorSensingTimer.milliseconds() > 500) {
+            if (intaking && colorSensingTimer.milliseconds() > 500) {
+                sorterSubsystem.detectColor();
                 if (sorterSubsystem.getIsBall()) {
                     sorterSubsystem.turnToIntake('P');
                     colorSensingTimer.reset();
@@ -302,8 +303,31 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
 
             //TURRET
-            if (gamepad2.a) {
-                llDetection = false;
+
+            LLStatus status = limelight.getStatus();
+            telemetry.addData("LL Name", status.getName());
+            telemetry.addData("CPU", "%.1f %%", status.getCpu());
+            telemetry.addData("FPS", "%d", (int) status.getFps());
+            telemetry.addData("Pipeline", "%d (%s)",
+                    status.getPipelineIndex(),
+                    status.getPipelineType()
+            );
+
+            LLResult result = limelight.getLatestResult();
+
+            if (result != null && result.isValid()) {
+                double tx = result.getTx();
+                if (tx > 3) {
+                    llmotor.setPower(-0.5);
+                } else if (tx < -3) {
+                    llmotor.setPower(0.5);
+                } else {
+                    llmotor.setPower(0);
+                }
+                telemetry.addData("tx", tx);
+                telemetry.update();
+
+            } else {
                 if (gamepad2.dpad_right) {
                     llmotor.setPower(-0.5);
                 } else if (gamepad2.dpad_left) {
@@ -311,33 +335,44 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 } else {
                     llmotor.setPower(0);
                 }
-            } else {
-                llDetection = true;
             }
 
-            if (llDetection) {
-                LLStatus status = limelight.getStatus();
-                telemetry.addData("LL Name", status.getName());
-                telemetry.addData("CPU", "%.1f %%", status.getCpu());
-                telemetry.addData("FPS", "%d", (int) status.getFps());
-                telemetry.addData("Pipeline", "%d (%s)",
-                        status.getPipelineIndex(),
-                        status.getPipelineType()
-                );
+//            if (gamepad2.a) {
+//                llDetection = false;
+//                if (gamepad2.dpad_right) {
+//                    llmotor.setPower(-0.5);
+//                } else if (gamepad2.dpad_left) {
+//                    llmotor.setPower(0.5);
+//                } else {
+//                    llmotor.setPower(0);
+//                }
+//            } else {
+//                llDetection = true;
+//            }
+//
+//            if (llDetection) {
+//                LLStatus status = limelight.getStatus();
+//                telemetry.addData("LL Name", status.getName());
+//                telemetry.addData("CPU", "%.1f %%", status.getCpu());
+//                telemetry.addData("FPS", "%d", (int) status.getFps());
+//                telemetry.addData("Pipeline", "%d (%s)",
+//                        status.getPipelineIndex(),
+//                        status.getPipelineType()
+//                );
 
-                LLResult result = limelight.getLatestResult();
-                if (result != null && result.isValid()) {
-                    double tx = result.getTx();
-                    if (tx > 2.5) {
-                        llmotor.setPower(-0.2);
-                    } else if (tx < -2.5) {
-                        llmotor.setPower(0.2);
-                    } else {
-                        llmotor.setPower(0);
-                    }
-
-                    telemetry.addData("tx", tx);
-                    telemetry.update();
+//                LLResult result = limelight.getLatestResult();
+//                if (result != null && result.isValid()) {
+//                    double tx = result.getTx();
+//                    if (tx > 2.5) {
+//                        llmotor.setPower(-0.2);
+//                    } else if (tx < -2.5) {
+//                        llmotor.setPower(0.2);
+//                    } else {
+//                        llmotor.setPower(0);
+//                    }
+//
+//                    telemetry.addData("tx", tx);
+//                    telemetry.update();
 //
 //                } else {
 //                    if (gamepad2.dpad_right) {
@@ -348,7 +383,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 //                        llmotor.setPower(0);
 //                    }
                 }
-            }
+
 
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("colour?: ", sorterSubsystem.getIsBall());
@@ -364,7 +399,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
         }
     }
-}
+
 
 
 //        public void quickfire () {
