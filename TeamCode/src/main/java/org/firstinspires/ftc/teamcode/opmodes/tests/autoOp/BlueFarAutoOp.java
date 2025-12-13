@@ -257,7 +257,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                 case FIRST_SHOT:
                     shooterSubsystem.setMaxRPM(3500);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.35);
+                    mecanumCommand.moveToPos(26, -6, 0.36);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -337,7 +337,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                                 autoState = AUTO_STATE.SECOND_SHOT;
                                 shooterSubsystem.setMaxRPM(3500);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
-                                mecanumCommand.moveToPos(26, -6, 0.35);
+                                mecanumCommand.moveToPos(26, -6, 0.36);
                                 hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
@@ -428,7 +428,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                                 autoState = AUTO_STATE.FINISH;
                                 shooterSubsystem.setMaxRPM(3500);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
-                                mecanumCommand.moveToPos(26, -6, 0.35);
+                                mecanumCommand.moveToPos(26, -6, 0.36);
                                 hood.setPosition(0.43); //replace with hood position
                                 break;
                             }

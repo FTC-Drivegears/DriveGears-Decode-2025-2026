@@ -315,12 +315,14 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             LLResult result = limelight.getLatestResult();
 
+
+
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
-                if (tx > 3) {
-                    llmotor.setPower(-0.5);
-                } else if (tx < -3) {
-                    llmotor.setPower(0.5);
+                if (Math.abs(tx) > 3) {
+                    double power = 0.03 * tx;
+                    power = Math.max(-1.0, Math.min(1.0, power));
+                    llmotor.setPower(-power);
                 } else {
                     llmotor.setPower(0);
                 }
@@ -328,9 +330,9 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 telemetry.update();
 
             } else {
-                if (gamepad2.dpad_right) {
+                if (gamepad2.right_trigger > 0) {
                     llmotor.setPower(-0.5);
-                } else if (gamepad2.dpad_left) {
+                } else if (gamepad2.left_trigger > 0) {
                     llmotor.setPower(0.5);
                 } else {
                     llmotor.setPower(0);
