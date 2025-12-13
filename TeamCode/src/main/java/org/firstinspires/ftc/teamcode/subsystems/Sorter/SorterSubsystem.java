@@ -12,10 +12,15 @@ import org.firstinspires.ftc.teamcode.Hardware;
 
 import java.util.ArrayList;
 
+
 public class SorterSubsystem {
+    private Hardware hw;
     public static final int MAX_NUM_BALLS = 3;
     private final Servo sorter;
     private final Servo pusher;
+    private static final double PUSHER_UP = 0.0;
+    private static final double PUSHER_DOWN = 1.0;
+    private static final long PUSHER_TIME = 150;
 
     // Color sensors do not work. One reports 0 values. Another one reported 646 for red, 2000 for other numbers.
 //    public final ColorSensor colourSensor;
@@ -26,14 +31,23 @@ public class SorterSubsystem {
     private ArrayList<Character> pattern;
     private final ArrayList<Artifact> sorterList;
 
-    private final ElapsedTime pushTime = new ElapsedTime();
     private final ElapsedTime sorterSpinTime = new ElapsedTime();
+
+//    private final ElapsedTime pusherTimer = new ElapsedTime();
+
+    private final ElapsedTime pusherTimer = new ElapsedTime();
 
     private final ElapsedTime spinForIntakeTime = new ElapsedTime();
     private final ElapsedTime spinForOuttakeTime = new ElapsedTime();
     private boolean isPusherUp = false; // pusher is down
     private int curSorterPositionIndex = 0;
+
     private final double[] sorterPositions = new double[]{0.085, 0.515, 0.96};
+    private final double sorterPosition1 = 0.085;
+    private final double sorterPosition2 = 0.515;
+    private final double sorterPosition3 = 0.96;
+
+
 
     public NormalizedColorSensor colourSensor1;
     public NormalizedColorSensor colourSensor2;
@@ -43,6 +57,17 @@ public class SorterSubsystem {
     public boolean isGreen = false;
 
     private boolean isBall = false;
+
+    private static final long SORTER_TIME = 400;
+
+//    public TransferState state = TransferState.FIRST;
+
+//    public enum TransferState {
+//        PUSH_UP,
+//        PUSH_DOWN,
+//        SORT,
+//        FIRST
+//    }
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -62,7 +87,7 @@ public class SorterSubsystem {
     // reinitPattern re-initializes the pattern. Call reinitPattern when reading a new pattern.
     public void reinitPattern(String pattern) {
         this.pattern = new ArrayList<>();
-        for (char p: pattern.toCharArray()) {
+        for (char p : pattern.toCharArray()) {
             this.pattern.add(p);
         }
     }
@@ -71,12 +96,12 @@ public class SorterSubsystem {
         this.isPusherUp = isPusherUp;
     }
 
-    public boolean getIsPusherUp(){
+    public boolean getIsPusherUp() {
         return this.isPusherUp;
     }
 
-    public void manualSpin(){
-        if (isPusherUp){
+    public void manualSpin() {
+        if (isPusherUp) {
             return;
         }
         if (curSorterPositionIndex >= 3) {
@@ -88,7 +113,7 @@ public class SorterSubsystem {
 
     public void intakeBall(char color) {
         // fail-safe
-        if (this.sorterList.size() == MAX_NUM_BALLS){
+        if (this.sorterList.size() == MAX_NUM_BALLS) {
             telemetry.addLine("Cannot intake any more balls, max capacity");
             return;
         }
@@ -114,21 +139,21 @@ public class SorterSubsystem {
         }
     }
 
-    public void turnToNextPos(){
-        if (curSorterPositionIndex < MAX_NUM_BALLS){
+    public void turnToNextPos() {
+        if (curSorterPositionIndex < MAX_NUM_BALLS) {
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
             curSorterPositionIndex++;
         }
     }
 
-    public void outtakeToNextPos(){
-        if (curSorterPositionIndex > 0){
+    public void outtakeToNextPos() {
+        if (curSorterPositionIndex > 0) {
             curSorterPositionIndex--;
             sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
         }
     }
 
-    public int getCurSorterPositionIndex () {
+    public int getCurSorterPositionIndex() {
         return curSorterPositionIndex;
     }
 
@@ -155,30 +180,26 @@ public class SorterSubsystem {
         float hue = JavaUtil.colorToHue(colours1.toColor());
         float hue2 = JavaUtil.colorToHue(colours2.toColor());
 
-        if (hue < 163 && hue > 150 || hue2 < 163 && hue2 > 150){
+        if (hue < 163 && hue > 150 || hue2 < 163 && hue2 > 150) {
             telemetry.addData("Color", "Green");
             isGreen = true;
 
             if (sorterList.get(curSorterPositionIndex) == null) {
                 sorterList.set(curSorterPositionIndex, new Artifact('g', sorterPositions[curSorterPositionIndex]));
             }
-        }
-        else if (hue < 350 && hue > 165 || hue2 < 350 && hue2 > 165){
+        } else if (hue < 350 && hue > 165 || hue2 < 350 && hue2 > 165) {
             telemetry.addData("Color", "Purple");
             isPurple = true;
             if (sorterList.get(curSorterPositionIndex) == null) {
                 sorterList.set(curSorterPositionIndex, new Artifact('p', sorterPositions[curSorterPositionIndex]));
             }
-        }
-        else{
+        } else {
             telemetry.addLine("Nothing is here");
         }
 
         if (isGreen || isPurple) {
             isBall = true;
-        }
-
-        else
+        } else
             isBall = false;
     }
 
@@ -209,11 +230,11 @@ public class SorterSubsystem {
 //        this.waitForSpinAndPush(0);
 //    }
 
-    public boolean getIsBall(){
+    public boolean getIsBall() {
         return isBall;
     }
 
-    public void setIsBall(boolean value){
+    public void setIsBall(boolean value) {
         isBall = value;
     }
 
@@ -254,14 +275,14 @@ public class SorterSubsystem {
     private void findBallIndexAndSpin(char colorToRemove) { // for outtake spinning
         int ballIndexToRemoveFromSorter = -1;
         telemetry.addData("num balls left", this.sorterList.size());
-        for (int i = 0; i < this.sorterList.size(); i++){
-            if (this.sorterList.get(i) != null && this.sorterList.get(i).getColor() == colorToRemove){
+        for (int i = 0; i < this.sorterList.size(); i++) {
+            if (this.sorterList.get(i) != null && this.sorterList.get(i).getColor() == colorToRemove) {
                 ballIndexToRemoveFromSorter = i;
                 break;
             }
         }
 
-        if (ballIndexToRemoveFromSorter == -1){
+        if (ballIndexToRemoveFromSorter == -1) {
             telemetry.addData("color not found: ", colorToRemove);
             telemetry.update();
             return;
@@ -286,3 +307,53 @@ public class SorterSubsystem {
         this.sorterList.set(ballIndexToRemoveFromSorter, null);
     }
 }
+
+//    public boolean transfer() {
+//        switch (state) {
+//            case FIRST:
+//                pusherUp();
+//                pusherTimer.reset();
+//                state = TransferState.PUSH_UP;
+//                return true;
+//
+//            case PUSH_UP:
+//                if (pusherTimer.milliseconds() >= PUSHER_TIME) {
+//                    pusherDown();
+//                    sorterSpinTime.reset();
+//                    state = TransferState.PUSH_DOWN;
+//                }
+//                return true;
+//
+//            case PUSH_DOWN:
+//                if (sorterSpinTime.milliseconds() >= SORTER_TIME) {
+//                    state = TransferState.SORT;
+//                }
+//                return true;
+//
+//            case SORT:
+//                curSorterPositionIndex = (curSorterPositionIndex + 1) % 3;
+//                if (curSorterPositionIndex == 0) {
+//                    hw.sorter.setPosition(sorterPosition1);
+//                }
+//                if (curSorterPositionIndex == 1) {
+//                    hw.sorter.setPosition(sorterPosition2);
+//                }
+//                if (curSorterPositionIndex == 2) {
+//                    hw.sorter.setPosition(sorterPosition3);
+//                }
+//
+//                state = TransferState.FIRST;
+//                return false;
+//
+//            default:
+//                return false;
+//        }
+//    }
+//    public void pusherUp() {
+//        hw.pusher.setPosition(PUSHER_UP);
+//    }
+//
+//    public void pusherDown() {
+//        hw.pusher.setPosition(PUSHER_DOWN);
+//    }
+//}

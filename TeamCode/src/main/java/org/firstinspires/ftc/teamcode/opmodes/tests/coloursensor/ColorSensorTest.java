@@ -38,6 +38,9 @@ public class ColorSensorTest extends LinearOpMode {
         boolean detectedPurple2 = false;
         boolean detectedGreen2 = false;
 
+        boolean green = false;
+        boolean purple = false;
+
         while (opModeIsActive()) {
             detectColorTime.reset();
             boolean hasDetectedColor = false;
@@ -49,12 +52,15 @@ public class ColorSensorTest extends LinearOpMode {
 
             if (hue < 163 && hue > 150 || hue2 < 163 && hue2 > 150){
                 telemetry.addData("Color", "Green");
+                green = true;
             }
             else if (hue < 350 && hue > 165 || hue2 < 350 && hue2 > 165){
                 telemetry.addData("Color", "Purple");
+                purple = true;
             }
             else{
                 telemetry.addLine("Nothing is here");
+                purple = false;
             }
 
             telemetry.addData("Red:", colors.red);
