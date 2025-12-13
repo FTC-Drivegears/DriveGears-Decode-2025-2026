@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 
@@ -16,6 +17,8 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 public class BlueFarAutoOp extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
+
+    private static SorterSubsystem sorterSubsystem;
     private ElapsedTime resetTimer;
 
     private LogitechVisionSubsystem logitechVisionSubsystem;
@@ -87,7 +90,7 @@ public class BlueFarAutoOp extends LinearOpMode {
     AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
 
     private static int stage;
-    PATTERN pattern = PATTERN.PGP_2; // default
+    PATTERN pattern = PATTERN.PPG_3; // default
 
 
     int detection;
@@ -109,12 +112,22 @@ public class BlueFarAutoOp extends LinearOpMode {
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
+
     static boolean sort(int sp) {
         double pos = (sp == 0) ? pos1 : (sp == 1) ? pos2 : pos3;
         sorter.setPosition(pos);
         currentSort = sp;
         sorterTimer.reset();
         return true;
+    }
+
+    static boolean sort() {
+        if (sorterTimer.milliseconds() > 500) {
+            sorterTimer.reset();
+            sorterSubsystem.manualSpin();
+            return true;
+        }
+        return false;
     }
 
     static void shoot(boolean isOn) {
@@ -148,6 +161,7 @@ public class BlueFarAutoOp extends LinearOpMode {
 
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
+        sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
         resetTimer = new ElapsedTime();
 
         shooter = hw.shooter;
@@ -241,20 +255,20 @@ public class BlueFarAutoOp extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    shooterSubsystem.setMaxRPM(3820);
+                    shooterSubsystem.setMaxRPM(3500);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
                     mecanumCommand.moveToPos(26, -6, 0.35);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
-                                processGPP1();
+                                processGPP1(AUTO_STATE.RESET);
                                 break;
                             case PGP_2:
-                                processPGP2();
+                                processPGP2(AUTO_STATE.RESET);
                                 break;
                             case PPG_3:
-                                processPPG3();
+                                processPPG3(AUTO_STATE.RESET);
                                 break;
                         }
                         break;
@@ -275,7 +289,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(83, 32, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(82, 32, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
@@ -288,7 +302,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(83, 48, Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(82, 48, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -302,14 +316,14 @@ public class BlueFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
-                                mecanumCommand.moveToPos(83, 63, Math.PI / 2); //go to place to intake second artifact
+                            if (stageTimer.milliseconds() > 750) { //replace with whatever time you think is appropriate
+                                mecanumCommand.moveToPos(82, 63, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 750 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
                                 if(sort(2)) {
                                     stageTimer.reset();
                                     stage++;
@@ -319,11 +333,9 @@ public class BlueFarAutoOp extends LinearOpMode {
                         case 6:
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
-                                intakeFlag = false;
                                 stage = 0;
-                                gate.setPosition(GATE_DOWN);
                                 autoState = AUTO_STATE.SECOND_SHOT;
-                                shooterSubsystem.setMaxRPM(3820);
+                                shooterSubsystem.setMaxRPM(3500);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
                                 mecanumCommand.moveToPos(26, -6, 0.35);
                                 hood.setPosition(0.43); //replace with hood position
@@ -336,15 +348,17 @@ public class BlueFarAutoOp extends LinearOpMode {
 
                 case SECOND_SHOT:
                     if (mecanumCommand.isPositionReached()) {
+                        intakeFlag = false;
+                        gate.setPosition(GATE_DOWN);
                         switch (pattern) {
                             case GPP_1:
-                                processGPP1();
+                                processGPP1(AUTO_STATE.RESET_2);
                                 break;
                             case PGP_2:
-                                processPGP2();
+                                processPGP2(AUTO_STATE.RESET_2);
                                 break;
                             case PPG_3:
-                                processPPG3();
+                                processPPG3(AUTO_STATE.RESET_2);
                                 break;
                         }
                         break;
@@ -353,7 +367,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                     break;
                 case RESET_2: //set position for ball 1
                     if(!isPusherUp && stageTimer.milliseconds() > 500){
-                        if(sort(0)){
+                        if(sort(2)){
                             stage = 0;
                             stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_2;
@@ -364,8 +378,8 @@ public class BlueFarAutoOp extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
+                            mecanumCommand.moveToPos(142, 32, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
-                            mecanumCommand.moveToPos(142, 26, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -376,7 +390,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 2: //intake first ball
-                            if (stageTimer.milliseconds() > 300) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(142, 48, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
@@ -384,22 +398,22 @@ public class BlueFarAutoOp extends LinearOpMode {
                             break;
                         case 3: //set position for second ball
                             if (stageTimer.milliseconds() > 500 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
-                                if(sort(1)) {
+                                if(sort(0)) {
                                     stageTimer.reset();
                                     stage++;
                                 }
                             }
                             break;
                         case 4: //intake second ball
-                            if (stageTimer.milliseconds() > 300) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 mecanumCommand.moveToPos(142, 63, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
                             break;
                         case 5: //set position to third ball
-                            if (stageTimer.milliseconds() > 250 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
-                                if(sort(2)) {
+                            if (stageTimer.milliseconds() > 500 && intakeTimer.milliseconds() >= INTAKE_WAIT) { //replace with whatever time you think is appropriate
+                                if(sort(1)) {
                                     stageTimer.reset();
                                     stage++;
                                 }
@@ -408,10 +422,11 @@ public class BlueFarAutoOp extends LinearOpMode {
                         case 6:
                             if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
+                                intakeFlag = false;
                                 stage = 0;
                                 gate.setPosition(GATE_DOWN);
-                                autoState = AUTO_STATE.THIRD_SHOT;
-                                shooterSubsystem.setMaxRPM(3820);
+                                autoState = AUTO_STATE.FINISH;
+                                shooterSubsystem.setMaxRPM(3500);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
                                 mecanumCommand.moveToPos(26, -6, 0.35);
                                 hood.setPosition(0.43); //replace with hood position
@@ -426,13 +441,13 @@ public class BlueFarAutoOp extends LinearOpMode {
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1:
-                                processGPP1();
+                                processGPP1(AUTO_STATE.FINISH);
                                 break;
                             case PGP_2:
-                                processPGP2();
+                                processPGP2(AUTO_STATE.FINISH);
                                 break;
                             case PPG_3:
-                                processPPG3();
+                                processPPG3(AUTO_STATE.FINISH);
 
                                 break;
                         }
@@ -444,16 +459,17 @@ public class BlueFarAutoOp extends LinearOpMode {
                     gate.setPosition(GATE_UP);
                     outtakeFlag = false;
                     intakeFlag = false;
-                    mecanumCommand.moveToPos(60, 0, 0); //replace with box position
+                    //mecanumCommand.moveToPos(60, 0, 0); //replace with box position
                     mecanumCommand.stop();
                     break;
 
             }
         }
     }
-    public void processGPP1(){
+    public void processGPP1(AUTO_STATE reset){
         switch (stage) {
             case 0: //turn on outtake
+                gate.setPosition(GATE_DOWN);
                 outtakeFlag = true;
                 stage++;
                 stageTimer.reset();
@@ -467,50 +483,70 @@ public class BlueFarAutoOp extends LinearOpMode {
                 }
                 break;
             case 2: //push on
-            case 5:
-            case 8:
-                if (stageTimer.milliseconds() > 200&& shooterSubsystem.isRPMReached()) {
+            case 4:
+            case 7:
+            case 9:
+                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
                 }
                 break;
+            case 12:
+                if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                    halfPush(true);
+                    stage++;
+                    stageTimer.reset();
+                }
+                break;
+            case 14:
+                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
+                    halfPush(true);
+                    stage++;
+                    stageTimer.reset();
+                }
+                break;
+
             case 3: //push off
-            case 6:
-            case 9:
-                if (stageTimer.milliseconds() > 425) {
+            case 5:
+            case 8:
+            case 10:
+            case 13:
+            case 15:
+                if (stageTimer.milliseconds() > 300) {
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 4: // sort
-                if (stageTimer.milliseconds() > 500) {
+            case 6: // sort
+                if (stageTimer.milliseconds() > 650) {
                     if(sort(1)) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 7: // sort
-                if (stageTimer.milliseconds() > 750 && !isPusherUp) {
+            case 11: // sort
+                if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
                     if(sort(2)) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 10:
+            case 16:
                 stage = 0;
                 stageTimer.reset();
-                autoState = AUTO_STATE.RESET;
+                autoState = reset;
                 break;
         }
     }
-    public void processPGP2(){
+    public void processPGP2(AUTO_STATE reset){
         switch (stage) {
             case 0: //turn on outtake
+                gate.setPosition(GATE_DOWN);
                 outtakeFlag = true;
                 stage++;
                 stageTimer.reset();
@@ -524,8 +560,23 @@ public class BlueFarAutoOp extends LinearOpMode {
                 }
                 break;
             case 2: //push on
-            case 5:
-            case 8:
+            case 4:
+            case 7:
+            case 9:
+                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
+                    halfPush(true);
+                    stage++;
+                    stageTimer.reset();
+                }
+                break;
+            case 12:
+                if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                    halfPush(true);
+                    stage++;
+                    stageTimer.reset();
+                }
+                break;
+            case 14:
                 if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                     halfPush(true);
                     stage++;
@@ -533,99 +584,116 @@ public class BlueFarAutoOp extends LinearOpMode {
                 }
                 break;
             case 3: //push off
-            case 6:
-            case 9:
-                if (stageTimer.milliseconds() > 425) {
+            case 5:
+            case 8:
+            case 10:
+            case 13:
+            case 15:
+                if (stageTimer.milliseconds() > 300) {
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 4: // sort
-                if (stageTimer.milliseconds() > 600) {
-                    if(sort(0)) {
+            case 6: // sort
+                if (stageTimer.milliseconds() > 650) {
+                    if(sort()) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 7: // sort
-                if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                    if(sort(1)) {
+            case 11: // sort
+                if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
+                    if(sort()) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 10:
+            case 16:
                 stage = 0;
                 stageTimer.reset();
-                autoState = AUTO_STATE.RESET;
+                autoState = reset;
                 break;
         }
     }
 
-    public void processPPG3(){
+    public void processPPG3(AUTO_STATE reset){
         switch (stage) {
             case 0: //turn on outtake
+                gate.setPosition(GATE_DOWN);
                 outtakeFlag = true;
                 stage++;
                 stageTimer.reset();
                 break;
             case 1: // sort
                 if (stageTimer.milliseconds() > 500) {
-                    if (sort(1)) {
+                    if(sort(1)) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
             case 2: //push on
-            case 5:
+            case 4:
+            case 7:
+            case 9:
                 if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
                 }
                 break;
-            case 8:
-                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
+            case 12:
+                if (stageTimer.milliseconds() > 400 && shooterSubsystem.isRPMReached()) {
+                    halfPush(true);
+                    stage++;
+                    stageTimer.reset();
+                }
+                break;
+            case 14:
+                if (stageTimer.milliseconds() > 300 && shooterSubsystem.isRPMReached()) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
                 }
                 break;
             case 3: //push off
-            case 6:
-            case 9:
-                if (stageTimer.milliseconds() > 425) {
-                    if (halfPush(false)) {
-                        stage++;
-                        stageTimer.reset();
-                    }
-                }
-                break;
-            case 4: //  sort
-                if (stageTimer.milliseconds() > 500) {
-                    if (sort(2)) {
-                        stage++;
-                        stageTimer.reset();
-                    }
-                }
-                break;
-            case 7: // sort
-                if (stageTimer.milliseconds() > 750 && !isPusherUp) {
-                    if (sort(0)) {
-                        stage++;
-                        stageTimer.reset();
-                    }
-                }
-                break;
+            case 5:
+            case 8:
             case 10:
+            case 13:
+            case 15:
+                if (stageTimer.milliseconds() > 300) {
+                    if(halfPush(false)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
+                }
+                break;
+            case 6: // sort
+                if (stageTimer.milliseconds() > 650) {
+                    if(sort(2)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
+                }
+                break;
+            case 11: // sort
+                if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
+                    if(sort(0)) {
+                        sort(0);
+                        stage++;
+                        stageTimer.reset();
+                    }
+                }
+                break;
+            case 16:
                 stage = 0;
                 stageTimer.reset();
-                autoState = AUTO_STATE.RESET;
+                autoState = reset;
                 break;
         }
     }

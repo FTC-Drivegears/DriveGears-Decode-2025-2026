@@ -54,7 +54,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private final int CLOSE_SHOOT_SPEED = 2500;
 
     private static final double GATE_UP = 1.0;
-    private static final double GATE_DOWN = 0.675;
+    private static final double GATE_DOWN = 0.65;
 
     private LogitechVisionSubsystem vision;
 
