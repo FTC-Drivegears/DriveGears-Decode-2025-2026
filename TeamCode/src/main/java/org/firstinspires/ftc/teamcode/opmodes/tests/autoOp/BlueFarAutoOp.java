@@ -257,7 +257,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                 case FIRST_SHOT:
                     shooterSubsystem.setMaxRPM(3500);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.36);
+                    mecanumCommand.moveToPos(26, -6, 0.355);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -337,7 +337,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                                 autoState = AUTO_STATE.SECOND_SHOT;
                                 shooterSubsystem.setMaxRPM(3500);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
-                                mecanumCommand.moveToPos(26, -6, 0.36);
+                                mecanumCommand.moveToPos(26, -6, 0.355);
                                 hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
@@ -378,7 +378,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(142, 32, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(142, 30, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
@@ -428,7 +428,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                                 autoState = AUTO_STATE.FINISH;
                                 shooterSubsystem.setMaxRPM(3500);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
-                                mecanumCommand.moveToPos(26, -6, 0.36);
+                                mecanumCommand.moveToPos(26, -6, 0.355);
                                 hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
