@@ -188,6 +188,7 @@ public class DecodeTeleOpModeBlue extends LinearOpMode {
                     if (isIntakeMotorOn) {
                         intake.setPower(0.8);
                         gate.setPosition(GATE_UP);
+
 //                        intaking = true;
                     } else {
                         intake.setPower(0);
@@ -319,7 +320,7 @@ public class DecodeTeleOpModeBlue extends LinearOpMode {
 
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
-                if (Math.abs(tx) > 3) {
+                if (Math.abs(tx) > 2) {
                     double power = 0.03 * tx;
                     power = Math.max(-1.0, Math.min(1.0, power));
                     llmotor.setPower(-power);

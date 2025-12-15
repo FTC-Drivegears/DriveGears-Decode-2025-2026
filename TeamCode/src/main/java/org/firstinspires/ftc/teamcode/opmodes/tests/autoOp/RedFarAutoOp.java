@@ -232,9 +232,10 @@ public class RedFarAutoOp extends LinearOpMode {
 
 
         while (opModeIsActive()) {
+            turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
-            turret.setPower(1.0);
+//            turret.setPower(1.0);
             shoot(outtakeFlag);
             intake(intakeFlag);
             telemetry.addData("stage", stage);
@@ -255,9 +256,9 @@ public class RedFarAutoOp extends LinearOpMode {
 
             switch (autoState) {
                 case FIRST_SHOT:
-                    shooterSubsystem.setMaxRPM(3500);
+                    shooterSubsystem.setMaxRPM(3600);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, 6, -0.36);
+                    mecanumCommand.moveToPos(26, 6, -0.39);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -331,11 +332,11 @@ public class RedFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 6:
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 750) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
-                                shooterSubsystem.setMaxRPM(3500);
+                                shooterSubsystem.setMaxRPM(3600);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
                                 mecanumCommand.moveToPos(26, 6, -0.36);
                                 hood.setPosition(0.43); //replace with hood position
@@ -420,15 +421,13 @@ public class RedFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 6:
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 750) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
-                                intakeFlag = false;
                                 stage = 0;
-                                gate.setPosition(GATE_DOWN);
                                 autoState = AUTO_STATE.FINISH;
-                                shooterSubsystem.setMaxRPM(3500);
+                                shooterSubsystem.setMaxRPM(3700);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
-                                mecanumCommand.moveToPos(26, 6, -0.36);
+                                mecanumCommand.moveToPos(26, 6, -0.45);
                                 hood.setPosition(0.43); //replace with hood position
                                 break;
                             }
@@ -470,6 +469,7 @@ public class RedFarAutoOp extends LinearOpMode {
         switch (stage) {
             case 0: //turn on outtake
                 gate.setPosition(GATE_DOWN);
+                intakeFlag = false;
                 outtakeFlag = true;
                 stage++;
                 stageTimer.reset();
@@ -547,6 +547,7 @@ public class RedFarAutoOp extends LinearOpMode {
         switch (stage) {
             case 0: //turn on outtake
                 gate.setPosition(GATE_DOWN);
+                intakeFlag = false;
                 outtakeFlag = true;
                 stage++;
                 stageTimer.reset();
@@ -624,6 +625,7 @@ public class RedFarAutoOp extends LinearOpMode {
         switch (stage) {
             case 0: //turn on outtake
                 gate.setPosition(GATE_DOWN);
+                intakeFlag = false;
                 outtakeFlag = true;
                 stage++;
                 stageTimer.reset();

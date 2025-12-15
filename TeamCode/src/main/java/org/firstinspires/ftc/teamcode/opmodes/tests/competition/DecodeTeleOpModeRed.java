@@ -219,6 +219,9 @@ public class DecodeTeleOpModeRed extends LinearOpMode {
                 sorterSubsystem.manualSpin();
             }
 
+            if (gamepad1.a) {
+                hw.sorter.setPosition(0.085);
+            }
 
 //            boolean right = gamepad1.dpad_right;
 //            boolean left = gamepad1.dpad_left;
@@ -319,7 +322,7 @@ public class DecodeTeleOpModeRed extends LinearOpMode {
 
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
-                if (Math.abs(tx) > 3) {
+                if (Math.abs(tx) > 2) {
                     double power = 0.03 * tx;
                     power = Math.max(-1.0, Math.min(1.0, power));
                     llmotor.setPower(-power);

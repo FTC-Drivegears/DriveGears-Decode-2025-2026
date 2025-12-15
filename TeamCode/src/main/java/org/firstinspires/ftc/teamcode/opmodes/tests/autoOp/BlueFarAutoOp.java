@@ -257,7 +257,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                 case FIRST_SHOT:
                     shooterSubsystem.setMaxRPM(3500);
                     //mecanumCommand.moveToPos(26, -14, 0.5014);
-                    mecanumCommand.moveToPos(26, -6, 0.355);
+                    mecanumCommand.moveToPos(26, -6, 0.36);
                     hood.setPosition(0.43); //replace with hood position
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
@@ -331,7 +331,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 6:
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 750) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
@@ -378,7 +378,7 @@ public class BlueFarAutoOp extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(142, 30, Math.PI / 2); //align with artifacts
+                            mecanumCommand.moveToPos(142, 28, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
@@ -420,11 +420,9 @@ public class BlueFarAutoOp extends LinearOpMode {
                             }
                             break;
                         case 6:
-                            if (stageTimer.milliseconds() > 500) { //replace with whatever time you think is appropriate
+                            if (stageTimer.milliseconds() > 750) { //replace with whatever time you think is appropriate
                                 stageTimer.reset();
-                                intakeFlag = false;
                                 stage = 0;
-                                gate.setPosition(GATE_DOWN);
                                 autoState = AUTO_STATE.FINISH;
                                 shooterSubsystem.setMaxRPM(3500);
                                 //mecanumCommand.moveToPos(26, -14, 0.5014);
@@ -469,6 +467,7 @@ public class BlueFarAutoOp extends LinearOpMode {
     public void processGPP1(AUTO_STATE reset){
         switch (stage) {
             case 0: //turn on outtake
+                intakeFlag = false;
                 gate.setPosition(GATE_DOWN);
                 outtakeFlag = true;
                 stage++;
@@ -546,6 +545,7 @@ public class BlueFarAutoOp extends LinearOpMode {
     public void processPGP2(AUTO_STATE reset){
         switch (stage) {
             case 0: //turn on outtake
+                intakeFlag = false;
                 gate.setPosition(GATE_DOWN);
                 outtakeFlag = true;
                 stage++;
@@ -623,6 +623,7 @@ public class BlueFarAutoOp extends LinearOpMode {
     public void processPPG3(AUTO_STATE reset){
         switch (stage) {
             case 0: //turn on outtake
+                intakeFlag = false;
                 gate.setPosition(GATE_DOWN);
                 outtakeFlag = true;
                 stage++;
