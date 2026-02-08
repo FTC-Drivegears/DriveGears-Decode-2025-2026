@@ -75,10 +75,7 @@ public class BlueFarAutoOp extends LinearOpMode {
     //Gate variables
     private static final double GATE_UP = 1.0;
     private static final double GATE_DOWN = 0.675;
-//
-//    private double initialHeading = 0.0;
-//    private int initialTurretPos = 0;
-//    private static final double TICKS_PER_RAD = 100.0;
+
 
     //Initialize motors and servos
     private static DcMotor shooter;
@@ -439,7 +436,6 @@ public class BlueFarAutoOp extends LinearOpMode {
                                 stage = 0;
                                 autoState = AUTO_STATE.FINISH;
                                 shooterSubsystem.setMaxRPM(3500);
-                                //mecanumCommand.moveToPos(26, -14, 0.5014);
                                 mecanumCommand.moveToPos(26, -6, 0.355);
                                 hood.setPosition(0.43);
                                 break;
@@ -448,6 +444,7 @@ public class BlueFarAutoOp extends LinearOpMode {
 
                     }
                     break;
+                // 0 purple, 1 green, 2 purple
                 //Shoot once more
                 case THIRD_SHOT:
                     if (mecanumCommand.isPositionReached()) {
@@ -471,7 +468,6 @@ public class BlueFarAutoOp extends LinearOpMode {
                     gate.setPosition(GATE_UP);
                     outtakeFlag = false;
                     intakeFlag = false;
-
                     mecanumCommand.stop();
                     break;
 
@@ -714,7 +710,6 @@ public class BlueFarAutoOp extends LinearOpMode {
                 break;
         }
     }
-
     //processTelemetry(), updates telemetry with x, y, theta, and shooter velocity
     public void processTelemetry() {
         //add telemetry messages here
