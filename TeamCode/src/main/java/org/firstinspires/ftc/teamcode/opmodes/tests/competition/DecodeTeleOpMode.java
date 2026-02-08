@@ -19,12 +19,19 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
 @TeleOp(name = "DecodeTeleOpMode", group = "TeleOp")
 public class DecodeTeleOpMode extends LinearOpMode {
+
+    //Define mecanumCommand  and hardware
     private MecanumCommand mecanumCommand;
     private Hardware hw;
+
+    //Define variabls for turret turning
     private double theta;
     final double TURN_GAIN = 0.5;
     final double MAX_AUTO_TURN = 0.3; //max speed
     private double previousTurn = 0; //last turn value
+    //final double goal = 0;
+
+    //Define servos, motors, and limelight
     private DcMotor intake;
     private DcMotor shooter;
     private Servo pusher;
@@ -34,9 +41,11 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private DcMotorEx llmotor;
     private Limelight3A limelight;
 
+    // Create sorter subsystem and shooter subsystem
     private SorterSubsystem sorterSubsystem;
     private ShooterSubsystem shooterSubsystem;
 
+    //Create ElapsedTime variables for sorter, outtake, pusher, and color sensor
     private final ElapsedTime sorterTimer = new ElapsedTime();
 
     private final ElapsedTime outtakeTimer = new ElapsedTime();
@@ -53,88 +62,88 @@ public class DecodeTeleOpMode extends LinearOpMode {
     private final double CLOSE_HOOD = 0.846;
     private final int CLOSE_SHOOT_SPEED = 2500;
 
+    //Gate positions
+
     private static final double GATE_UP = 1.0;
     private static final double GATE_DOWN = 0.65;
 
+    //Initialize Logitech Vision Subsystem
     private LogitechVisionSubsystem vision;
 
+    //enum for drive type, containing both robot and field oriented movement types
     private enum DRIVETYPE {
         ROBOTORIENTED, FIELDORIENTED
     }
 
 
-//    enum OUTTAKE {
-//
-//        PUSHUP1,
-//        PUSHDOWN1,
-//        SORT1,
-//        PUSHUP2,
-//        PUSHDOWN2,
-//        SORT2,
-//        PUSHUP3,
-//        PUSHDOWN3,
-//        IDLE
-//    }
-
-//    OUTTAKE outtakeState = OUTTAKE.IDLE;
-
     @Override
     public void runOpMode() throws InterruptedException {
+
+        //state variables for x and y buttons (flywheel and pusher buttons)
         boolean previousXState = false;
         boolean previousYState = false;
 
         boolean currentXState;
         boolean currentYState;
 
-        boolean intaking = false;
+        //booleans for intaking
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
         boolean rightTriggerPressed = false;
         boolean leftTriggerPressed = false;
 
+        //variables for hood position and shooter speed
         double hoodPos = 0.846;
         double shootSpeed = 4000;
 
-        boolean autoAimState = false;
-        boolean previousAimButton = false;
-
-        boolean llDetection = true;
-
+        //setting inital drive type to Robot-oriented move
         DRIVETYPE drivetype = DRIVETYPE.ROBOTORIENTED;
 
+        //initialize hardwareMap
         hw = Hardware.getInstance(hardwareMap);
 
+        //initialize mecanumCommmand, shooterSubsystem, and logitechVisionSystem
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
         vision = new LogitechVisionSubsystem(hw, "RED");
+
+        //define pusher, light, and set their positions
         pusher = hw.pusher;
         light = hw.light;
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.light.setPosition(0.0);
+
+        //set positions of sorter, gate. and hood
         hw.sorter.setPosition(0.085);
         hw.gate.setPosition(GATE_DOWN);
         hw.hood.setPosition(hoodPos);
 
+        //define intake, shooter, hood, and gate
         intake = hw.intake;
         shooter = hw.shooter;
         hood = hw.hood;
         gate = hw.gate;
 
+        //initialize limelight and llmotor
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         llmotor = hardwareMap.get(DcMotorEx.class, "llmotor");
-
         limelight.pipelineSwitch(7);
         limelight.start();
 
+        //Start telemetry, and add line 'waiting for start'
         telemetry.addLine("waiting for start");
         telemetry.update();
 
+        //Set intake direction to reverse
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        //create sorterSubsystem
         if (sorterSubsystem == null) {
             sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
         }
 
+        //while opMode is in initialize mode, if a is pressed, set mode to robot-oriented movement
+        //otherwise, set to field-oriented movement
         while (opModeInInit()) {
             if (gamepad1.a) {
                 drivetype = DRIVETYPE.ROBOTORIENTED;
@@ -143,10 +152,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
             if (gamepad1.y) {
                 drivetype = DRIVETYPE.FIELDORIENTED;
             }
-
             telemetry.update();
         }
 
+        //wait for start
         waitForStart();
 
         while (opModeIsActive()) {
@@ -156,48 +165,36 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             double turn = 0;
 
-//            if (gamepad2.left_bumper && !previousAimButton) {
-//                autoAimState = !autoAimState;   // toggle on *edge* of button press
-//            }
-//            previousAimButton = gamepad2.left_bumper;
-//
-//            if (autoAimState) {
-//                if (LogitechVisionSubsystem.targetApril(telemetry) > 5) {
-//                    mecanumCommand.pivot(0.2);
-//                } else if (LogitechVisionSubsystem.targetApril(telemetry) < -5) {
-//                    mecanumCommand.pivot(-0.2);
-//                } else {
-//                    mecanumCommand.pivot(0);
-//                }
-//            }
-
             mecanumCommand.processOdometry();
-//            sorterSubsystem.transfer();
 
-//            if (drivetype == DRIVETYPE.FIELDORIENTED) {
-//                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            //sets movement type to field or robot-oriented
+          if (drivetype == DRIVETYPE.FIELDORIENTED) {
+              theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+          }
             if (drivetype == DRIVETYPE.ROBOTORIENTED) {
                 theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             }
 
-            //intake
+            //intake mechanism
             if (gamepad1.right_trigger > 0) {
+                //if right trigger wasn't pressed, and it is pressed, then turn intake motor on
                 if (!rightTriggerPressed) {
                     rightTriggerPressed = true;
                     isIntakeMotorOn = !isIntakeMotorOn;
                     if (isIntakeMotorOn) {
                         intake.setPower(0.8);
+                        //also set gate to be up
                         gate.setPosition(GATE_UP);
-//                        intaking = true;
+                    //otherwise, set intake power to zero, and put gate back down
                     } else {
                         intake.setPower(0);
                         gate.setPosition(GATE_DOWN);
-//                        intaking = false;
                     }
                 }
             } else
                 rightTriggerPressed = false;
 
+            //repeat process for left trigger, except have the intake motor move the opposite way
             if (gamepad1.left_trigger > 0) {
                 if (!leftTriggerPressed) {
                     leftTriggerPressed = true;
@@ -214,32 +211,14 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 leftTriggerPressed = false;
             }
 
+            //if b button is pressed and 500ms have passed since the last sort, manually spin sorter
             if (gamepad1.b && sorterTimer.milliseconds() > 500) {
                 sorterTimer.reset();
                 sorterSubsystem.manualSpin();
             }
 
 
-//            boolean right = gamepad1.dpad_right;
-//            boolean left = gamepad1.dpad_left;
-//            if (right || left) { // right to spin sorter to green for outtake, left to spin sorter to purple for outtake
-//                if (outtakeTimer.milliseconds() > 500) {
-//                    char curColor = 'g';
-//                    if (left) {
-//                        curColor = 'p';
-//                    }
-//                    sorterSubsystem.outtakeBall(curColor);
-//                    outtakeTimer.reset();
-//                }
-//            }
-            if (intaking && colorSensingTimer.milliseconds() > 500) {
-                sorterSubsystem.detectColor();
-                if (sorterSubsystem.getIsBall()) {
-                    sorterSubsystem.turnToIntake('P');
-                    colorSensingTimer.reset();
-                }
-            }
-
+            //if y button is pressed, then push up
             currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
                 // Start pulse only if not already pulsing
@@ -251,22 +230,21 @@ public class DecodeTeleOpMode extends LinearOpMode {
             }
             previousYState = currentYState;
 
-            // Pusher
+            // If the pusher is up AND 500ms have passed since last push, push back down
             if (sorterSubsystem.getIsPusherUp() && pusherTimer.milliseconds() >= 500) {
                 hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                 sorterSubsystem.setIsPusherUp(false);
             }
 
+            //if X is pressed, switch outtake motor state
             currentXState = gamepad1.x;
             if (currentXState && !previousXState) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
             }
             previousXState = currentXState;
 
-//            if (gamepad1.a && sorterSubsystem.state == SorterSubsystem.TransferState.FIRST) {
-//                sorterSubsystem.state = SorterSubsystem.TransferState.PUSH_UP;
-//            }
 
+            //Set hood position and outtake speed with gamepad 2's x, y, and b buttons
             // CLOSE
             if (gamepad2.x) {
                 hood.setPosition(CLOSE_HOOD);
@@ -285,10 +263,13 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 shootSpeed = FAR_SHOOT_SPEED;
             }
 
+            //if start button pressed, reset odometry
             if (gamepad1.start) {
                 mecanumCommand.resetPinPointOdometry();
             }
 
+            //if outtake motor is on, then set the max rpm to whatever the shoot speed is
+            //if shooter is at max speed, turn light on
             if (isOuttakeMotorOn) {
                 shooterSubsystem.setMaxRPM(shootSpeed);
                 if (shooterSubsystem.spinup()) {
@@ -315,8 +296,6 @@ public class DecodeTeleOpMode extends LinearOpMode {
 
             LLResult result = limelight.getLatestResult();
 
-
-
             if (result != null && result.isValid()) {
                 double tx = result.getTx();
                 if (Math.abs(tx) > 3) {
@@ -339,54 +318,10 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 }
             }
 
-//            if (gamepad2.a) {
-//                llDetection = false;
-//                if (gamepad2.dpad_right) {
-//                    llmotor.setPower(-0.5);
-//                } else if (gamepad2.dpad_left) {
-//                    llmotor.setPower(0.5);
-//                } else {
-//                    llmotor.setPower(0);
-//                }
-//            } else {
-//                llDetection = true;
-//            }
-//
-//            if (llDetection) {
-//                LLStatus status = limelight.getStatus();
-//                telemetry.addData("LL Name", status.getName());
-//                telemetry.addData("CPU", "%.1f %%", status.getCpu());
-//                telemetry.addData("FPS", "%d", (int) status.getFps());
-//                telemetry.addData("Pipeline", "%d (%s)",
-//                        status.getPipelineIndex(),
-//                        status.getPipelineType()
-//                );
-
-//                LLResult result = limelight.getLatestResult();
-//                if (result != null && result.isValid()) {
-//                    double tx = result.getTx();
-//                    if (tx > 2.5) {
-//                        llmotor.setPower(-0.2);
-//                    } else if (tx < -2.5) {
-//                        llmotor.setPower(0.2);
-//                    } else {
-//                        llmotor.setPower(0);
-//                    }
-//
-//                    telemetry.addData("tx", tx);
-//                    telemetry.update();
-//
-//                } else {
-//                    if (gamepad2.dpad_right) {
-//                        llmotor.setPower(-0.2);
-//                    } else if (gamepad2.dpad_left) {
-//                        llmotor.setPower(0.2);
-//                    } else {
-//                        llmotor.setPower(0);
-//                    }
                 }
 
-
+            //Add telemetry data for intake motor state, ball color, outtake motor state,
+            //Hood position, x, y, and odometry heading, outtake speed, and sorter position
             telemetry.addData("Is intake motor ON?: ", isIntakeMotorOn);
             telemetry.addData("colour?: ", sorterSubsystem.getIsBall());
             telemetry.addData("Is outtake motor ON?: ", isOuttakeMotorOn);
@@ -403,72 +338,3 @@ public class DecodeTeleOpMode extends LinearOpMode {
     }
 
 
-
-//        public void quickfire () {
-//            switch (outtakeState) {
-//                case IDLE:
-//                    break;
-//
-//                case PUSHUP1:
-//                    hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-//                    sorterSubsystem.setIsPusherUp(true);
-//                    pusherTimer.reset();
-//                    outtakeState = OUTTAKE.PUSHDOWN1;
-//                    break;
-//
-//                case PUSHDOWN1:
-//                    if (pusherTimer.milliseconds() >= 1000) {
-//                        hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-//                        sorterSubsystem.setIsPusherUp(false);
-//                        pusherTimer.reset();
-//                        outtakeState = OUTTAKE.SORT1;
-//                    }
-//                    break;
-//
-//                case SORT1:
-//                    sorterSubsystem.outtakeToNextPos();
-//                    outtakeState = OUTTAKE.PUSHUP2;
-//                    sorterTimer.reset();
-//                    break;
-//
-//                case PUSHUP2:
-//                    if (sorterTimer.milliseconds() >= 1000) {
-//                        hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-//                        sorterSubsystem.setIsPusherUp(true);
-//                        pusherTimer.reset();
-//                        outtakeState = (sorterSubsystem.getCurSorterPositionIndex() > 0) ? OUTTAKE.SORT2 : OUTTAKE.IDLE;
-//                    }
-//                    break;
-//
-//                case PUSHDOWN2:
-//                    if (pusherTimer.milliseconds() >= 1000) {
-//                        sorterSubsystem.setIsPusherUp(false);
-//                        hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-//                        outtakeState = OUTTAKE.SORT2;
-//                    }
-//
-//                    break;
-//
-//                case SORT2:
-//                    sorterSubsystem.turnToNextPos();
-//                    outtakeState = OUTTAKE.PUSHUP3;
-//                    break;
-//
-//                case PUSHUP3:
-//                    if (sorterTimer.milliseconds() >= 1000) {
-//                        hw.pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
-//                        sorterSubsystem.setIsPusherUp(true);
-//                        pusherTimer.reset();
-//                        outtakeState = OUTTAKE.PUSHDOWN3;
-//                    }
-//                    break;
-//
-//                case PUSHDOWN3:
-//                    if (pusherTimer.milliseconds() >= 1000) {
-//                        sorterSubsystem.setIsPusherUp(false);
-//                        hw.pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-//                        outtakeState = OUTTAKE.IDLE;
-//                    }
-//                    break;
-//            }
-//        }
