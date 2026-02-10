@@ -212,7 +212,7 @@ public class DecodeTeleOpMode extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn){
-                    shooterSubsystem.setMaxRPM(shootSpeed);
+                    shooterSubsystem.setMaxRPM((int) Math.round(shootSpeed));
                     shooterSubsystem.spinup();
                 }else{
                     shooterSubsystem.stopShooter();
