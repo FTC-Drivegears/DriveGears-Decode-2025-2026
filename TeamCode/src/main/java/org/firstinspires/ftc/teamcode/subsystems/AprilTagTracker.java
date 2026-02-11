@@ -14,7 +14,7 @@ public class AprilTagTracker extends OpMode {
     @Override
     public void init() {
         hw = Hardware.getInstance(hardwareMap);
-//        turret = hw.turret;
+//        llmotor = hw.llmotor;
 //        encoder = hw.encoder;
     }
 

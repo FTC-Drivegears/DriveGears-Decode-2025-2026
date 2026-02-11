@@ -1,12 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
@@ -32,7 +29,7 @@ public class Hardware {
 
     public final Servo pusher;
 
-    public final DcMotorEx turret;
+    public final DcMotorEx llmotor;
 
     public CameraName Webcam_1;
 
@@ -56,7 +53,7 @@ public class Hardware {
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
-        this.turret = hwMap.get(DcMotorEx.class, Specifications.TURRET);
+        this.llmotor = hwMap.get(DcMotorEx.class, Specifications.LLMOTOR);
 
     }
 

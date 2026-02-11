@@ -19,7 +19,7 @@ public class TurretMechanismTutorial {
     private double power = 0;
     private final ElapsedTime timer = new ElapsedTime();
     public void init(HardwareMap hwMap) {
-        turret = hwMap.get(DcMotorEx.class, "turret"); //whatver its called change it
+        turret = hwMap.get(DcMotorEx.class, "llmotor"); //whatver its called change it
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
     public void setkP(double newkP){
