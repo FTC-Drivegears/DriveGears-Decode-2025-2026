@@ -25,10 +25,7 @@ public class TurretMechanismTutorial {
     public void setkP(double newkP){
         kP = newkP;
     }
-    public double getkP(){
-
-        return kP;
-    }
+    public double getkP(){return kP;}
     public void setkD(double newkD){
         kD = newkD;
     }

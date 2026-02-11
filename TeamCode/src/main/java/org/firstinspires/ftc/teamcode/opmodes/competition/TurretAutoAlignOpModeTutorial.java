@@ -3,10 +3,20 @@ import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.teamcode.subsystems.AprilTagWebcam;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+
+
+@TeleOp(name = "AutoAlignTest", group = "TeleOp")
 public class TurretAutoAlignOpModeTutorial extends OpMode {
     private AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
     private TurretMechanismTutorial turret = new TurretMechanismTutorial();
+
+    private Hardware hw;
+    private MecanumCommand mecanumCommand;
+    private double theta;
 
     // ----------------- used to auto update P and D ----------------------
     double[] stepSizes = {0.1, 0.01, 0.001, 0.0001, 0.00001};
@@ -15,6 +25,9 @@ public class TurretAutoAlignOpModeTutorial extends OpMode {
 
     @Override
     public void init() {
+        hw = Hardware.getInstance(hardwareMap);
+        mecanumCommand = new MecanumCommand(hw);
+
         aprilTagWebcam.init(hardwareMap, telemetry);
         turret.init(hardwareMap);
 
@@ -27,6 +40,14 @@ public class TurretAutoAlignOpModeTutorial extends OpMode {
 
     @Override
     public void loop(){
+        mecanumCommand.processOdometry();
+
+        theta = mecanumCommand.fieldOrientedMove(
+                gamepad1.left_stick_y,
+                gamepad1.left_stick_x,
+                gamepad1.right_stick_x
+        );
+
         //vision logic
         aprilTagWebcam.update();
         AprilTagDetection id20 = aprilTagWebcam.getTagBySpecificId(20);
