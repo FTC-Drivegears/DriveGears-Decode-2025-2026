@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -32,6 +34,8 @@ public class Hardware {
     public final DcMotorEx llmotor;
 
     public CameraName Webcam_1;
+    public final Limelight3A limelight;
+
 
     // Odometry
     public final GoBildaPinpointDriver pinPointOdo;
@@ -54,6 +58,8 @@ public class Hardware {
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
         this.llmotor = hwMap.get(DcMotorEx.class, Specifications.LLMOTOR);
+        this.limelight = hwMap.get(Limelight3A.class, "limelight");
+
 
     }
 
