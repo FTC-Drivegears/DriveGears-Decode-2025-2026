@@ -56,7 +56,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         turret = new TurretMechanismTutorial();
 
         turret.init(hardwareMap);
-        turret.setkP(0.04);  // Tuned PID
+        turret.setkP(0.035);  // Tuned PID
         turret.setkD(0.001);
 
         // Limelight setup
