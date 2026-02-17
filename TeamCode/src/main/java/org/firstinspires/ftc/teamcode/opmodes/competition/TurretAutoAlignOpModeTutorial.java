@@ -1,3 +1,22 @@
+/**
+ * TurretAutoAlignOpModeTutorial
+ *
+ * This OpMode demonstrates automatic turret alignment using Limelight.
+ *
+ * Responsibilities:
+ * - Read Limelight vision data
+ * - Compute distance to target
+ * - Adjust hood position
+ * - Send tx error to turret subsystem
+ *
+ * The turret control logic itself lives in TurretMechanismTutorial.
+ *
+ * This separation allows turret alignment to be reused in:
+ * - Autonomous
+ * - Future robots
+ * - Different vision pipelines
+ */
+
 package org.firstinspires.ftc.teamcode.opmodes.competition;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -46,6 +65,15 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private final ElapsedTime sorterTimer = new ElapsedTime();
     private final ElapsedTime pusherTimer = new ElapsedTime();
 
+    // ---------------- HOOD AUTO-ADJUST CONSTANTS ----------------
+    private final double LIMELIGHT_HEIGHT = 0.35; // meters, height of Limelight camera
+    private final double LIMELIGHT_ANGLE = Math.toRadians(25); // radians, mounting angle of Limelight
+    private final double TARGET_HEIGHT = 0.9; // meters, center of AprilTag
+    private final double HOOD_MIN = 0.359;
+    private final double HOOD_MAX = 0.846;
+    private final double MIN_DISTANCE = 0.5; // meters, closest distance to target
+    private final double MAX_DISTANCE = 3.0; // meters, farthest distance to target
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -55,16 +83,17 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         shooterSubsystem = new ShooterSubsystem(hw);
         turret = new TurretMechanismTutorial();
 
+        // Initialize turret PID
         turret.init(hardwareMap);
         turret.setkP(0.035);  // Tuned PID
         turret.setkD(0.001);
 
-        // Limelight setup
+        // Initialize Limelight
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(8);
+        limelight.pipelineSwitch(8); //uses pipeline 8 becuase this is where the blue alliance tag 20 lives
         limelight.start();
 
-        // Hardware setup
+        // Initialize hardware
         intake = hw.intake;
         shooter = hw.shooter;
         hood = hw.hood;
@@ -109,9 +138,23 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             // ---------------- TURRET AUTO-ALIGN ----------------
             llResult = limelight.getLatestResult();
             Double tx = null;
+            Double distance = null; // Distance to target
+
             if (llResult != null && llResult.isValid()) {
-                tx = llResult.getTx();
+                tx = llResult.getTx(); // horizontal offset for turret
+                double ty = llResult.getTy(); // vertical offset
+
+                // ---- calculate approximate distance to AprilTag ----
+                distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
+                        Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
+
+                // ---- map distance to hood position ----
+                hoodPos = HOOD_MIN + (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE) * (HOOD_MAX - HOOD_MIN);
+                hoodPos = Math.max(HOOD_MIN, Math.min(HOOD_MAX, hoodPos)); // clamp
+                hood.setPosition(hoodPos);
             }
+
+            // Update turret
             turret.update(tx);
 
             // ---------------- INTAKE ----------------
@@ -141,18 +184,6 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 }
             }
             previousXState = currentXState;
-
-            // ---------------- HOOD ----------------
-            curRB = gamepad1.right_bumper;
-            if (curRB) {
-                hoodPos = Math.max(0.359, hoodPos - 0.001);
-                hood.setPosition(hoodPos);
-            }
-            curLB = gamepad1.left_bumper;
-            if (curLB) {
-                hoodPos = Math.min(0.846, hoodPos + 0.001);
-                hood.setPosition(hoodPos);
-            }
 
             // ---------------- SORTER ----------------
             boolean up = gamepad1.dpad_up;
@@ -196,11 +227,14 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             }
 
             // ---------------- TELEMETRY ----------------
-            if(tx != null){
+            if (tx != null) {
                 telemetry.addData("Target Visible", true);
-                telemetry.addData("tx", tx); }
-            else { telemetry.addLine("No Target Detected - Turret Stopped");
+                telemetry.addData("tx", tx);
+                telemetry.addData("Distance (m)", distance);
+            } else {
+                telemetry.addLine("No Target Detected - Turret Stopped");
             }
+
             telemetry.addData("Turret kP", turret.getkP());
             telemetry.addData("Turret kD", turret.getkD());
             telemetry.addData("Hood pos", hoodPos);
