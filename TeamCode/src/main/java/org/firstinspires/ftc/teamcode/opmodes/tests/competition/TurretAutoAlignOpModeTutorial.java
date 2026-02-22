@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes.tests.competition;
+package org.firstinspires.ftc.teamcode.opmodes.competition;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -53,10 +53,16 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private DcMotor intake;
     private DcMotor shooter;
     private Servo pusher;
+    private Servo light;
+
+    private Servo gate;
 
     private double theta;
     private double sorterPosition = 0.0;
     private double shootSpeed = 4800;
+
+    private static final double GATE_UP = 1;
+    private static final double GATE_DOWN = 0.65;
 
     // ---------------- TIMERS ----------------
     private final ElapsedTime sorterTimer = new ElapsedTime();
@@ -87,9 +93,14 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         intake = hw.intake;
         shooter = hw.shooter;
         pusher = hw.pusher;
+        light = hw.light;
+
+        gate = hw.gate;
 
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
+        hw.gate.setPosition(GATE_DOWN);
+
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -140,6 +151,9 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
                 intake.setPower(isIntakeMotorOn ? 0.8 : 0);
+                gate.setPosition(GATE_UP);
+            } else {
+                gate.setPosition(GATE_DOWN);
             }
             prevRightTrigger = curRightTrigger;
 
@@ -148,7 +162,11 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
                 intake.setPower(isOuttakeMotorOn ? -0.8 : 0);
+                gate.setPosition(GATE_UP);
+            } else {
+                gate.setPosition(GATE_DOWN);
             }
+
             prevLeftTrigger = curLeftTrigger;
 
             // ---------------- SHOOTER TOGGLE ----------------
@@ -159,8 +177,10 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 if (isOuttakeMotorOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(shootSpeed));
                     shooterSubsystem.spinup();
+                    light.setPosition(0.333);
                 } else {
                     shooterSubsystem.stopShooter();
+                    light.setPosition(0);
                 }
             }
             previousXState = currentXState;
@@ -229,4 +249,3 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         }
     }
 }
-
