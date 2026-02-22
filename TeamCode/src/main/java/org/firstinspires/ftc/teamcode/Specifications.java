@@ -40,8 +40,6 @@ public class Specifications {
 
     public static final String LIME_LIGHT = "lime";
 
-    public static final String LIGHT = "light";
-
     public static final String PIN_POINT_ODOMETRY = "odo";
 
     public static final String INTAKE = "intake";
@@ -52,6 +50,9 @@ public class Specifications {
 
     public static final String HOOD = "hood";
 
+    public static final String GATE = "gate";
+    public static final String LIGHT = "light";
+
     public static final String SORTER = "sorter";
 
     public static final String PUSHER = "pusher";
@@ -60,5 +61,4 @@ public class Specifications {
 
     public static final String LLMOTOR = "llmotor";
 
-    public static final String WEBCAM_1 = "Webcam 1";
 }
