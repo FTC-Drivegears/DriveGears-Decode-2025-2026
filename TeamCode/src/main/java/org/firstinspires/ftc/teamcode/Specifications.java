@@ -18,6 +18,7 @@ package org.firstinspires.ftc.teamcode;
     0. roll
     1. pitch
     2. light
+    3. llmotor
 
 
     Motors:
@@ -55,7 +56,7 @@ public class Specifications {
 
     public static final String PUSHER = "pusher";
 
-    public static final String TURRET = "turret";
+    public static final String LLMOTOR = "llmotor";
 
     public static final String WEBCAM_1 = "Webcam 1";
 }

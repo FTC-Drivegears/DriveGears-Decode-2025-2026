@@ -206,7 +206,10 @@ public class MecanumCommand {
         processPIDUsingPinpoint();
         mecanumSubsystem.motorProcessNoEncoder();
     }
-
+    public double normalMove(double vertical, double horizontal, double rotational) {
+        mecanumSubsystem.normalMove(vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
+        return pinPointOdoSubsystem.getHeading();
+    }
     public void stop(){
         mecanumSubsystem.stop(true);
     }
