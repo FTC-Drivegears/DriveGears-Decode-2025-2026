@@ -14,15 +14,15 @@ public class AprilTagTracker extends OpMode {
     @Override
     public void init() {
         hw = Hardware.getInstance(hardwareMap);
-//        turret = hw.turret;
+//        llmotor = hw.llmotor;
 //        encoder = hw.encoder;
     }
 
     @Override
-        public void loop() {
-            turret.setPower(1);
-            processTelemetry();
-        }
+    public void loop() {
+        turret.setPower(1);
+        processTelemetry();
+    }
 
     public double get_position() {
         double position = encoder.getVoltage() / 3.2 * 360;
@@ -34,3 +34,4 @@ public class AprilTagTracker extends OpMode {
         telemetry.update();
     }
 }
+

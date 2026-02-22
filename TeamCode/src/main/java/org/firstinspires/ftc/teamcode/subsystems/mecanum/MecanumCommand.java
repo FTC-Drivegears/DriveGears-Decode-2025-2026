@@ -114,11 +114,11 @@ public class MecanumCommand {
      */
     public void moveGlobalPartialPinPoint(double vertical, double horizontal, double rotational) {
 
-            //might have to change this because Gobilda Odommetry strafing left is POSITIVE while this works for strafing right is Positive
-            double angle = Math.PI / 2 - pinPointOdoSubsystem.getHeading();
-            double localVertical = vertical * Math.cos(pinPointOdoSubsystem.getHeading()) - horizontal * Math.cos(angle);
-            double localHorizontal = vertical * Math.sin(pinPointOdoSubsystem.getHeading()) + horizontal * Math.sin(angle);
-            mecanumSubsystem.partialMove(localVertical, localHorizontal, rotational);
+        //might have to change this because Gobilda Odommetry strafing left is POSITIVE while this works for strafing right is Positive
+        double angle = Math.PI / 2 - pinPointOdoSubsystem.getHeading();
+        double localVertical = vertical * Math.cos(pinPointOdoSubsystem.getHeading()) - horizontal * Math.cos(angle);
+        double localHorizontal = vertical * Math.sin(pinPointOdoSubsystem.getHeading()) + horizontal * Math.sin(angle);
+        mecanumSubsystem.partialMove(localVertical, localHorizontal, rotational);
     }
 
     public void resetPinPointOdometry() {
@@ -133,10 +133,10 @@ public class MecanumCommand {
 
     public void setFinalPosition(double velocity, double x, double y, double theta) {
 
-            this.xFinal = x;
-            this.yFinal = y;
-            this.thetaFinal = theta;
-            this.velocity = velocity;
+        this.xFinal = x;
+        this.yFinal = y;
+        this.thetaFinal = theta;
+        this.velocity = velocity;
 
     }
 
@@ -201,23 +201,15 @@ public class MecanumCommand {
         mecanumSubsystem.fieldOrientedMove(-vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
         return pinPointOdoSubsystem.getHeading();
     }
-    public double robotOrientedMove(double vertical, double horizontal, double rotational) {
-        mecanumSubsystem.robotOrientedMove(-vertical, horizontal, rotational);
-        return pinPointOdoSubsystem.getHeading();
-    }
 
     public void motorProcess() {
         processPIDUsingPinpoint();
         mecanumSubsystem.motorProcessNoEncoder();
     }
-
-    public void pivot (double power){
-        hw.lf.setPower(power);
-        hw.lb.setPower(power);
-        hw.rb.setPower(-power);
-        hw.rf.setPower(-power);
+    public double normalMove(double vertical, double horizontal, double rotational) {
+        mecanumSubsystem.normalMove(vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
+        return pinPointOdoSubsystem.getHeading();
     }
-
     public void stop(){
         mecanumSubsystem.stop(true);
     }
@@ -233,5 +225,6 @@ public class MecanumCommand {
         return pinPointOdoSubsystem.getY();
     }
 }
+
 
 

@@ -177,7 +177,7 @@ public class DecodeTeleOpModeBlue extends LinearOpMode {
 //            if (drivetype == DRIVETYPE.FIELDORIENTED) {
 //                theta = mecanumCommand.fieldOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             if (drivetype == DRIVETYPE.ROBOTORIENTED) {
-                theta = mecanumCommand.robotOrientedMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+                theta = mecanumCommand.normalMove(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             }
 
             //intake
@@ -291,7 +291,7 @@ public class DecodeTeleOpModeBlue extends LinearOpMode {
             }
 
             if (isOuttakeMotorOn) {
-                shooterSubsystem.setMaxRPM(shootSpeed);
+                shooterSubsystem.setMaxRPM((int) Math.round(shootSpeed));
                 if (shooterSubsystem.spinup()) {
                     light.setPosition(0.333);
                 } else {
