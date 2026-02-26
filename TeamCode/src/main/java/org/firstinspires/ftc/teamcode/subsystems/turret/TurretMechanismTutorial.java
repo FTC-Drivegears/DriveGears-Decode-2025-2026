@@ -6,124 +6,102 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-/**
- * TurretMechanismTutorial
- *
- * This subsystem controls:
- * 1. Turret rotation using PD control and Limelight tx values
- * 2. Hood angle adjustment using Limelight ty distance estimation
- *
- * The turret attempts to align the Limelight's horizontal offset (tx) to zero.
- * The hood automatically adjusts based on calculated distance to the target.
- */
 public class TurretMechanismTutorial {
 
     private DcMotorEx turret;
     private Servo hood;
 
-    // ---------------- TURRЕТ PD CONTROL ----------------
-    // kP controls how strongly the turret reacts to error
-    // kD dampens motion to reduce oscillation
-    private double kP = 0.035;
-    private double kD = 0.001;
-
+    // ---------------- TURRET PD CONTROL ----------------
+    private double kP = 0.02; // slower proportional
+    private double kD = 0.0;  // keep derivative for compatibility
     private double goalX = 0;
     private double lastError = 0;
-    private double angleTolerance = 0.2;
+    private final double ANGLE_TOLERANCE = 0.5;
+    private final double MAX_POWER = 0.15; // much lower power
 
-    private final double MAX_POWER = 0.6;
-    private double power = 0;
+    private final ElapsedTime loopTimer = new ElapsedTime();
 
-    private final ElapsedTime timer = new ElapsedTime();
-
-    // ---------------- HOOD AUTO-AIM CONSTANTS ----------------
-    // These values define the physical geometry of the robot + Limelight.
-    private final double LIMELIGHT_HEIGHT = 0.35;     // meters
+    // ---------------- HOOD / SHOOTER CONSTANTS ----------------
+    private final double LIMELIGHT_HEIGHT = 0.35; // meters
     private final double LIMELIGHT_ANGLE = Math.toRadians(25);
-    private final double TARGET_HEIGHT = 0.9;         // meters
-
-    // Servo limits determined experimentally
-    private final double HOOD_MIN = 0.359;
-    private final double HOOD_MAX = 0.846;
-
-    // Expected shooting distance range (meters)
+    private final double TARGET_HEIGHT = 1.05; // meters
+    private final double HOOD_MIN = 0.36;
+    private final double HOOD_MAX = 0.75;
     private final double MIN_DISTANCE = 0.5;
     private final double MAX_DISTANCE = 3.0;
 
-    /**
-     * Initializes turret motor and hood servo from the hardware map.
-     */
+    private final double MIN_RPM = 3000;
+    private final double MAX_RPM = 4000;
+    private double shootRPM = MIN_RPM;
+
     public void init(HardwareMap hwMap) {
         turret = hwMap.get(DcMotorEx.class, "llmotor");
         turret.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
         hood = hwMap.get(Servo.class, "hood");
+
+        loopTimer.reset();
     }
 
     public void resetTimer() {
-        timer.reset();
+        loopTimer.reset();
     }
 
-    // PD tuning helpers
     public void setkP(double newkP) { kP = newkP; }
     public void setkD(double newkD) { kD = newkD; }
     public double getkP() { return kP; }
     public double getkD() { return kD; }
+    public double getShootRPM() { return shootRPM; }
 
     /**
-     * Main update loop for turret + hood auto-alignment.
-     *
-     * @param tx horizontal Limelight offset (degrees)
-     * @param ty vertical Limelight offset (degrees)
+     * Updates turret rotation, hood position, and shooter RPM
      */
     public void update(Double tx, Double ty) {
 
-        double deltaTime = timer.seconds();
-        timer.reset();
+        // ---------------- TURRET ----------------
+        if (tx != null) {
+            double error = goalX - tx;
 
-        // If no target is detected, stop turret motion
-        if (tx == null) {
+            // Simplified PD: proportional + small derivative
+            double deltaTime = loopTimer.seconds();
+            loopTimer.reset();
+
+            double dTerm = (deltaTime > 0) ? ((error - lastError) / deltaTime) * kD : 0;
+            double power = (Math.abs(error) < ANGLE_TOLERANCE) ? 0 : Range.clip(error * kP + dTerm, -MAX_POWER, MAX_POWER);
+
+            turret.setPower(power);
+            lastError = error;
+        } else {
             turret.setPower(0);
             lastError = 0;
-            return;
         }
 
-        // ---------------- TURRET ALIGNMENT ----------------
-        double error = goalX - tx;
-
-        double pTerm = error * kP;
-        double dTerm = 0;
-
-        if (deltaTime > 0) {
-            dTerm = ((error - lastError) / deltaTime) * kD;
-        }
-
-        if (Math.abs(error) < angleTolerance) {
-            power = 0;
-        } else {
-            power = Range.clip(pTerm + dTerm, -MAX_POWER, MAX_POWER);
-        }
-
-        turret.setPower(power);
-        lastError = error;
-
-        // ---------------- HOOD AUTO-AIM ----------------
-        // Distance is estimated using Limelight vertical angle (ty)
+        // ---------------- HOOD & SHOOTER ----------------
         if (ty != null) {
 
-            double distance =
-                    (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
-                            Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
+            double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
+                    Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
 
-            // Map distance linearly to hood servo position
+            distance *= 0.85;
+            distance = Range.clip(distance, MIN_DISTANCE, MAX_DISTANCE);
+
+            double normalized =
+                    (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
+
+            normalized = Range.clip(normalized, 0, 1);
+
+            // VERY aggressive arc curve
+            double hoodCurve = Math.pow(normalized, 3.0);
+
             double hoodPos =
-                    HOOD_MIN +
-                            (distance - MIN_DISTANCE) /
-                                    (MAX_DISTANCE - MIN_DISTANCE) *
-                                    (HOOD_MAX - HOOD_MIN);
+                    HOOD_MIN + hoodCurve * (HOOD_MAX - HOOD_MIN);
 
-            hoodPos = Math.max(HOOD_MIN, Math.min(HOOD_MAX, hoodPos));
-            hood.setPosition(hoodPos);
+            hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
+
+            // RPM barely increases
+            shootRPM = MIN_RPM + normalized * 300;  // only +300 max
+
+            shootRPM = Range.clip(shootRPM, MIN_RPM, MAX_RPM);
         }
     }
-}
+    }
