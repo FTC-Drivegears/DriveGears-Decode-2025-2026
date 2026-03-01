@@ -74,7 +74,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
-        hw.light.setPosition(0.3);
+        hw.light.setPosition(0.0);
 
         gate.setPosition(GATE_DOWN);
 
@@ -186,7 +186,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 if (isOuttakeMotorOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
-
+                    light.setPosition(0.5);
                 } else {
                     shooterSubsystem.stopShooter();
                 }
