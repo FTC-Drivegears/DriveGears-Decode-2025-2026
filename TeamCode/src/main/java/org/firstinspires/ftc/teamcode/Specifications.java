@@ -25,7 +25,7 @@ package org.firstinspires.ftc.teamcode;
     0: RightBack
     1: RightForward
     2: Lift 3
-q
+
     i2c:
     1: pinpoint odo
      */
@@ -39,6 +39,8 @@ public class Specifications {
     public static final String BKRT_MOTOR = "rb";
 
     public static final String LIME_LIGHT = "lime";
+
+    public static final String LIGHT = "light";
 
     public static final String PIN_POINT_ODOMETRY = "odo";
 
@@ -57,6 +59,5 @@ public class Specifications {
 
     public static final String PUSHER = "pusher";
 
-    public static final String LLMOTOR = "llmotor";
-
-}
+    public static final String TURRET = "turret";
+} public static final String LLMOTOR = "llmotor";

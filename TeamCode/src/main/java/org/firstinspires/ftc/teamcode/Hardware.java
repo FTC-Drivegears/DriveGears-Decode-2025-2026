@@ -37,7 +37,6 @@ public class Hardware {
 
     public final DcMotorEx llmotor;
 
-    public CameraName Webcam_1;
     public final Limelight3A limelight;
 
 

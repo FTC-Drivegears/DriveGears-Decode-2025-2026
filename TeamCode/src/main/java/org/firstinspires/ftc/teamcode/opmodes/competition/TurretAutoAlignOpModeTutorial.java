@@ -140,11 +140,13 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
 // ---------------- TURRET CONTROL ----------------
             if (manualPower != 0) {
+
                 // manual override
                 hw.llmotor.setPower(manualPower);
 
             }
             else if (autoAimEnabled) {
+
                 // auto aim using odometry + limelight
                 turret.update(tx, ty);
 
