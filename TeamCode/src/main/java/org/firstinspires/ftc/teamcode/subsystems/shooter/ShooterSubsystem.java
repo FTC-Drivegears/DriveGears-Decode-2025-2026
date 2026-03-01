@@ -27,8 +27,13 @@ public class ShooterSubsystem {
     }
 
     //returns whether or not we have reached the correctRPM
-    public boolean isRPMReached(double currentRPM) {
+    public boolean isRPMReached() {
+        double currentRPM = hw.shooter.getVelocity() * seconds_In_A_Minute / PPR_of_6000_motor;
         return Math.abs(targetRPM - currentRPM) < 200;
+    }
+
+    public double getShooterVelocity(){
+        return hw.shooter.getVelocity();
     }
 
     public boolean spinup(){
@@ -37,7 +42,7 @@ public class ShooterSubsystem {
 
         hw.shooter.setVelocity(targetTPS);
 
-        return isRPMReached(currentRPM);
+        return isRPMReached();
     }
 
     public void stopShooter(){
@@ -47,5 +52,6 @@ public class ShooterSubsystem {
     public void setMaxRPM(int maxRPM){
         targetRPM = maxRPM;
     }
+
 
 }
