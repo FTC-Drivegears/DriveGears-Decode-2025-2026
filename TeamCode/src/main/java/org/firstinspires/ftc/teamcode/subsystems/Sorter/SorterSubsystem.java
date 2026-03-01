@@ -46,6 +46,17 @@ public class SorterSubsystem {
         }
     }
 
+    public void manualSpin() {
+        if (isPusherUp) {
+            return;
+        }
+        if (curSorterPositionIndex >= 3) {
+            curSorterPositionIndex = 0;
+        }
+        this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
+        curSorterPositionIndex++;
+    }
+
     public void setIsPusherUp(boolean isPusherUp) {
         this.isPusherUp = isPusherUp;
     }
