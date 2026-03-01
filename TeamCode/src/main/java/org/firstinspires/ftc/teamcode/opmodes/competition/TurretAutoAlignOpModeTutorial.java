@@ -74,6 +74,9 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        boolean autoAimEnabled = false;
+        boolean prevA = false;
+
 
         if (sorterSubsystem == null) {
             sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
@@ -100,16 +103,57 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                     gamepad1.right_stick_x
             );
 
-            // ---------------- LIMELIGHT + TURRET ----------------
+            // ---------------- LIMELIGHT DATA ----------------
             llResult = limelight.getLatestResult();
+
             Double tx = null;
             Double ty = null;
+
             if (llResult != null && llResult.isValid()) {
                 tx = llResult.getTx();
                 ty = llResult.getTy();
             }
 
-            turret.update(tx, ty);
+// ---------------- AUTO AIM TOGGLE ----------------
+            boolean curA = gamepad1.a;
+
+            if (curA && !prevA) {
+                autoAimEnabled = !autoAimEnabled;
+            }
+
+            prevA = curA;
+
+// ---------------- MANUAL OVERRIDE ----------------
+            double manualPower = 0;
+
+            if (gamepad1.left_bumper) {
+                manualPower = 0.35;
+            }
+            else if (gamepad1.right_bumper) {
+                manualPower = -0.35;
+            }
+
+// ---------------- TURRET CONTROL ----------------
+            if (manualPower != 0) {
+
+                // manual override
+                hw.llmotor.setPower(manualPower);
+
+            }
+            else if (autoAimEnabled) {
+
+                // auto aim using odometry + limelight
+                turret.update(tx, ty);
+
+            }
+            else {
+
+                // idle
+                hw.llmotor.setPower(0);
+
+            }
+
+
 
             // ---------------- INTAKE TOGGLE ----------------
             boolean curRightTrigger = gamepad1.right_trigger > 0;
@@ -188,6 +232,8 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             telemetry.addData("Robot X", mecanumCommand.getX());
             telemetry.addData("Robot Y", mecanumCommand.getY());
             telemetry.addData("Theta (rad)", mecanumCommand.getOdoHeading());
+            telemetry.addData("Auto Aim Enabled", autoAimEnabled);
+            telemetry.addData("Manual Override", gamepad1.right_bumper || gamepad1.left_bumper);
             telemetry.update();
         }
     }
