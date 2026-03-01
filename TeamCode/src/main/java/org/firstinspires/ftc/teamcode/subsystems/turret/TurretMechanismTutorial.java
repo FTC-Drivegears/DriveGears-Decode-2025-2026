@@ -40,7 +40,7 @@ public class TurretMechanismTutorial {
     private double shootRPM = MIN_RPM;
 
     // ---------------- GOAL POSITION ----------------
-    private double goalX = 0.5; // meters, set your field target X
+    private double goalX = 0; // meters, set your field target X
     private double goalY = 3.0; // meters, set your field target Y
 
     // ---------------- INITIALIZATION ----------------
