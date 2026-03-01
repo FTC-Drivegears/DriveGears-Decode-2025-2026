@@ -22,7 +22,7 @@ public class TurretMechanismTutorial {
     private double kD = 0.001;
     private double lastError = 0;
     private final double ANGLE_TOLERANCE = 0.5; // degrees
-    private final double MAX_POWER = 0.4; // increase for testing
+    private final double MAX_POWER = 0.3; // increase for testing
 
     private final ElapsedTime loopTimer = new ElapsedTime();
 
@@ -40,8 +40,8 @@ public class TurretMechanismTutorial {
     private double shootRPM = MIN_RPM;
 
     // ---------------- GOAL POSITION ----------------
-    private double goalX = 0.0; // meters, set your field target X
-    private double goalY = 2.0; // meters, set your field target Y
+    private double goalX = 0.5; // meters, set your field target X
+    private double goalY = 3.0; // meters, set your field target Y
 
     // ---------------- INITIALIZATION ----------------
     public void init(HardwareMap hwMap, MecanumCommand mecanumCommand) {
