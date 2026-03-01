@@ -6,124 +6,143 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-/**
- * TurretMechanismTutorial
- *
- * This subsystem controls:
- * 1. Turret rotation using PD control and Limelight tx values
- * 2. Hood angle adjustment using Limelight ty distance estimation
- *
- * The turret attempts to align the Limelight's horizontal offset (tx) to zero.
- * The hood automatically adjusts based on calculated distance to the target.
- */
+import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
+
 public class TurretMechanismTutorial {
 
     private DcMotorEx turret;
     private Servo hood;
 
-    // ---------------- TURRЕТ PD CONTROL ----------------
-    // kP controls how strongly the turret reacts to error
-    // kD dampens motion to reduce oscillation
+    private Hardware hw;
+    private MecanumCommand mecanumCommand;
+
+    // ---------------- TURRET PD CONTROL ----------------
     private double kP = 0.035;
     private double kD = 0.001;
-
-    private double goalX = 0;
     private double lastError = 0;
-    private double angleTolerance = 0.2;
+    private final double ANGLE_TOLERANCE = 0.5; // degrees
+    private final double MAX_POWER = 0.3; // increase for testing
 
-    private final double MAX_POWER = 0.6;
-    private double power = 0;
+    private final ElapsedTime loopTimer = new ElapsedTime();
 
-    private final ElapsedTime timer = new ElapsedTime();
-
-    // ---------------- HOOD AUTO-AIM CONSTANTS ----------------
-    // These values define the physical geometry of the robot + Limelight.
-    private final double LIMELIGHT_HEIGHT = 0.35;     // meters
+    // ---------------- HOOD / SHOOTER ----------------
+    private final double LIMELIGHT_HEIGHT = 0.35; // meters
     private final double LIMELIGHT_ANGLE = Math.toRadians(25);
-    private final double TARGET_HEIGHT = 0.9;         // meters
-
-    // Servo limits determined experimentally
-    private final double HOOD_MIN = 0.359;
-    private final double HOOD_MAX = 0.846;
-
-    // Expected shooting distance range (meters)
+    private final double TARGET_HEIGHT = 1.05; // meters
+    private final double HOOD_MIN = 0.36;
+    private final double HOOD_MAX = 0.75;
     private final double MIN_DISTANCE = 0.5;
     private final double MAX_DISTANCE = 3.0;
 
-    /**
-     * Initializes turret motor and hood servo from the hardware map.
-     */
-    public void init(HardwareMap hwMap) {
-        turret = hwMap.get(DcMotorEx.class, "llmotor");
-        turret.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+    private final double MIN_RPM = 3000;
+    private final double MAX_RPM = 4000;
+    private double shootRPM = MIN_RPM;
 
-        hood = hwMap.get(Servo.class, "hood");
+    // ---------------- GOAL POSITION ----------------
+    private double goalX = 0.5; // meters, set your field target X
+    private double goalY = 3.0; // meters, set your field target Y
+
+    // ---------------- INITIALIZATION ----------------
+    public void init(HardwareMap hwMap, MecanumCommand mecanumCommand) {
+        this.hw = Hardware.getInstance(hwMap);
+        this.mecanumCommand = mecanumCommand;
+
+        turret = hw.llmotor;
+        turret.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        turret.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
+        hood = hw.hood;
+
+        loopTimer.reset();
     }
 
     public void resetTimer() {
-        timer.reset();
+        loopTimer.reset();
     }
 
-    // PD tuning helpers
     public void setkP(double newkP) { kP = newkP; }
     public void setkD(double newkD) { kD = newkD; }
     public double getkP() { return kP; }
     public double getkD() { return kD; }
+    public double getShootRPM() { return shootRPM; }
 
     /**
-     * Main update loop for turret + hood auto-alignment.
-     *
-     * @param tx horizontal Limelight offset (degrees)
-     * @param ty vertical Limelight offset (degrees)
+     * Update turret rotation using odometry + Limelight as corrector
      */
     public void update(Double tx, Double ty) {
+        double deltaTime = loopTimer.seconds();
+        deltaTime = Math.max(deltaTime, 0.01); // prevent division by zero
+        loopTimer.reset();
 
-        double deltaTime = timer.seconds();
-        timer.reset();
+        // ---------------- CALCULATE TURRET GOAL ANGLE ----------------
+        double robotX = mecanumCommand.getX(); // meters
+        double robotY = mecanumCommand.getY(); // meters
+        double robotHeading = mecanumCommand.getOdoHeading(); // radians
 
-        // If no target is detected, stop turret motion
-        if (tx == null) {
-            turret.setPower(0);
-            lastError = 0;
-            return;
+        double dx = goalX - robotX;
+        double dy = goalY - robotY;
+
+        double targetAngleField = Math.atan2(dy, dx); // radians
+        double targetAngleRobot = normalizeRadians(targetAngleField - robotHeading);
+        double goalAngleDeg = Math.toDegrees(targetAngleRobot);
+
+        // ---------------- LIMELIGHT CORRECTION ----------------
+        if (tx != null) {
+            goalAngleDeg -= tx; // adjust if camera sees target
         }
 
-        // ---------------- TURRET ALIGNMENT ----------------
-        double error = goalX - tx;
-
-        double pTerm = error * kP;
-        double dTerm = 0;
-
-        if (deltaTime > 0) {
-            dTerm = ((error - lastError) / deltaTime) * kD;
-        }
-
-        if (Math.abs(error) < angleTolerance) {
-            power = 0;
-        } else {
-            power = Range.clip(pTerm + dTerm, -MAX_POWER, MAX_POWER);
-        }
+        // ---------------- PD CONTROL ----------------
+        double currentAngleDeg = getTurretAngleDegrees();
+        double error = wrapDegrees(goalAngleDeg - currentAngleDeg);
+        double dTerm = (error - lastError) / deltaTime * kD;
+        double power = (Math.abs(error) < ANGLE_TOLERANCE) ? 0 : Range.clip(error * kP + dTerm, -MAX_POWER, MAX_POWER);
 
         turret.setPower(power);
         lastError = error;
 
-        // ---------------- HOOD AUTO-AIM ----------------
-        // Distance is estimated using Limelight vertical angle (ty)
+        // ---------------- HOOD & SHOOTER ----------------
         if (ty != null) {
+            double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT) / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
+            distance *= 0.85;
+            distance = Range.clip(distance, MIN_DISTANCE, MAX_DISTANCE);
 
-            double distance =
-                    (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
-                            Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
+            double normalized = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
+            normalized = Range.clip(normalized, 0, 1);
 
-            // Map distance linearly to hood servo position
-            double hoodPos =
-                    HOOD_MIN +
-                            (distance - MIN_DISTANCE) /
-                                    (MAX_DISTANCE - MIN_DISTANCE) *
-                                    (HOOD_MAX - HOOD_MIN);
+            double hoodCurve = Math.pow(normalized, 3.0);
+            double hoodPos = HOOD_MIN + hoodCurve * (HOOD_MAX - HOOD_MIN);
+            hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
 
-            hoodPos = Math.max(HOOD_MIN, Math.min(HOOD_MAX, hoodPos));
-            hood.setPosition(hoodPos);
+            shootRPM = MIN_RPM + normalized * 300;
+            shootRPM = Range.clip(shootRPM, MIN_RPM, MAX_RPM);
         }
+    }
+
+    // ---------------- HELPER FUNCTIONS ----------------
+
+    private double getTurretAngleDegrees() {
+        int ticks = turret.getCurrentPosition();
+        double motorGearRatio = 7.85; // Yellow Jacket
+        int ticksPerRev = 28;
+        return ticks / (ticksPerRev * motorGearRatio) * 360.0;
+    }
+
+    private double normalizeRadians(double angle) {
+        while (angle > Math.PI) angle -= 2*Math.PI;
+        while (angle < -Math.PI) angle += 2*Math.PI;
+        return angle;
+    }
+
+    private double wrapDegrees(double angle) {
+        while (angle > 180) angle -= 360;
+        while (angle < -180) angle += 360;
+        return angle;
+    }
+
+    // ---------------- OPTIONAL: set the goal in meters ----------------
+    public void setGoalPosition(double x, double y) {
+        goalX = x;
+        goalY = y;
     }
 }

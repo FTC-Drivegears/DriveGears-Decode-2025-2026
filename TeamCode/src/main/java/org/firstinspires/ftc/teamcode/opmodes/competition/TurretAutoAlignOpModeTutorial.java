@@ -17,24 +17,6 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
-/**
- * TurretAutoAlignOpModeTutorial
- *
- * Demonstrates automatic turret alignment using Limelight vision.
- *
- * System architecture:
- * OpMode responsibilities:
- * - Read driver input
- * - Read Limelight data
- * - Call subsystem updates
- *
- * Turret subsystem responsibilities:
- * - PD alignment using tx
- * - Distance estimation using ty
- * - Hood auto-adjustment
- *
- * This separation keeps robot logic modular and easier to maintain.
- */
 @TeleOp(name = "TurretAutoAlignOpModeTutorial", group = "TeleOp")
 public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
@@ -53,43 +35,43 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private DcMotor intake;
     private DcMotor shooter;
     private Servo pusher;
+    private Servo gate;
 
     private double theta;
     private double sorterPosition = 0.0;
-    private double shootSpeed = 4800;
+
+    private final double GATE_UP = 1.0;
+    private final double GATE_DOWN = 0.65;
 
     // ---------------- TIMERS ----------------
     private final ElapsedTime sorterTimer = new ElapsedTime();
     private final ElapsedTime pusherTimer = new ElapsedTime();
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
 
         // ---------------- INITIALIZATION ----------------
         hw = Hardware.getInstance(hardwareMap);
-
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
 
         turret = new TurretMechanismTutorial();
-        turret.init(hardwareMap);
-
-        // Turret tuning values (adjust during testing)
+        turret.init(hardwareMap, mecanumCommand);
         turret.setkP(0.035);
         turret.setkD(0.001);
 
-        // ---------------- LIMELIGHT SETUP ----------------
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight = hw.limelight;
         limelight.pipelineSwitch(8);
         limelight.start();
 
-        // ---------------- HARDWARE SETUP ----------------
         intake = hw.intake;
         shooter = hw.shooter;
         pusher = hw.pusher;
+        gate = hw.gate;
 
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
+        gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -98,14 +80,11 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         }
 
         waitForStart();
-        turret.resetTimer();
 
-        // ---------------- STATE VARIABLES ----------------
         boolean previousXState = false;
         boolean previousYState = false;
         boolean prevRightTrigger = false;
         boolean prevLeftTrigger = false;
-
         boolean togglePusher = false;
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
@@ -123,16 +102,13 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
             // ---------------- LIMELIGHT + TURRET ----------------
             llResult = limelight.getLatestResult();
-
             Double tx = null;
             Double ty = null;
-
             if (llResult != null && llResult.isValid()) {
                 tx = llResult.getTx();
                 ty = llResult.getTy();
             }
 
-            // Turret subsystem performs alignment and hood adjustment
             turret.update(tx, ty);
 
             // ---------------- INTAKE TOGGLE ----------------
@@ -140,6 +116,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
                 intake.setPower(isIntakeMotorOn ? 0.8 : 0);
+                gate.setPosition(isIntakeMotorOn ? GATE_UP : GATE_DOWN);
             }
             prevRightTrigger = curRightTrigger;
 
@@ -148,6 +125,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
                 intake.setPower(isOuttakeMotorOn ? -0.8 : 0);
+                gate.setPosition(isOuttakeMotorOn ? GATE_UP : GATE_DOWN);
             }
             prevLeftTrigger = curLeftTrigger;
 
@@ -157,7 +135,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn) {
-                    shooterSubsystem.setMaxRPM((int) Math.round(shootSpeed));
+                    shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
                 } else {
                     shooterSubsystem.stopShooter();
@@ -165,22 +143,10 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             }
             previousXState = currentXState;
 
-            // ---------------- SHOOT SPEED ADJUST ----------------
-            if (gamepad1.dpad_up) {
-                shootSpeed = Math.min(6000.0, shootSpeed + 30.0);
-                sleep(300);
-            }
-
-            if (gamepad1.dpad_down) {
-                shootSpeed = Math.max(0.0, shootSpeed - 30.0);
-                sleep(300);
-            }
-
             // ---------------- SORTER CONTROL ----------------
             if (gamepad1.b && sorterTimer.milliseconds() > 1000) {
                 sorterPosition = (sorterPosition + 1) % 3;
                 sorterTimer.reset();
-
                 if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
                 else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
                 else hw.sorter.setPosition(0.875);
@@ -208,23 +174,20 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             }
 
             // ---------------- TELEMETRY ----------------
-            if (tx != null) {
-                telemetry.addData("Target Visible", true);
-                telemetry.addData("tx", tx);
-                telemetry.addData("ty", ty);
-            } else {
-                telemetry.addLine("No Target Detected - Turret Stopped");
-            }
-
+            telemetry.addData("Target Visible", tx != null);
+            telemetry.addData("tx", tx);
+            telemetry.addData("ty", ty);
             telemetry.addData("Turret kP", turret.getkP());
             telemetry.addData("Turret kD", turret.getkD());
-            telemetry.addData("Shooter RPM", shootSpeed);
+            telemetry.addData("Shooter RPM", turret.getShootRPM());
             telemetry.addData("Intake On", isIntakeMotorOn);
             telemetry.addData("Outtake On", isOuttakeMotorOn);
+            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
+
             telemetry.addLine("---------------------------------");
-            telemetry.addData("X", mecanumCommand.getX());
-            telemetry.addData("Y", mecanumCommand.getY());
-            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+            telemetry.addData("Robot X", mecanumCommand.getX());
+            telemetry.addData("Robot Y", mecanumCommand.getY());
+            telemetry.addData("Theta (rad)", mecanumCommand.getOdoHeading());
             telemetry.update();
         }
     }

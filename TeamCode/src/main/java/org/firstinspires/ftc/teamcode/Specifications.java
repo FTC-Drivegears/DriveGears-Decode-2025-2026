@@ -56,6 +56,8 @@ public class Specifications {
 
     public static final String PUSHER = "pusher";
 
+    public static final String GATE = "gate";
+
     public static final String LLMOTOR = "llmotor";
 
     public static final String WEBCAM_1 = "Webcam 1";
