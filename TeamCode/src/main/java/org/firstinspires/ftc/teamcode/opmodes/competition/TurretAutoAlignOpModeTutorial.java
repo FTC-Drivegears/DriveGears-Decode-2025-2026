@@ -37,6 +37,8 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private Servo pusher;
     private Servo gate;
 
+    private Servo light;
+
     private double theta;
     private double sorterPosition = 0.0;
 
@@ -68,9 +70,12 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         shooter = hw.shooter;
         pusher = hw.pusher;
         gate = hw.gate;
+        light = hw.light;
 
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
+        hw.light.setPosition(0.3);
+
         gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -181,6 +186,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 if (isOuttakeMotorOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
+
                 } else {
                     shooterSubsystem.stopShooter();
                 }
