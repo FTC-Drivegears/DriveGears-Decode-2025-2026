@@ -140,13 +140,11 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
 // ---------------- TURRET CONTROL ----------------
             if (manualPower != 0) {
-
                 // manual override
                 hw.llmotor.setPower(manualPower);
 
             }
             else if (autoAimEnabled) {
-
                 // auto aim using odometry + limelight
                 turret.update(tx, ty);
 
@@ -186,6 +184,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 if (isOuttakeMotorOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
+                    if (shooterSubsystem.isRPMReached())
                     light.setPosition(0.5);
                 } else {
                     shooterSubsystem.stopShooter();
