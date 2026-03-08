@@ -22,7 +22,7 @@ public class ColourAuto extends LinearOpMode {
     public void runOpMode() {
         ColorSensor colourSensor;
         colourSensor = hardwareMap.get(ColorSensor.class, "colour");
-        Servo servo = hardwareMap.get(Servo.class, "servo");
+        Servo servo = hardwareMap.get(Servo.class, "sorter");
         colourSensor.enableLed(true);
 
         servo.setPosition(0);
