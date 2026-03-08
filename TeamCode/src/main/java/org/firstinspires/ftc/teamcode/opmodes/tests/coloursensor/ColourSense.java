@@ -1,10 +1,11 @@
-package org.firstinspires.ftc.teamcode.opmodes.competition;
+package org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -14,17 +15,18 @@ import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
-@TeleOp(name = "TurretAutoAlignOpModeTutorial", group = "TeleOp")
-public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
+import java.util.ArrayList;
+
+@TeleOp(name = "ColourAuto2", group = "Competition")
+
+public class ColourSense extends LinearOpMode {
 
     // ---------------- SUBSYSTEMS ----------------
     private Hardware hw;
     private MecanumCommand mecanumCommand;
     private ShooterSubsystem shooterSubsystem;
-    private SorterSubsystem sorterSubsystem;
     private TurretMechanismTutorial turret;
 
     // ---------------- LIMELIGHT ----------------
@@ -37,21 +39,53 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private Servo pusher;
     private Servo gate;
 
+    // ---------------- COLOR SENSOR ----------------
+    private ColorSensor colourSensor;
+
+    private int red;
+    private int green;
+    private int blue;
+    private int alpha;
+
+    private boolean objectDetected = false;
+
+    private ArrayList<String> artifacts = new ArrayList<>();
+
+    private ElapsedTime detectionTimer = new ElapsedTime();
+
+    // ---------------- TIMERS ----------------
+    private final ElapsedTime pusherTimer = new ElapsedTime();
+
+    // ---------------- STATE VARIABLES ----------------
     private double theta;
-    private double sorterPosition = 0.0;
+
+    private boolean autoAimEnabled = false;
+    private boolean prevA = false;
+
+    private boolean previousXState = false;
+    private boolean previousYState = false;
+
+    private boolean prevRightTrigger = false;
+    private boolean prevLeftTrigger = false;
+
+    private boolean togglePusher = false;
+    private boolean isIntakeMotorOn = false;
+    private boolean isOuttakeMotorOn = false;
+
+    // ---------------- SORTER POSITIONS ----------------
+    private static final double SLOT1 = 0.0;
+    private static final double SLOT2 = 0.45;
+    private static final double SLOT3 = 0.9;
 
     private final double GATE_UP = 1.0;
     private final double GATE_DOWN = 0.8;
-
-    // ---------------- TIMERS ----------------
-    private final ElapsedTime sorterTimer = new ElapsedTime();
-    private final ElapsedTime pusherTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
 
         // ---------------- INITIALIZATION ----------------
         hw = Hardware.getInstance(hardwareMap);
+
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
 
@@ -69,41 +103,34 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         pusher = hw.pusher;
         gate = hw.gate;
 
+        // Color sensor
+        colourSensor = hardwareMap.get(ColorSensor.class, "colour");
+        colourSensor.enableLed(true);
+
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-        hw.sorter.setPosition(0.0);
+        hw.sorter.setPosition(SLOT1);
         gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
-        boolean autoAimEnabled = false;
-        boolean prevA = false;
 
-
-        if (sorterSubsystem == null) {
-            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
-        }
+        telemetry.addLine("Robot Ready");
+        telemetry.update();
 
         waitForStart();
 
-        boolean previousXState = false;
-        boolean previousYState = false;
-        boolean prevRightTrigger = false;
-        boolean prevLeftTrigger = false;
-        boolean togglePusher = false;
-        boolean isIntakeMotorOn = false;
-        boolean isOuttakeMotorOn = false;
-
-        // ---------------- MAIN CONTROL LOOP ----------------
+        // ---------------- MAIN LOOP ----------------
         while (opModeIsActive()) {
 
             // ---------------- DRIVE ----------------
             mecanumCommand.processOdometry();
+
             theta = mecanumCommand.normalMove(
                     -gamepad1.left_stick_y,
                     gamepad1.left_stick_x,
                     gamepad1.right_stick_x
             );
 
-            // ---------------- LIMELIGHT DATA ----------------
+            // ---------------- LIMELIGHT ----------------
             llResult = limelight.getLatestResult();
 
             Double tx = null;
@@ -114,7 +141,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 ty = llResult.getTy();
             }
 
-// ---------------- AUTO AIM TOGGLE ----------------
+            // ---------------- AUTO AIM TOGGLE ----------------
             boolean curA = gamepad1.a;
 
             if (curA && !prevA) {
@@ -123,118 +150,191 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
             prevA = curA;
 
-// ---------------- MANUAL OVERRIDE ----------------
+            // ---------------- MANUAL TURRET ----------------
             double manualPower = 0;
 
-            if (gamepad1.left_bumper) {
-                manualPower = 0.35;
-            }
-            else if (gamepad1.right_bumper) {
-                manualPower = -0.35;
-            }
+            if (gamepad1.left_bumper) manualPower = 0.35;
+            else if (gamepad1.right_bumper) manualPower = -0.35;
 
-// ---------------- TURRET CONTROL ----------------
             if (manualPower != 0) {
-
-                // manual override
                 hw.llmotor.setPower(manualPower);
-
             }
             else if (autoAimEnabled) {
-
-                // auto aim using odometry + limelight
                 turret.update(tx, ty);
-
             }
             else {
-
-                // idle
                 hw.llmotor.setPower(0);
-
             }
-
-
 
             // ---------------- INTAKE TOGGLE ----------------
             boolean curRightTrigger = gamepad1.right_trigger > 0;
+
             if (curRightTrigger && !prevRightTrigger) {
+
                 isIntakeMotorOn = !isIntakeMotorOn;
+
                 intake.setPower(isIntakeMotorOn ? 0.8 : 0);
+
                 gate.setPosition(isIntakeMotorOn ? GATE_UP : GATE_DOWN);
             }
+
             prevRightTrigger = curRightTrigger;
 
-            // ---------------- OUTTAKE TOGGLE ----------------
+            // ---------------- OUTTAKE ----------------
             boolean curLeftTrigger = gamepad1.left_trigger > 0;
+
             if (curLeftTrigger && !prevLeftTrigger) {
+
                 isOuttakeMotorOn = !isOuttakeMotorOn;
+
                 intake.setPower(isOuttakeMotorOn ? -0.8 : 0);
+
                 gate.setPosition(isOuttakeMotorOn ? GATE_UP : GATE_DOWN);
             }
+
             prevLeftTrigger = curLeftTrigger;
 
-            // ---------------- SHOOTER TOGGLE ----------------
+            // ---------------- SHOOTER ----------------
             boolean currentXState = gamepad1.x;
+
             if (currentXState && !previousXState) {
+
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
                 if (isOuttakeMotorOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
-                } else {
+                }
+                else {
                     shooterSubsystem.stopShooter();
                 }
             }
+
             previousXState = currentXState;
 
-            // ---------------- SORTER CONTROL ----------------
-            if (gamepad1.b && sorterTimer.milliseconds() > 1000) {
-                sorterPosition = (sorterPosition + 1) % 3;
-                sorterTimer.reset();
-                if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
-                else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
-                else hw.sorter.setPosition(0.875);
-            }
-
-            // ---------------- PUSHER CONTROL ----------------
+            // ---------------- PUSHER ----------------
             boolean currentYState = gamepad1.y;
+
             if (currentYState && !previousYState) {
+
                 if (!togglePusher) {
+
                     pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+
                     pusherTimer.reset();
+
                     togglePusher = true;
                 }
             }
+
             previousYState = currentYState;
 
             if (togglePusher && pusherTimer.milliseconds() >= 500) {
+
                 pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+
                 togglePusher = false;
             }
 
-            // ---------------- ODOMETRY RESET ----------------
-            if (gamepad1.start) {
-                mecanumCommand.resetPinPointOdometry();
-            }
+            // ---------------- COLOR SENSOR ----------------
+            readSensor();
+
+            detectColour();
 
             // ---------------- TELEMETRY ----------------
+            telemetry.addLine("----- LIMELIGHT -----");
+
             telemetry.addData("Target Visible", tx != null);
             telemetry.addData("tx", tx);
             telemetry.addData("ty", ty);
-            telemetry.addData("Turret kP", turret.getkP());
-            telemetry.addData("Turret kD", turret.getkD());
-            telemetry.addData("Shooter RPM", turret.getShootRPM());
-            telemetry.addData("Intake On", isIntakeMotorOn);
-            telemetry.addData("Outtake On", isOuttakeMotorOn);
-            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
 
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("Robot X", mecanumCommand.getX());
-            telemetry.addData("Robot Y", mecanumCommand.getY());
-            telemetry.addData("Theta (rad)", mecanumCommand.getOdoHeading());
-            telemetry.addData("Auto Aim Enabled", autoAimEnabled);
-            telemetry.addData("Manual Override", gamepad1.right_bumper || gamepad1.left_bumper);
+            telemetry.addLine("----- COLOR SENSOR -----");
+
+            telemetry.addData("Red", red);
+            telemetry.addData("Green", green);
+            telemetry.addData("Blue", blue);
+            telemetry.addData("Alpha", alpha);
+
+            telemetry.addData("Stored Objects", artifacts.size());
+
+            telemetry.addLine("----- ODOMETRY -----");
+
+            telemetry.addData("X", mecanumCommand.getX());
+            telemetry.addData("Y", mecanumCommand.getY());
+            telemetry.addData("Theta", mecanumCommand.getOdoHeading());
+
             telemetry.update();
+        }
+    }
+
+    // ---------------- SENSOR READ ----------------
+
+    private void readSensor() {
+
+        red = colourSensor.red();
+        green = colourSensor.green();
+        blue = colourSensor.blue();
+        alpha = colourSensor.alpha();
+    }
+
+    // ---------------- DETECT COLOUR ----------------
+
+    private void detectColour() {
+
+        if (artifacts.size() >= 3) return;
+
+        if (detectionTimer.milliseconds() < 300) return;
+
+        String detected = classifyColour();
+
+        if (detected != null && !objectDetected) {
+
+            objectDetected = true;
+
+            artifacts.add(detected);
+
+            moveSorter();
+
+            detectionTimer.reset();
+        }
+
+        if (alpha < 40) {
+            objectDetected = false;
+        }
+    }
+
+    // ---------------- CLASSIFY ----------------
+
+    private String classifyColour() {
+
+        if (blue > green && blue > red && alpha > 60) {
+            return "Purple";
+        }
+
+        if (green > blue + 20 && green > red && alpha > 60) {
+            return "Green";
+        }
+
+        return null;
+    }
+
+    // ---------------- SORTER ----------------
+
+    private void moveSorter() {
+
+        switch (artifacts.size()) {
+
+            case 1:
+                hw.sorter.setPosition(SLOT1);
+                break;
+
+            case 2:
+                hw.sorter.setPosition(SLOT2);
+                break;
+
+            case 3:
+                hw.sorter.setPosition(SLOT3);
+                break;
         }
     }
 }
