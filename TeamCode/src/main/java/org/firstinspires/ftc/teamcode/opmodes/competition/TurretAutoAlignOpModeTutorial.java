@@ -43,7 +43,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private double sorterPosition = 0.0;
 
     private final double GATE_UP = 1.0;
-    private final double GATE_DOWN = 0.8;
+    private final double GATE_DOWN = 0.65;
 
     // ---------------- TIMERS ----------------
     private final ElapsedTime sorterTimer = new ElapsedTime();
@@ -67,14 +67,15 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         limelight.start();
 
         intake = hw.intake;
-        light = hw.light;
         shooter = hw.shooter;
         pusher = hw.pusher;
         gate = hw.gate;
+        light = hw.light;
 
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
         hw.light.setPosition(0.3);
+
         gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -168,7 +169,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             }
             prevRightTrigger = curRightTrigger;
 
-            // ---------------- OUTTAKE TOGGLE ----------------
+            // ---------------- OUTTAKE TOGGLE -----------------
             boolean curLeftTrigger = gamepad1.left_trigger > 0;
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
@@ -177,7 +178,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             }
             prevLeftTrigger = curLeftTrigger;
 
-            // ---------------- SHOOTER TOGGLE ----------------
+//             ---------------- SHOOTER TOGGLE ----------------
             boolean currentXState = gamepad1.x;
 
             if (currentXState && !previousXState) {
