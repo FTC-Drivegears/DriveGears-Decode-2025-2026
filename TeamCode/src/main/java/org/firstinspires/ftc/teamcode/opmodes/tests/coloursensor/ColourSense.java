@@ -23,7 +23,7 @@ import java.util.ArrayList;
 
 public class ColourSense extends LinearOpMode {
 
-    // ---------------- SUBSYSTEMS ----------------
+    // ---------------- SUBSYSTEMS -----------------
     private Hardware hw;
     private MecanumCommand mecanumCommand;
     private ShooterSubsystem shooterSubsystem;
