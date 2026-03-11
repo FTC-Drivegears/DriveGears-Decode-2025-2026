@@ -53,9 +53,10 @@ public class BlueFarAutoOp extends LinearOpMode {
 
     //Sorter variables
     private static final ElapsedTime sorterTimer = new ElapsedTime();
-    private static double pos1 = 0.085;
-    private static double pos2 = 0.515;
-    private static double pos3 = 0.96;
+
+    private static double pos1 = 0.0;
+    private static double pos2 = 0.43;
+    private static double pos3 = 0.875;
     private static int standardms = 1000;
 
     private static final long SORTER_TIME = 250;

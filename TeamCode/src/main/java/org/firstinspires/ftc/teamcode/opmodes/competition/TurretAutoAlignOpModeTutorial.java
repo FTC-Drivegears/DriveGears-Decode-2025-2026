@@ -37,11 +37,13 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private Servo pusher;
     private Servo gate;
 
+    private Servo light;
+
     private double theta;
     private double sorterPosition = 0.0;
 
     private final double GATE_UP = 1.0;
-    private final double GATE_DOWN = 0.8;
+    private final double GATE_DOWN = 0.65;
 
     // ---------------- TIMERS ----------------
     private final ElapsedTime sorterTimer = new ElapsedTime();
@@ -68,9 +70,12 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         shooter = hw.shooter;
         pusher = hw.pusher;
         gate = hw.gate;
+        light = hw.light;
 
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
+        hw.light.setPosition(0.3);
+
         gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -164,7 +169,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             }
             prevRightTrigger = curRightTrigger;
 
-            // ---------------- OUTTAKE TOGGLE ----------------
+            // ---------------- OUTTAKE TOGGLE -----------------
             boolean curLeftTrigger = gamepad1.left_trigger > 0;
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
@@ -173,19 +178,28 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             }
             prevLeftTrigger = curLeftTrigger;
 
-            // ---------------- SHOOTER TOGGLE ----------------
+//             ---------------- SHOOTER TOGGLE ----------------
             boolean currentXState = gamepad1.x;
+
             if (currentXState && !previousXState) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
-
                 if (isOuttakeMotorOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
                 } else {
                     shooterSubsystem.stopShooter();
+                    light.setPosition(0.3);
                 }
             }
             previousXState = currentXState;
+
+            if (isOuttakeMotorOn) {
+                if (shooterSubsystem.isRPMReached()) {
+                    light.setPosition(0.5);
+                } else {
+                    light.setPosition(0.3);
+                }
+            }
 
             // ---------------- SORTER CONTROL ----------------
             if (gamepad1.b && sorterTimer.milliseconds() > 1000) {
@@ -195,6 +209,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
                 else hw.sorter.setPosition(0.875);
             }
+
 
             // ---------------- PUSHER CONTROL ----------------
             boolean currentYState = gamepad1.y;
