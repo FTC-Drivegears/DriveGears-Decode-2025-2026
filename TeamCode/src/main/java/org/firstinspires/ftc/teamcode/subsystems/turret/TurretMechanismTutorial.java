@@ -32,8 +32,8 @@ public class TurretMechanismTutorial {
     private final double TARGET_HEIGHT = 1.05; // meters
     private final double HOOD_MIN = 0.36;
     private final double HOOD_MAX = 0.75;
-    private final double MIN_DISTANCE = 0.5;
-    private final double MAX_DISTANCE = 3.0;
+    private final double MIN_DISTANCE = 0.3;
+    private final double MAX_DISTANCE = 2.0;
 
     private final double MIN_RPM = 3000;
     private final double MAX_RPM = 4000;

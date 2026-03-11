@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.competition;
-
+import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -157,7 +157,16 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 hw.llmotor.setPower(0);
 
             }
-
+            if (autoAimEnabled && tx != null) {
+                RobotLog.i(String.format(
+                        "time:%.2f target:%.1f position:%.1f error:%.1f power:%.2f",
+                        getRuntime(),
+                        0.0,
+                        tx,
+                        -tx,
+                        hw.llmotor.getPower()
+                ));
+            }
 
 
             // ---------------- INTAKE TOGGLE ----------------
