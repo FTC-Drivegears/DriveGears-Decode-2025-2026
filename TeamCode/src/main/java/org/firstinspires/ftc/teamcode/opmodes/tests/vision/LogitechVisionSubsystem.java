@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class LogitechVisionSubsystem {
     private final Hardware hw;
-    private final CameraName Webcam_1;
+//    private final CameraName Webcam_1;
     private String ALLIANCE;
     public String OBELISK = "UNKNOWN";
     private int targetID = -1;
@@ -24,7 +24,7 @@ public class LogitechVisionSubsystem {
 
     public LogitechVisionSubsystem(Hardware hw, String alliance) {
         this.hw = hw;
-        this.Webcam_1 = hw.Webcam_1;
+//        this.Webcam_1 = hw.Webcam_1;
         this.ALLIANCE = alliance;
 
         if (ALLIANCE != null && "RED".equalsIgnoreCase(alliance)) {
@@ -45,7 +45,7 @@ public class LogitechVisionSubsystem {
                 .build();
 
         VisionPortal.Builder builder = new VisionPortal.Builder();
-        builder.setCamera(this.Webcam_1);
+//        builder.setCamera(this.Webcam_1);
         builder.setAutoStopLiveView(true);
         builder.addProcessor(this.tagProcessor);
         this.visionPortal = builder.build();

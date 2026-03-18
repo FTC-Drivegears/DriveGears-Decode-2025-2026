@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.competition;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -11,11 +12,14 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor.ColourSensorSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
+
+import java.util.ArrayList;
 
 @TeleOp(name = "TurretAutoAlignOpModeTutorial", group = "TeleOp")
 public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
@@ -26,6 +30,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     private ShooterSubsystem shooterSubsystem;
     private SorterSubsystem sorterSubsystem;
     private TurretMechanismTutorial turret;
+    private ColourSensorSubsystem colourSubsystem;
 
     // ---------------- LIMELIGHT ----------------
     private Limelight3A limelight;
@@ -66,6 +71,8 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         limelight.pipelineSwitch(8);
         limelight.start();
 
+        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw);
+
         intake = hw.intake;
         shooter = hw.shooter;
         pusher = hw.pusher;
@@ -74,14 +81,13 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
         pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
-        hw.light.setPosition(0.3);
+        hw.light.setPosition(0.0);
 
         gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         boolean autoAimEnabled = false;
         boolean prevA = false;
-
 
         if (sorterSubsystem == null) {
             sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
@@ -168,7 +174,6 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 ));
             }
 
-
             // ---------------- INTAKE TOGGLE ----------------
             boolean curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger) {
@@ -177,6 +182,8 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                 gate.setPosition(isIntakeMotorOn ? GATE_UP : GATE_DOWN);
             }
             prevRightTrigger = curRightTrigger;
+            colourSubsystem.update(isIntakeMotorOn);
+
 
             // ---------------- OUTTAKE TOGGLE -----------------
             boolean curLeftTrigger = gamepad1.left_trigger > 0;
@@ -197,16 +204,16 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
                     shooterSubsystem.spinup();
                 } else {
                     shooterSubsystem.stopShooter();
-                    light.setPosition(0.3);
+                    light.setPosition(0.0);
                 }
             }
             previousXState = currentXState;
 
             if (isOuttakeMotorOn) {
                 if (shooterSubsystem.isRPMReached()) { //add && tx<5
-                    light.setPosition(0.5);
-                } else {
                     light.setPosition(0.3);
+                } else {
+                    light.setPosition(0.0);
                 }
             }
 
@@ -258,6 +265,16 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             telemetry.addData("Theta (rad)", mecanumCommand.getOdoHeading());
             telemetry.addData("Auto Aim Enabled", autoAimEnabled);
             telemetry.addData("Manual Override", gamepad1.right_bumper || gamepad1.left_bumper);
+
+            telemetry.addData("Red", colourSubsystem.getRed());
+            telemetry.addData("Green", colourSubsystem.getGreen());
+            telemetry.addData("Blue", colourSubsystem.getBlue());
+            telemetry.addData("Alpha", colourSubsystem.getAlpha());
+            telemetry.addData("Red2", colourSubsystem.getRed2());
+            telemetry.addData("Green2", colourSubsystem.getGreen2());
+            telemetry.addData("Blue2", colourSubsystem.getBlue2());
+            telemetry.addData("Alpha2", colourSubsystem.getAlpha2());
+            telemetry.addData("Detected Count", colourSubsystem.getCount());
             telemetry.update();
         }
     }

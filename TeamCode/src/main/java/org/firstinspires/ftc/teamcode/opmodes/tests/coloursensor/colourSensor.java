@@ -3,68 +3,74 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.Artifact;
 import java.util.ArrayList;
 
 @TeleOp(name = "colourSensor")
 
-public class ColourAuto extends LinearOpMode {
-
+public class colourSensor extends LinearOpMode {
+    private Hardware hw;
+    private Servo light;
     int red;
     int green;
     int blue;
     int alpha;
+
+    int red2;
+    int green2;
+    int blue2;
+    int alpha2;
     boolean detectedColor = false;
     ArrayList<String> pattern = new ArrayList<>();
     ArrayList<Artifact> sorter = new ArrayList<Artifact>();
 
     @Override
     public void runOpMode() {
-        ColorSensor colourSensor;
-        colourSensor = hardwareMap.get(ColorSensor.class, "colour");
+        hw = Hardware.getInstance(hardwareMap);
+        ColorSensor colourSensor1;
+        ColorSensor colourSensor2;
+        colourSensor1 = hardwareMap.get(ColorSensor.class, "colour1");
+        colourSensor2 = hardwareMap.get(ColorSensor.class, "colour2");
         Servo servo = hardwareMap.get(Servo.class, "sorter");
-        colourSensor.enableLed(true);
+        colourSensor1.enableLed(true);
+        colourSensor2.enableLed(true);
 
         servo.setPosition(0);
 
         pattern.add("Purple");
         pattern.add("Green");
         pattern.add("Purple");
+        light = hw.light;
 
         waitForStart();
 
         while (opModeIsActive()) {
 
-            red = colourSensor.red();
-            green = colourSensor.green();
-            blue = colourSensor.blue();
-            alpha = colourSensor.alpha();
+            red = colourSensor1.red();
+            green = colourSensor1.green();
+            blue = colourSensor1.blue();
+            alpha = colourSensor1.alpha();
+
+            red2 = colourSensor2.red();
+            green2 = colourSensor2.green();
+            blue2 = colourSensor2.blue();
+            alpha2 = colourSensor2.alpha();
+            detectColour(servo);
 
             telemetry.addData("Red", red);
             telemetry.addData("Green", green);
             telemetry.addData("Blue", blue);
             telemetry.addData("Alpha", alpha);
+            telemetry.addData("Red2", red2);
+            telemetry.addData("Green2", green2);
+            telemetry.addData("Blue2", blue2);
+            telemetry.addData("Alpha2", alpha2);
+
             telemetry.addData("Amount of Artifacts", sorter.size());
             telemetry.addData("position", servo.getPosition());
             telemetry.update();
-
-            // After intake it needs to detect 3 balls that enter the robot
-            detectColour(servo);
-
-            /*
-            // After the colour is detected turn to the colour to prepare it for launch
-            turnToColour(pattern.get(0), servo);
-            sleep(2000);
-            // add launch code
-
-            turnToColour(pattern.get(1), servo);
-            sleep(2000);
-            // add launch code
-
-            turnToColour(pattern.get(2), servo);
-            sleep(2000);
-            // add launch code
-             */
         }
     }
 
@@ -75,30 +81,38 @@ public class ColourAuto extends LinearOpMode {
         }
 
         // Purple ball is detected
-        if (blue > green && alpha < 700) {
+//        if (blue > red + 30 && blue > green + 30 && alpha < 700) {
+//            if (blue2 > red2 + 30 && blue2 > green2 + 30 && alpha2 < 700) {
+        if (blue > green && alpha < 700 && blue2 > green2 && alpha2 < 700) {
             if (detectedColor == false) {
                 detectedColor = true;
                 sorter.add(new Artifact("Purple", servo.getPosition()));
+                light.setPosition(0.7);
                 telemetry.addLine("Purple Detected");
                 turnSorter(servo);
-            } //green detected
-        } else if (green - blue > 20 && alpha < 110 && alpha > 70) {
-            if (detectedColor == false) {
-                detectedColor = true;
-                sorter.add(new Artifact("Green", servo.getPosition()));
-                telemetry.addLine("Green Detected");
-                turnSorter(servo);
             }
+             //green detected
+//]
+//         if  (green > blue + 30 && green > red + 30 && alpha > 70 && alpha < 110) {
+//       if (green2 > blue2 + 30 && green2 > red2 + 30 && alpha2 > 70 && alpha2 < 110) {
+        } else if (green - blue > 20 && green2 - blue2 > 20) {
+           if (detectedColor == false) {
+               detectedColor = true;
+               sorter.add(new Artifact("Green", servo.getPosition()));
+               light.setPosition(0.5);
+                telemetry.addLine("Green Detected");
+               turnSorter(servo);
+       }
 
-        }else {
+        } else {
             detectedColor = false;
         }
+
         telemetry.update();
     }
 
     public void turnSorter(Servo servo) {
         //If the sorter is full it stops
-        //if (sorter.size() == 3) {
             if (sorter.size() == 3) {
             return;
         }
@@ -125,20 +139,4 @@ public class ColourAuto extends LinearOpMode {
         servo.setPosition(pos);
     }
 
-//    public void quickFire(Servo servo) {
-//        servo.setPosition(sorter.get(0).getPosition());
-//        sleep(800);
-//        //launch
-//        sorter.remove(0);
-//
-//        servo.setPosition(sorter.get(0).getPosition());
-//        sleep(500);
-//        //launch
-//        sorter.remove(0);
-//
-//        servo.setPosition(sorter.get(0).getPosition());
-//        sleep(500);
-//        //launch
-//        sorter.remove(0);
-//    }
 }

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -37,8 +38,10 @@ public class Hardware {
 
     public final DcMotorEx llmotor;
 
-    public CameraName Webcam_1;
+//    public CameraName Webcam_1;
     public final Limelight3A limelight;
+    public final ColorSensor colour1;
+    public final ColorSensor colour2;
 
 
     // Odometry
@@ -50,13 +53,14 @@ public class Hardware {
         this.lb = hwMap.get(DcMotorEx.class, Specifications.BKLF_MOTOR); //leftback
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
 
-//        this.colour = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR);
+        this.colour1 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR1);
+        this.colour2 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR2);
 
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
 
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
-        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
+//        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);

@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 @TeleOp(name = "ColourAuto2", group = "Competition")
 
-public class ColourSense extends LinearOpMode {
+public class colourtest extends LinearOpMode {
 
     // ---------------- SUBSYSTEMS -----------------
     private Hardware hw;
