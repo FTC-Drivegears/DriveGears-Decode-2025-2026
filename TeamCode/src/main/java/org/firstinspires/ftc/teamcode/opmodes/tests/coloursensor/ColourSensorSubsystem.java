@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.util.Artifact;
 import java.util.ArrayList;
 
 public class ColourSensorSubsystem {
-
+    private boolean lastArtifactPresent = false;
     private Hardware hw;
     private ColorSensor colourSensor1;
     private ColorSensor colourSensor2;
@@ -48,44 +48,46 @@ public class ColourSensorSubsystem {
         if (!intakeOn) return;
         if (sorterList.size() == 3) return;
 
-        // PURPLE
-//        if (!detectedColor && blue > red + 30 || blue > green + 30 && alpha < 700) {
-//            detectedColor = true;
-//            sorterList.add(new Artifact("Purple", sorter.getPosition()));
-//            light.setPosition(0.7);
-//            turnSorter();
+//        //PURPLE
+//        if (blue > red + 30 && blue > green + 30 && alpha < 700 || blue2 > red2 + 30 && blue2 > green2 + 30 && alpha2 < 700) {
+//            if (!detectedColor) {
+//                detectedColor = true;
+//                sorterList.add(new Artifact("Purple", sorter.getPosition()));
+//                light.setPosition(0.7);
+//                turnSorter();
+//            }
+//
+//            //GREEN
+//        } else if (green - blue > 20 && alpha > 600 || green2 - blue2 > 20 && alpha2 > 600) {
+//            if (!detectedColor) {
+//                detectedColor = true;
+//                sorterList.add(new Artifact("Green", sorter.getPosition()));
+//                light.setPosition(0.5);
+//                turnSorter();
+//            }
+//        }
 
-        if (blue > red + 30 && blue > green + 30 && alpha < 700 || blue2 > red2 + 30 && blue2 > green2 + 30 && alpha2 < 700) {
-            if (!detectedColor) {
-                detectedColor = true;
-                sorterList.add(new Artifact("Purple", sorter.getPosition()));
-                light.setPosition(0.7);
-                turnSorter();
-            }
+        boolean artifactPresent = alpha > 150 || alpha2 > 150;
+        if (artifactPresent && !lastArtifactPresent) {
 
-            //GREEN
-//        } else if(!detectedColor && green - blue > 20 && alpha > 600 || green2 - blue2 > 20 && alpha2 > 600) {
-//        detectedColor = true;
-//        sorterList.add(new Artifact("Green", sorter.getPosition()));
-//        light.setPosition(0.5);
-//        turnSorter();
-//    }
+            if (sorterList.size() < 3) {
 
-            // detect GREEN
-        } else if (green - blue > 20 && alpha > 600 || green2 - blue2 > 20 && alpha2 > 600) {
-            if (!detectedColor) {
-                detectedColor = true;
-                sorterList.add(new Artifact("Green", sorter.getPosition()));
-                light.setPosition(0.5);
-                turnSorter();
+                // PURPLE
+                if (blue > red + 30 && blue > green + 30) {
+                    sorterList.add(new Artifact("Purple", sorter.getPosition()));
+                    light.setPosition(0.7);
+                    turnSorter();
+                }
+
+                // GREEN
+                else if (green > blue + 30 && green > red + 30) {
+                    sorterList.add(new Artifact("Green", sorter.getPosition()));
+                    light.setPosition(0.5);
+                    turnSorter();
+                }
             }
         }
-
-        boolean ballPresent = alpha > 50 || alpha2 > 50;
-        if (!ballPresent) {
-            detectedColor = false;
-            light.setPosition(0);
-        }
+        lastArtifactPresent = artifactPresent;
     }
 
     private void turnSorter() {
@@ -94,13 +96,15 @@ public class ColourSensorSubsystem {
     }
 
     public int getRed() { return red; }
+
     public int getGreen() { return green; }
+
     public int getBlue() { return blue; }
     public int getAlpha() { return alpha; }
-    public int getCount() { return sorterList.size(); }
     public int getRed2() { return red2; }
     public int getGreen2() { return green2; }
     public int getBlue2() { return blue2; }
     public int getAlpha2() { return alpha2; }
+    public int getCount() { return sorterList.size(); }
 }
 
