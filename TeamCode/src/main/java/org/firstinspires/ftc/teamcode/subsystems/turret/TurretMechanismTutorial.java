@@ -66,7 +66,7 @@ public class TurretMechanismTutorial {
 
         // Turret alignment from Limelight only
         if (tx != null) {
-            double error = tx; // flip sign if needed
+            double error = -tx; // flip sign if needed
 
             double dTerm = ((error - lastError) / deltaTime) * kD;
             double power = (Math.abs(error) < ANGLE_TOLERANCE)
