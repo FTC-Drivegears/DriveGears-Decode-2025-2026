@@ -90,7 +90,7 @@ public class colourtest extends LinearOpMode {
         shooterSubsystem = new ShooterSubsystem(hw);
 
         turret = new TurretMechanismTutorial();
-        turret.init(hardwareMap, mecanumCommand);
+        turret.init(hardwareMap);
         turret.setkP(0.035);
         turret.setkD(0.001);
 

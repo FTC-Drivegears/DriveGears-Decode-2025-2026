@@ -63,9 +63,9 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         shooterSubsystem = new ShooterSubsystem(hw);
 
         turret = new TurretMechanismTutorial();
-        turret.init(hardwareMap, mecanumCommand);
-        turret.setkP(0.0315);
-        turret.setkD(0.0012);
+        turret.init(hardwareMap);
+        turret.setkP(0.035);
+        turret.setkD(0.001);
 
         limelight = hw.limelight;
         limelight.pipelineSwitch(8);
