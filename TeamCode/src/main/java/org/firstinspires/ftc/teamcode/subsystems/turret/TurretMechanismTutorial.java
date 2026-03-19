@@ -85,7 +85,7 @@ public class TurretMechanismTutorial {
             double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT)
                     / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
 
-            distance *= 0.85;
+            distance *= 0.9;
             distance = Range.clip(distance, MIN_DISTANCE, MAX_DISTANCE);
 
             double normalized = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
