@@ -18,6 +18,8 @@ public class TurretMechanismTutorial {
     // ---------------- TURRET PD CONTROL ----------------
     private double kP = 0.035;
     private double kD = 0.001;
+
+    private double distanceTrack;
     private double lastError = 0;
     private final double ANGLE_TOLERANCE = 0.5; // degrees
     private final double MAX_POWER = 0.3;
@@ -58,6 +60,7 @@ public class TurretMechanismTutorial {
     public double getkP() { return kP; }
     public double getkD() { return kD; }
     public double getShootRPM() { return shootRPM; }
+    public double getDistanceTrack() {return distanceTrack;}
 
     public void update(Double tx, Double ty) {
         double deltaTime = loopTimer.seconds();
@@ -85,7 +88,9 @@ public class TurretMechanismTutorial {
             double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT)
                     / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
 
+            distanceTrack = distance;
             distance *= 0.9;
+
             distance = Range.clip(distance, MIN_DISTANCE, MAX_DISTANCE);
 
             double normalized = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
@@ -93,9 +98,21 @@ public class TurretMechanismTutorial {
 
             double hoodCurve = Math.pow(normalized, 3.0);
             double hoodPos = HOOD_MIN + hoodCurve * (HOOD_MAX - HOOD_MIN);
+
+            // raise hood a little more for longer shots
+            if (distance > 0.55) {
+                hoodPos += 0.1;
+            }
+
             hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
 
             shootRPM = MIN_RPM + normalized * 300;
+
+            // boost RPM for farther shots
+            if (distance > 0.55) {
+                shootRPM += 250;
+            }
+
             shootRPM = Range.clip(shootRPM, MIN_RPM, MAX_RPM);
         }
     }

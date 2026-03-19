@@ -252,6 +252,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             telemetry.addData("Target Visible", tx != null);
             telemetry.addData("tx", tx);
             telemetry.addData("ty", ty);
+            telemetry.addData("distance", turret.getDistanceTrack());
             telemetry.addData("Turret kP", turret.getkP());
             telemetry.addData("Turret kD", turret.getkD());
             telemetry.addData("Shooter RPM", turret.getShootRPM());
