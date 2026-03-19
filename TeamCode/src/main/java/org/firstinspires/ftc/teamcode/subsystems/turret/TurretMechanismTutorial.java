@@ -15,7 +15,7 @@ public class TurretMechanismTutorial {
 
     private Hardware hw;
 
-    // ---------------- TURRET PD CONTROL ----------------
+    // ---------------- TURRET PD CONTROL -----------------
     private double kP = 0.035;
     private double kD = 0.001;
 
