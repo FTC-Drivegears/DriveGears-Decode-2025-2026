@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.opmodes.competition;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -19,10 +18,8 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
-import java.util.ArrayList;
-
-@TeleOp(name = "TurretAutoAlignOpModeTutorial", group = "TeleOp")
-public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
+@TeleOp(name = "CanadaCup", group = "TeleOp")
+public class CanadaCupTeleOp extends LinearOpMode {
 
     // ---------------- SUBSYSTEMS ----------------
     private Hardware hw;
@@ -46,9 +43,6 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
     private double theta;
     private double sorterPosition = 0.0;
-
-//    private final double GATE_UP = 0.689;
-//    private final double GATE_DOWN = 0.6;
 
     // ---------------- TIMERS ----------------
     private final ElapsedTime sorterTimer = new ElapsedTime();
@@ -83,8 +77,6 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
         hw.light.setPosition(0.0);
-
-//        gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         boolean autoAimEnabled = false;
@@ -191,11 +183,10 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
                 intake.setPower(isOuttakeMotorOn ? -0.8 : 0);
-//                gate.setPosition(isOuttakeMotorOn ? GATE_UP : GATE_DOWN);
             }
             prevLeftTrigger = curLeftTrigger;
 
-//             ---------------- SHOOTER TOGGLE ----------------
+            // ---------------- SHOOTER TOGGLE ----------------
             boolean currentXState = gamepad1.x;
 
             if (currentXState && !previousXState) {
