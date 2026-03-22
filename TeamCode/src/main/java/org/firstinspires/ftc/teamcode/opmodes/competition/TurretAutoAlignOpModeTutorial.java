@@ -39,16 +39,16 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
     // ---------------- HARDWARE ----------------
     private DcMotor intake;
     private DcMotor shooter;
-    private Servo pusher;
-    private Servo gate;
+    private Servo pusher_R;
+    private Servo pusher_L;
 
     private Servo light;
 
     private double theta;
     private double sorterPosition = 0.0;
 
-    private final double GATE_UP = 0.689;
-    private final double GATE_DOWN = 0.6;
+//    private final double GATE_UP = 0.689;
+//    private final double GATE_DOWN = 0.6;
 
     // ---------------- TIMERS ----------------
     private final ElapsedTime sorterTimer = new ElapsedTime();
@@ -75,15 +75,16 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
 
         intake = hw.intake;
         shooter = hw.shooter;
-        pusher = hw.pusher;
-        gate = hw.gate;
+        pusher_R = hw.pusher_R;
+        pusher_L = hw.pusher_L;
         light = hw.light;
 
-        pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+        pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+        pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
         hw.sorter.setPosition(0.0);
         hw.light.setPosition(0.0);
 
-        gate.setPosition(GATE_DOWN);
+//        gate.setPosition(GATE_DOWN);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         boolean autoAimEnabled = false;
@@ -179,7 +180,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
                 intake.setPower(isIntakeMotorOn ? 0.8 : 0);
-                gate.setPosition(isIntakeMotorOn ? GATE_UP : GATE_DOWN);
+//                gate.setPosition(isIntakeMotorOn ? GATE_UP : GATE_DOWN);
             }
             prevRightTrigger = curRightTrigger;
             colourSubsystem.update(isIntakeMotorOn);
@@ -190,7 +191,7 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
                 intake.setPower(isOuttakeMotorOn ? -0.8 : 0);
-                gate.setPosition(isOuttakeMotorOn ? GATE_UP : GATE_DOWN);
+//                gate.setPosition(isOuttakeMotorOn ? GATE_UP : GATE_DOWN);
             }
             prevLeftTrigger = curLeftTrigger;
 
@@ -231,7 +232,8 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             boolean currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
                 if (!togglePusher) {
-                    pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION);
                     pusherTimer.reset();
                     togglePusher = true;
                 }
@@ -239,7 +241,8 @@ public class TurretAutoAlignOpModeTutorial extends LinearOpMode {
             previousYState = currentYState;
 
             if (togglePusher && pusherTimer.milliseconds() >= 500) {
-                pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
                 togglePusher = false;
             }
 

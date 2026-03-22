@@ -13,7 +13,8 @@ import java.util.ArrayList;
 public class SorterSubsystem {
     public static final int MAX_NUM_BALLS = 3;
     private final Servo sorter;
-    private Servo pusher;
+    private Servo pusher_L;
+    private Servo pusher_R;
     private final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
@@ -30,7 +31,8 @@ public class SorterSubsystem {
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
-        this.pusher = hw.pusher;
+        this.pusher_R = hw.pusher_R;
+        this.pusher_L = hw.pusher_L;
         this.opMode = opMode;
         this.telemetry = telemetry;
         this.sorterList = new ArrayList<>();
@@ -93,12 +95,14 @@ public class SorterSubsystem {
     }
     public void push(){
 
-        pusher.setPosition(PusherConsts.PUSHER_UP_POSITION);
+        pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION);
+        pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION);
         pushTime.reset();
         isPusherUp = true;
 
         if (isPusherUp && pushTime.milliseconds() >= 500) {
-            pusher.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+            pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+            pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
             isPusherUp = false;
         }
     }

@@ -55,7 +55,8 @@ public class Specifications {
 
     public static final String SORTER = "sorter";
 
-    public static final String PUSHER = "pusher";
+    public static final String PUSHER_L = "pusherL";
+    public static final String PUSHER_R = "pusherR";
 
     public static final String GATE = "gate";
 
