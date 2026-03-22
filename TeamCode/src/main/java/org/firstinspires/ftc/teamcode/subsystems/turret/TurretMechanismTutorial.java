@@ -22,7 +22,7 @@ public class TurretMechanismTutorial {
     private double distanceTrack;
     private double lastError = 0;
     private final double ANGLE_TOLERANCE = 0.5; // degrees
-    private final double MAX_POWER = 0.3;
+    private final double MAX_POWER = 0.6;
 
     private final ElapsedTime loopTimer = new ElapsedTime();
 

@@ -172,7 +172,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
                 intake.setPower(isIntakeMotorOn ? 0.8 : 0);
-//                gate.setPosition(isIntakeMotorOn ? GATE_UP : GATE_DOWN);
             }
             prevRightTrigger = curRightTrigger;
             colourSubsystem.update(isIntakeMotorOn);
