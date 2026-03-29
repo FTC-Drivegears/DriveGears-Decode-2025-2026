@@ -538,16 +538,27 @@ public class NewRedAutoOp extends LinearOpMode {
                     }
                 }
                 break;
-            case 2:
-            case 4:
-            case 6:
-                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
-                    push();
+            case 2: //push on
+            case 5:
+            case 8:
+                if (stageTimer.milliseconds() > 500) {
+                    halfPush(true);
                     stage++;
                     stageTimer.reset();
                 }
                 break;
-            case 3:
+
+            case 3: //push off
+            case 6:
+            case 9:
+                if (stageTimer.milliseconds() > 300) {
+                    if(halfPush(false)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
+                }
+                break;
+            case 4: // sort
                 if (stageTimer.milliseconds() > 650) {
                     if(sort(1)) {
                         stage++;
@@ -555,15 +566,15 @@ public class NewRedAutoOp extends LinearOpMode {
                     }
                 }
                 break;
-            case 5:
-                if (stageTimer.milliseconds() > 650) {
+            case 7: // sort
+                if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
                     if(sort(2)) {
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 7:
+            case 10:
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
@@ -587,17 +598,26 @@ public class NewRedAutoOp extends LinearOpMode {
                     }
                 }
                 break;
-            case 2:
-            case 4:
-            case 6:
-                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
-                    push();
+            case 2: //push on
+            case 5:
+            case 8:
+                if (stageTimer.milliseconds() > 500) {
+                    halfPush(true);
                     stage++;
                     stageTimer.reset();
                 }
                 break;
-            case 3:
-            case 5:
+            case 3: //push off
+            case 6:
+            case 9:
+                if (stageTimer.milliseconds() > 300) {
+                    if(halfPush(false)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
+                }
+                break;
+            case 4: // sort
                 if (stageTimer.milliseconds() > 650) {
                     if(sort()) {
                         stage++;
@@ -605,7 +625,15 @@ public class NewRedAutoOp extends LinearOpMode {
                     }
                 }
                 break;
-            case 7:
+            case 7: // sort
+                if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
+                    if(sort()) {
+                        stage++;
+                        stageTimer.reset();
+                    }
+                }
+                break;
+            case 10:
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
@@ -629,16 +657,26 @@ public class NewRedAutoOp extends LinearOpMode {
                     }
                 }
                 break;
-            case 2:
-            case 4:
-            case 6:
-                if (stageTimer.milliseconds() > 200 && shooterSubsystem.isRPMReached()) {
-                    push();
+            case 2: //push on
+            case 5:
+            case 8:
+                if (stageTimer.milliseconds() > 500) {
+                    halfPush(true);
                     stage++;
                     stageTimer.reset();
                 }
                 break;
-            case 3:
+            case 3: //push off
+            case 6:
+            case 9:
+                if (stageTimer.milliseconds() > 500) {
+                    if(halfPush(false)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
+                }
+                break;
+            case 4: // sort
                 if (stageTimer.milliseconds() > 650) {
                     if(sort(2)) {
                         stage++;
@@ -646,15 +684,16 @@ public class NewRedAutoOp extends LinearOpMode {
                     }
                 }
                 break;
-            case 5:
-                if (stageTimer.milliseconds() > 650) {
+            case 7: // sort
+                if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
                     if(sort(0)) {
+                        sort(0);
                         stage++;
                         stageTimer.reset();
                     }
                 }
                 break;
-            case 7:
+            case 10:
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
