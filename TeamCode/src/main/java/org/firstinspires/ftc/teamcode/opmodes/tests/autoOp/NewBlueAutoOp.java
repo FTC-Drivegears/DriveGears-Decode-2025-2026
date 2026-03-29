@@ -58,9 +58,10 @@ public class NewBlueAutoOp extends LinearOpMode {
     //Pusher variables
     private static final double PUSHER_UP = 0.0;
     private static final double PUSHER_DOWN = 1.0;
-    private static final long PUSHER_TIME = 150;
+    private static final long PUSHER_TIME = 100;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
+    private static final long PUSHER_SAFE_MARGIN = 150;
 
     //Stage timer, to time the changes between states
     private static final ElapsedTime stageTimer = new ElapsedTime();
@@ -109,6 +110,10 @@ public class NewBlueAutoOp extends LinearOpMode {
     //Initial pattern is PPG_3 (must be set to something in case AprilTag detection fails)
     PATTERN pattern = PATTERN.PPG_3; // default
 
+    static boolean pusherReady() {
+        return !isPusherUp && pusherTimer.milliseconds() >= (PUSHER_TIME + PUSHER_SAFE_MARGIN);
+    }
+
     //halfPush, taking in boolean isUp, which either sets pusher to up or down
     static boolean halfPush(boolean isUp) {
         if (isUp) {
@@ -129,23 +134,17 @@ public class NewBlueAutoOp extends LinearOpMode {
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
-    static boolean push(){
-        if (!isPusherUp) {
-            pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION);
-            pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION);
-            pusherTimer.reset();
-            isPusherUp = true;
+    static void push(){
+        if (halfPush(true)) {
+            halfPush(false);
         }
-        if (isPusherUp && pusherTimer.milliseconds() >= 500) {
-            pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-            pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-            isPusherUp = false;
-        }
-        return isPusherUp;
     }
 
     //sort, taking in integer sp, which sets the position to the specified position
     static boolean sort(int sp) {
+        if (!pusherReady()) {
+            return false;
+        }
         double pos = (sp == 0) ? pos1 : (sp == 1) ? pos2 : pos3;
         sorter.setPosition(pos);
         currentSort = sp;
@@ -155,6 +154,9 @@ public class NewBlueAutoOp extends LinearOpMode {
 
     //sort with no arguments, which just sorts to the next position using manualSpin
     static boolean sort() {
+        if (!pusherReady()) {
+            return false;
+        }
         if (sorterTimer.milliseconds() > 500) {
             sorterTimer.reset();
             sorterSubsystem.manualSpin();

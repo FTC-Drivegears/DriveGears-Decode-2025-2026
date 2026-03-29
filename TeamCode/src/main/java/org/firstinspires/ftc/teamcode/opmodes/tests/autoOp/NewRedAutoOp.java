@@ -129,19 +129,10 @@ public class NewRedAutoOp extends LinearOpMode {
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
-    static boolean push(){
-        if (!isPusherUp) {
-            pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION);
-            pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION);
-            pusherTimer.reset();
-            isPusherUp = true;
+    static void push(){
+        if (halfPush(true)) {
+           halfPush(false);
         }
-        if (isPusherUp && pusherTimer.milliseconds() >= 500) {
-            pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-            pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-            isPusherUp = false;
-        }
-        return isPusherUp;
     }
 
     //sort, taking in integer sp, which sets the position to the specified position
