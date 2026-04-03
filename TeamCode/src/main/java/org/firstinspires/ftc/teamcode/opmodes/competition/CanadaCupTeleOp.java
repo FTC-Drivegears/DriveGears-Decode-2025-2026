@@ -39,6 +39,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
     private Servo pusher_R;
     private Servo pusher_L;
 
+    private Servo gate;
+
     private Servo light;
 
     private double theta;
@@ -72,11 +74,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
         pusher_R = hw.pusher_R;
         pusher_L = hw.pusher_L;
         light = hw.light;
+        gate = hw.gate;
 
         pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
         hw.sorter.setPosition(0.0);
         hw.light.setPosition(0.0);
+        gate.setPosition(0.5);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         boolean autoAimEnabled = false;
@@ -95,6 +99,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean togglePusher = false;
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
+        boolean isShooterOn = false;
 
         // ---------------- MAIN CONTROL LOOP ----------------
         while (opModeIsActive()) {
@@ -171,26 +176,47 @@ public class CanadaCupTeleOp extends LinearOpMode {
             boolean curRightTrigger = gamepad1.right_trigger > 0;
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
-                intake.setPower(isIntakeMotorOn ? 0.8 : 0);
+
+                // if intake turns on, outtake turns off
+                if (isIntakeMotorOn) {
+                    isOuttakeMotorOn = false;
+                    intake.setPower(0.8);
+                } else {
+                    intake.setPower(0);
+                }
             }
             prevRightTrigger = curRightTrigger;
             colourSubsystem.update(isIntakeMotorOn);
 
 
-            // ---------------- OUTTAKE TOGGLE -----------------
+// ---------------- OUTTAKE TOGGLE -----------------
             boolean curLeftTrigger = gamepad1.left_trigger > 0;
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
-                intake.setPower(isOuttakeMotorOn ? -0.8 : 0);
+
+                // if outtake turns on, intake turns off
+                if (isOuttakeMotorOn) {
+                    isIntakeMotorOn = false;
+                    intake.setPower(-0.8);
+                } else {
+                    intake.setPower(0);
+                }
             }
             prevLeftTrigger = curLeftTrigger;
 
+// ---------------- GATE CONTROL ----------------
+// gate opens only while intake OR outtake is on
+            if (isIntakeMotorOn || isOuttakeMotorOn) {
+                gate.setPosition(0.7);
+            } else {
+                gate.setPosition(0.6);
+            }
             // ---------------- SHOOTER TOGGLE ----------------
             boolean currentXState = gamepad1.x;
 
             if (currentXState && !previousXState) {
-                isOuttakeMotorOn = !isOuttakeMotorOn;
-                if (isOuttakeMotorOn) {
+                isShooterOn = !isShooterOn;
+                if (isShooterOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
                 } else {
@@ -200,23 +226,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
             previousXState = currentXState;
 
-            if (isOuttakeMotorOn) {
+            if (isShooterOn) {
                 if (shooterSubsystem.isRPMReached()) { //add && tx<5
                     light.setPosition(0.3);
                 } else {
                     light.setPosition(0.0);
                 }
             }
-
-            // ---------------- SORTER CONTROL ----------------
-            if (gamepad1.b && sorterTimer.milliseconds() > 1000) {
-                sorterPosition = (sorterPosition + 1) % 3;
-                sorterTimer.reset();
-                if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
-                else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
-                else hw.sorter.setPosition(0.875);
-            }
-
 
             // ---------------- PUSHER CONTROL ----------------
             boolean currentYState = gamepad1.y;
@@ -235,6 +251,15 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
                 togglePusher = false;
             }
+// --sorter override ---
+
+            if (gamepad1.b ) {
+                sorterPosition = (sorterPosition + 1) % 3;
+                if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
+                else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
+                else hw.sorter.setPosition(0.875);
+            }
+
 
             // ---------------- ODOMETRY RESET ----------------
             if (gamepad1.start) {

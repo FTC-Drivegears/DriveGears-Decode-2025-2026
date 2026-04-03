@@ -27,6 +27,7 @@ public class Hardware {
     public final DcMotorEx shooter;
 
     public final Servo hood;
+    public final Servo gate;
 
     public final Servo sorter;
 
@@ -63,6 +64,7 @@ public class Hardware {
 //        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);
 
         this.hood = hwMap.get(Servo.class, Specifications.HOOD);
+        this.gate = hwMap.get(Servo.class, Specifications.GATE);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher_R = hwMap.get(Servo.class, Specifications.PUSHER_R);
         this.pusher_L = hwMap.get(Servo.class, Specifications.PUSHER_L);
