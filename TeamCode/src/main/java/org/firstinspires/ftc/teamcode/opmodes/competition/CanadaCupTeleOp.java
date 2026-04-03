@@ -73,8 +73,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
         pusher_L = hw.pusher_L;
         light = hw.light;
 
-        pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-        pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+        pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
+        pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
         hw.sorter.setPosition(0.0);
         hw.light.setPosition(0.0);
 
@@ -222,8 +222,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
             boolean currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
                 if (!togglePusher) {
-                    pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION);
-                    pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION);
+                    pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
+                    pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
                     pusherTimer.reset();
                     togglePusher = true;
                 }
@@ -231,8 +231,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
             previousYState = currentYState;
 
             if (togglePusher && pusherTimer.milliseconds() >= 500) {
-                pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-                pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+                pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
+                pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
                 togglePusher = false;
             }
 
@@ -242,6 +242,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 
             // ---------------- TELEMETRY ----------------
+            telemetry.addData("Y state", currentYState);
             telemetry.addData("Target Visible", tx != null);
             telemetry.addData("tx", tx);
             telemetry.addData("ty", ty);

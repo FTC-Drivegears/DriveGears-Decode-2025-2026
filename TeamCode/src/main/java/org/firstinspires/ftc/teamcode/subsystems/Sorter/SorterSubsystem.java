@@ -95,14 +95,14 @@ public class SorterSubsystem {
     }
     public void push(){
 
-        pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION);
-        pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION);
+        pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
+        pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
         pushTime.reset();
         isPusherUp = true;
 
         if (isPusherUp && pushTime.milliseconds() >= 500) {
-            pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
-            pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION);
+            pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
+            pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
             isPusherUp = false;
         }
     }
