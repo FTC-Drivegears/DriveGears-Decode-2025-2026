@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode.util;
 
 public class PusherConsts{
     public static final double PUSHER_DOWN_POSITION_R = 0.2;
-    public static final double PUSHER_UP_POSITION_R = 0.35;
+    public static final double PUSHER_UP_POSITION_R = 0.32;
 
     public static final double PUSHER_DOWN_POSITION_L = 0.1;
-    public static final double PUSHER_UP_POSITION_L = 0.35;
+    public static final double PUSHER_UP_POSITION_L = 0.32;
 // 0.4 it will snap
 
 // 0.2 it will also snap
