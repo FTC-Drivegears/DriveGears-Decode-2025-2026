@@ -56,8 +56,10 @@ public class NewRedAutoOp extends LinearOpMode {
     }
 
     //Pusher variables
-    private static final double PUSHER_UP = 0.0;
-    private static final double PUSHER_DOWN = 1.0;
+    private static final double PUSHER_UP_L = PusherConsts.PUSHER_UP_POSITION_L;
+    private static final double PUSHER_DOWN_L = PusherConsts.PUSHER_DOWN_POSITION_L;
+    private static final double PUSHER_UP_R = PusherConsts.PUSHER_UP_POSITION_R;
+    private static final double PUSHER_DOWN_R = PusherConsts.PUSHER_DOWN_POSITION_R;
     private static final long PUSHER_TIME = 150;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
@@ -118,15 +120,15 @@ public class NewRedAutoOp extends LinearOpMode {
     static boolean halfPush(boolean isUp) {
         if (isUp) {
             if (!isPusherUp) {
-                pusher_L.setPosition(PUSHER_UP);
-                pusher_R.setPosition(PUSHER_UP);
+                pusher_L.setPosition(PUSHER_UP_L);
+                pusher_R.setPosition(PUSHER_UP_R);
                 isPusherUp = true;
                 pusherTimer.reset(); // start timing physical move
             }
         } else {
             if (isPusherUp) {
-                pusher_L.setPosition(PUSHER_DOWN);
-                pusher_R.setPosition(PUSHER_DOWN);
+                pusher_L.setPosition(PUSHER_DOWN_L);
+                pusher_R.setPosition(PUSHER_DOWN_R);
                 isPusherUp = false;
                 pusherTimer.reset(); // start timing physical move
             }
@@ -218,8 +220,8 @@ public class NewRedAutoOp extends LinearOpMode {
 
         //set the sorter, pusher, hood, initial positions
         sorter.setPosition(pos1);
-        pusher_L.setPosition(PUSHER_DOWN);
-        pusher_R.setPosition(PUSHER_DOWN);
+        pusher_L.setPosition(PUSHER_DOWN_L);
+        pusher_R.setPosition(PUSHER_DOWN_R);
         hood.setPosition(hoodPos);
         gate.setPosition(GATE_DOWN);
 
