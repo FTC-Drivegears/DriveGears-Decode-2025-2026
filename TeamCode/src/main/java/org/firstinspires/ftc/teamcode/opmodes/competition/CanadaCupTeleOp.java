@@ -64,7 +64,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         turret.setkD(0.001);
 
         limelight = hw.limelight;
-        limelight.pipelineSwitch(8);
+        limelight.pipelineSwitch(0); //obelisk detection
         limelight.start();
 
         colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw);
@@ -103,6 +103,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         // ---------------- MAIN CONTROL LOOP ----------------
         while (opModeIsActive()) {
+            limelight.pipelineSwitch(8); //blue side
 
             // ---------------- DRIVE ----------------
             mecanumCommand.processOdometry();
@@ -253,13 +254,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 // --sorter override ---
 
-            if (gamepad1.b ) {
+            if (gamepad1.b && sorterTimer.milliseconds() > 500) {
                 sorterPosition = (sorterPosition + 1) % 3;
+                sorterTimer.reset();
                 if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
                 else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
                 else hw.sorter.setPosition(0.875);
             }
-
 
             // ---------------- ODOMETRY RESET ----------------
             if (gamepad1.start) {

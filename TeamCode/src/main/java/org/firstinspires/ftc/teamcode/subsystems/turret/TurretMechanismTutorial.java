@@ -73,8 +73,7 @@ public class TurretMechanismTutorial {
 
             double dTerm = ((error - lastError) / deltaTime) * kD;
             double power = (Math.abs(error) < ANGLE_TOLERANCE)
-                    ? 0
-                    : Range.clip(error * kP + dTerm, -MAX_POWER, MAX_POWER);
+                    ? 0 : Range.clip(error * kP + dTerm, -MAX_POWER, MAX_POWER);
 
             turret.setPower(power);
             lastError = error;
