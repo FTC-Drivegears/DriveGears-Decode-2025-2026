@@ -88,6 +88,10 @@ public class NewBlueAutoOp extends LinearOpMode {
     //Hood position variable
     private static double hoodPos = 0.359;
 
+    //Gate variables
+    private static final double GATE_UP = 0.7;
+    private static final double GATE_DOWN = 0.6;
+
     //Initialize motors and servos
     private static DcMotor shooter;
     private static Servo pusher_L;
@@ -95,6 +99,7 @@ public class NewBlueAutoOp extends LinearOpMode {
     private static Servo hood;
     private static Servo sorter;
     private static DcMotorEx intake;
+    private static Servo gate;
     private TurretMechanismTutorial turret;
 
     //Outtake and intake states
@@ -208,6 +213,7 @@ public class NewBlueAutoOp extends LinearOpMode {
         sorter = hw.sorter;
         hood = hw.hood;
         intake = hw.intake;
+        gate = hw.gate;
 
         turret = new TurretMechanismTutorial();
         turret.init(hardwareMap);
@@ -226,6 +232,7 @@ public class NewBlueAutoOp extends LinearOpMode {
         pusher_L.setPosition(PUSHER_DOWN);
         pusher_R.setPosition(PUSHER_DOWN);
         hood.setPosition(hoodPos);
+        gate.setPosition(GATE_DOWN);
 
         //set position and stage to 0
         int position = 0;
@@ -364,6 +371,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     switch (stage) {
                         case 0: //align with artifacts
                             mecanumCommand.moveToPos(82, 32, Math.PI / 2); //align with artifacts
+                            gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
                             break;
@@ -419,6 +427,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     break;
                 //Repeat last process once more
                 case SECOND_SHOT:
+                    gate.setPosition(GATE_DOWN);
                     if (mecanumCommand.isPositionReached()) {
                         intakeFlag = false;
                         switch (pattern) {
@@ -450,6 +459,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     switch (stage) {
                         case 0: //align with artifacts
                             mecanumCommand.moveToPos(142, 28, Math.PI / 2); //align with artifacts
+                            gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
                             break;
@@ -507,6 +517,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                 //Shoot once more
                 case THIRD_SHOT:
                     if (mecanumCommand.isPositionReached()) {
+                        gate.setPosition(GATE_DOWN);
                         switch (pattern) {
                             case GPP_1:
                                 processGPP1(AUTO_STATE.FINISH);
@@ -524,6 +535,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     break;
                 //Turn off outtake and intake
                 case FINISH:
+                    gate.setPosition(GATE_DOWN);
                     outtakeFlag = false;
                     intakeFlag = false;
                     mecanumCommand.stop();
@@ -538,6 +550,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
+                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
@@ -598,6 +611,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
+                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
@@ -657,6 +671,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
+                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
