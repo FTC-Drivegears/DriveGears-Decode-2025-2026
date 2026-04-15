@@ -54,14 +54,14 @@ public class ColourSensorSubsystem {
             if (sorterList.size() < 3) {
 
                 // PURPLE
-                if (blue > red + 30 && blue > green + 30) {
+                if (blue > red + 30 && blue > green + 30 || blue2 > red2 + 30 && blue2 > green2 + 30) {
                     sorterList.add(new Artifact("Purple", sorter.getPosition()));
                     light.setPosition(0.7);
                     turnSorter();
                 }
 
                 // GREEN
-                else if (green > blue + 30 && green > red + 30) {
+                else if (green > blue + 30 && green > red + 30 || green2 > blue2 + 30 && green2 > red2 + 30) {
                     sorterList.add(new Artifact("Green", sorter.getPosition()));
                     light.setPosition(0.5);
                     turnSorter();
