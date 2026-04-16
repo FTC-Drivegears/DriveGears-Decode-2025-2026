@@ -11,13 +11,10 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-//import org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor.ColourSensorSubsystem;
-//import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
-import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
 @Autonomous (name = "New Blue Auto")
@@ -29,9 +26,6 @@ public class NewBlueAutoOp extends LinearOpMode {
 
     //Initialize a resetTimer
     private ElapsedTime resetTimer;
-
-//    //Initialize LogitechVisionSubsystem
-//    private LogitechVisionSubsystem logitechVisionSubsystem;
 
     //Initialize Limelight
     private Limelight3A limelight;
@@ -56,8 +50,10 @@ public class NewBlueAutoOp extends LinearOpMode {
     }
 
     //Pusher variables
-    private static final double PUSHER_UP = 0.0;
-    private static final double PUSHER_DOWN = 1.0;
+    public static final double PUSHER_UP_POSITION_L = 0.35;
+    public static final double PUSHER_UP_POSITION_R = 0.36;
+    public static final double PUSHER_DOWN_POSITION_R = 0.1;
+    public static final double PUSHER_DOWN_POSITION_L = 0.0;
     private static final long PUSHER_TIME = 100;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
@@ -118,15 +114,15 @@ public class NewBlueAutoOp extends LinearOpMode {
     static boolean halfPush(boolean isUp) {
         if (isUp) {
             if (!isPusherUp) {
-                pusher_L.setPosition(PUSHER_UP);
-                pusher_R.setPosition(PUSHER_UP);
+                pusher_L.setPosition(PUSHER_UP_POSITION_L);
+                pusher_R.setPosition(PUSHER_UP_POSITION_R);
                 isPusherUp = true;
                 pusherTimer.reset(); // start timing physical move
             }
         } else {
             if (isPusherUp) {
-                pusher_L.setPosition(PUSHER_DOWN);
-                pusher_R.setPosition(PUSHER_DOWN);
+                pusher_L.setPosition(PUSHER_DOWN_POSITION_L);
+                pusher_R.setPosition(PUSHER_DOWN_POSITION_R);
                 isPusherUp = false;
                 pusherTimer.reset(); // start timing physical move
             }
@@ -209,22 +205,22 @@ public class NewBlueAutoOp extends LinearOpMode {
         hood = hw.hood;
         intake = hw.intake;
 
-        turret = new TurretMechanismTutorial();
-        turret.init(hardwareMap);
-        turret.setkP(0.035);
-        turret.setkD(0.001);
-
-        limelight = hw.limelight;
-        limelight.pipelineSwitch(8);
-        limelight.start();
+//        turret = new TurretMechanismTutorial();
+//        turret.init(hardwareMap);
+//        turret.setkP(0.035);
+//        turret.setkD(0.001);
+//
+//        limelight = hw.limelight;
+//        limelight.pipelineSwitch(8);
+//        limelight.start();
 
 //        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw);
 
 
         //set the sorter, pusher, hood, initial positions
         sorter.setPosition(pos1);
-        pusher_L.setPosition(PUSHER_DOWN);
-        pusher_R.setPosition(PUSHER_DOWN);
+        pusher_L.setPosition(PUSHER_DOWN_POSITION_L);
+        pusher_R.setPosition(PUSHER_DOWN_POSITION_R);
         hood.setPosition(hoodPos);
 
         //set position and stage to 0
@@ -265,24 +261,24 @@ public class NewBlueAutoOp extends LinearOpMode {
 //            targetX = logitechVisionSubsystem.targetApril(telemetry);
 
             //limelight detection
-            llResult = limelight.getLatestResult();
+//            llResult = limelight.getLatestResult();
+//
+//            Double tx = null;
+//            Double ty = null;
 
-            Double tx = null;
-            Double ty = null;
-
-            if (llResult != null && llResult.isValid()) {
-                tx = llResult.getTx();
-                ty = llResult.getTy();
-            }
+//            if (llResult != null && llResult.isValid()) {
+//                tx = llResult.getTx();
+//                ty = llResult.getTy();
+//            }
 
             //Then update telemetry with this data, in order to know for sure
 //            telemetry.addData("Detected Obelisk", detected);
-            telemetry.addData("Pattern", pattern);
-            telemetry.addData("Target X", targetX);
-            telemetry.addData("tx", tx);
-            telemetry.addData("ty", ty);
-            telemetry.addData("llResult", llResult);
-            telemetry.update();
+//            telemetry.addData("Pattern", pattern);
+//            telemetry.addData("Target X", targetX);
+//            telemetry.addData("tx", tx);
+//            telemetry.addData("ty", ty);
+//            telemetry.addData("llResult", llResult);
+//            telemetry.update();
         }
 
         //Wait for start
@@ -290,45 +286,46 @@ public class NewBlueAutoOp extends LinearOpMode {
 
         //While running
         while (opModeIsActive()) {
+            mecanumCommand.moveToPos(26, -6, 0.36);
             //Call motorProcess and processOdometry
-            mecanumCommand.motorProcess();
-            mecanumCommand.processOdometry();
-
-            //Set shoot and intake to outtake and intakeFlag
-            shoot(outtakeFlag);
-            intake(intakeFlag);
-
-            //Update telemetry with stage, pattern, position, sorter and stageTimer
-            telemetry.addData("stage", stage);
-            telemetry.addData("Pattern", pattern);
-            telemetry.addData("position: ", position);
-            telemetry.addData("sorterTimer: ", sorterTimer.milliseconds());
-            telemetry.addData("stageTimer: ", stageTimer.milliseconds());
-
-            //limelight detection
-            llResult = limelight.getLatestResult();
-            Double tx = null;
-            Double ty = null;
-            if (llResult != null && llResult.isValid()) {
-                tx = llResult.getTx();
-                ty = llResult.getTy();
-            }
-            turret.update(tx, ty);
-            //Then update telemetry with this data, in order to know for sure
-            telemetry.addData("tx", tx);
-            telemetry.addData("ty", ty);
-            telemetry.addData("llResult", llResult);
-            telemetry.update();
+//            mecanumCommand.motorProcess();
+//            mecanumCommand.processOdometry();
+//
+//            //Set shoot and intake to outtake and intakeFlag
+//            shoot(outtakeFlag);
+//            intake(intakeFlag);
+//
+//            //Update telemetry with stage, pattern, position, sorter and stageTimer
+//            telemetry.addData("stage", stage);
+//            telemetry.addData("Pattern", pattern);
+//            telemetry.addData("position: ", position);
+//            telemetry.addData("sorterTimer: ", sorterTimer.milliseconds());
+//            telemetry.addData("stageTimer: ", stageTimer.milliseconds());
+//
+//            //limelight detection
+//            llResult = limelight.getLatestResult();
+//            Double tx = null;
+//            Double ty = null;
+//            if (llResult != null && llResult.isValid()) {
+//                tx = llResult.getTx();
+//                ty = llResult.getTy();
+//            }
+//            turret.update(tx, ty);
+//            //Then update telemetry with this data, in order to know for sure
+//            telemetry.addData("tx", tx);
+//            telemetry.addData("ty", ty);
+//            telemetry.addData("llResult", llResult);
+//            telemetry.update();
 
             //Process Telemetry
-            processTelemetry();
+//            processTelemetry();
 
             //State machine, going through the enum autoState
             switch (autoState) {
                 case FIRST_SHOT:
                     //Set max RPM to 3500 rpm, move to initial position, and set hood position
 //                    shooterSubsystem.setMaxRPM(3500);
-//                    mecanumCommand.moveToPos(26, -6, 0.36);
+                    mecanumCommand.moveToPos(26, -6, 0.36);
 //                    hood.setPosition(0.43);
 
                     //Depending on pattern, call respective processPattern function
