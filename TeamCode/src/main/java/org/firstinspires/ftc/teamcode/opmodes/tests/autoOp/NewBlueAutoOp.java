@@ -11,10 +11,12 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LimelightVision;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
 @Autonomous (name = "New Blue Auto")
@@ -23,19 +25,10 @@ public class NewBlueAutoOp extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
     private static SorterSubsystem sorterSubsystem;
-
-    //Initialize a resetTimer
     private ElapsedTime resetTimer;
-
-    //Initialize Limelight
+    private LimelightVision LimelightVision;
     private Limelight3A limelight;
     private LLResult llResult;
-
-    //Initialize Color Sensor Subsystem
-//    private ColourSensorSubsystem colourSubsystem;
-
-    //Initialize target X
-    private double targetX = Double.NaN; // X position of alliance-specific tag
 
     //Create an enum to power the state machine
     enum AUTO_STATE {
@@ -49,11 +42,13 @@ public class NewBlueAutoOp extends LinearOpMode {
         PPG_3 //Tag ID 23
     }
 
+
+
     //Pusher variables
-    public static final double PUSHER_UP_POSITION_L = 0.35;
-    public static final double PUSHER_UP_POSITION_R = 0.36;
-    public static final double PUSHER_DOWN_POSITION_R = 0.1;
-    public static final double PUSHER_DOWN_POSITION_L = 0.0;
+    private static final double PUSHER_UP_L = PusherConsts.PUSHER_UP_POSITION_L;
+    private static final double PUSHER_DOWN_L = PusherConsts.PUSHER_DOWN_POSITION_L;
+    private static final double PUSHER_UP_R = PusherConsts.PUSHER_UP_POSITION_R;
+    private static final double PUSHER_DOWN_R = PusherConsts.PUSHER_DOWN_POSITION_R;
     private static final long PUSHER_TIME = 100;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
@@ -84,6 +79,10 @@ public class NewBlueAutoOp extends LinearOpMode {
     //Hood position variable
     private static double hoodPos = 0.359;
 
+    //Gate variables
+    private static final double GATE_UP = 0.7;
+    private static final double GATE_DOWN = 0.6;
+
     //Initialize motors and servos
     private static DcMotor shooter;
     private static Servo pusher_L;
@@ -91,6 +90,7 @@ public class NewBlueAutoOp extends LinearOpMode {
     private static Servo hood;
     private static Servo sorter;
     private static DcMotorEx intake;
+    private static Servo gate;
     private TurretMechanismTutorial turret;
 
     //Outtake and intake states
@@ -114,15 +114,15 @@ public class NewBlueAutoOp extends LinearOpMode {
     static boolean halfPush(boolean isUp) {
         if (isUp) {
             if (!isPusherUp) {
-                pusher_L.setPosition(PUSHER_UP_POSITION_L);
-                pusher_R.setPosition(PUSHER_UP_POSITION_R);
+                pusher_L.setPosition(PUSHER_UP_L);
+                pusher_R.setPosition(PUSHER_UP_R);
                 isPusherUp = true;
                 pusherTimer.reset(); // start timing physical move
             }
         } else {
             if (isPusherUp) {
-                pusher_L.setPosition(PUSHER_DOWN_POSITION_L);
-                pusher_R.setPosition(PUSHER_DOWN_POSITION_R);
+                pusher_L.setPosition(PUSHER_DOWN_L);
+                pusher_R.setPosition(PUSHER_DOWN_R);
                 isPusherUp = false;
                 pusherTimer.reset(); // start timing physical move
             }
@@ -204,31 +204,29 @@ public class NewBlueAutoOp extends LinearOpMode {
         sorter = hw.sorter;
         hood = hw.hood;
         intake = hw.intake;
+        gate = hw.gate;
 
-//        turret = new TurretMechanismTutorial();
-//        turret.init(hardwareMap);
-//        turret.setkP(0.035);
-//        turret.setkD(0.001);
-//
-//        limelight = hw.limelight;
-//        limelight.pipelineSwitch(8);
-//        limelight.start();
+        turret = new TurretMechanismTutorial();
+        turret.init(hardwareMap);
+        turret.setkP(0.035);
+        turret.setkD(0.001);
 
-//        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw);
-
+        limelight = hw.limelight;
+        limelight.pipelineSwitch(0);
+        limelight.start();
 
         //set the sorter, pusher, hood, initial positions
         sorter.setPosition(pos1);
-        pusher_L.setPosition(PUSHER_DOWN_POSITION_L);
-        pusher_R.setPosition(PUSHER_DOWN_POSITION_R);
+        pusher_L.setPosition(PUSHER_DOWN_L);
+        pusher_R.setPosition(PUSHER_DOWN_R);
         hood.setPosition(hoodPos);
+        gate.setPosition(GATE_DOWN);
 
         //set position and stage to 0
         int position = 0;
         stage = 0;
 
-        //initialize logitechVisionSubsystem
-//        logitechVisionSubsystem = new LogitechVisionSubsystem(hw, "BLUE");
+        LimelightVision = new LimelightVision(hw);
 
         //update telemetry
         telemetry.update();
@@ -238,47 +236,37 @@ public class NewBlueAutoOp extends LinearOpMode {
 
         // Detect obelisk pattern, and set pattern based on that
         while (!isStarted() && !isStopRequested()) {
-//            String detected = logitechVisionSubsystem.pattern();
-//            String result = "";
-//            if (detected != null && !detected.equals("UNKNOWN")) {
-//                switch (detected) {
-//                    case "Obelisk_GPP":
-//                    case "21":
-//                        pattern = PATTERN.GPP_1;
-//                        break;
-//
-//                    case "Obelisk_PGP":
-//                    case "22":
-//                        pattern = PATTERN.PGP_2;
-//                        break;
-//
-//                    case "Obelisk_PPG":
-//                    case "23":
-//                        pattern = PATTERN.PPG_3;
-//                        break;
-//                }
-//            }
-//            targetX = logitechVisionSubsystem.targetApril(telemetry);
+            String detected = LimelightVision.pattern();
+            if (detected != null && !detected.equals("UNKNOWN")) {
+                switch (detected) {
+                    case "GPP":
+                        pattern = PATTERN.GPP_1;
+                        break;
+                    case "PGP":
+                        pattern = PATTERN.PGP_2;
+                        break;
+                    case "PPG":
+                        pattern = PATTERN.PPG_3;
+                        break;
+                }
+            }
 
             //limelight detection
-//            llResult = limelight.getLatestResult();
-//
-//            Double tx = null;
-//            Double ty = null;
+            llResult = limelight.getLatestResult();
 
-//            if (llResult != null && llResult.isValid()) {
-//                tx = llResult.getTx();
-//                ty = llResult.getTy();
-//            }
+            Double tx = null;
+            Double ty = null;
+
+            if (llResult != null && llResult.isValid()) {
+                tx = llResult.getTx();
+                ty = llResult.getTy();
+            }
 
             //Then update telemetry with this data, in order to know for sure
-//            telemetry.addData("Detected Obelisk", detected);
-//            telemetry.addData("Pattern", pattern);
-//            telemetry.addData("Target X", targetX);
-//            telemetry.addData("tx", tx);
-//            telemetry.addData("ty", ty);
-//            telemetry.addData("llResult", llResult);
-//            telemetry.update();
+            telemetry.addData("Pattern:", detected);
+            telemetry.addData("tx", tx);
+            telemetry.addData("ty", ty);
+            telemetry.update();
         }
 
         //Wait for start
@@ -286,46 +274,45 @@ public class NewBlueAutoOp extends LinearOpMode {
 
         //While running
         while (opModeIsActive()) {
-            mecanumCommand.moveToPos(26, -6, 0.36);
             //Call motorProcess and processOdometry
-//            mecanumCommand.motorProcess();
-//            mecanumCommand.processOdometry();
-//
-//            //Set shoot and intake to outtake and intakeFlag
-//            shoot(outtakeFlag);
-//            intake(intakeFlag);
-//
-//            //Update telemetry with stage, pattern, position, sorter and stageTimer
-//            telemetry.addData("stage", stage);
-//            telemetry.addData("Pattern", pattern);
-//            telemetry.addData("position: ", position);
-//            telemetry.addData("sorterTimer: ", sorterTimer.milliseconds());
-//            telemetry.addData("stageTimer: ", stageTimer.milliseconds());
-//
-//            //limelight detection
-//            llResult = limelight.getLatestResult();
-//            Double tx = null;
-//            Double ty = null;
-//            if (llResult != null && llResult.isValid()) {
-//                tx = llResult.getTx();
-//                ty = llResult.getTy();
-//            }
-//            turret.update(tx, ty);
-//            //Then update telemetry with this data, in order to know for sure
-//            telemetry.addData("tx", tx);
-//            telemetry.addData("ty", ty);
-//            telemetry.addData("llResult", llResult);
-//            telemetry.update();
+            mecanumCommand.motorProcess();
+            mecanumCommand.processOdometry();
+
+            //Set shoot and intake to outtake and intakeFlag
+            shoot(outtakeFlag);
+            intake(intakeFlag);
+
+            //Update telemetry with stage, pattern, position, sorter and stageTimer
+            telemetry.addData("stage", stage);
+            telemetry.addData("Pattern", pattern);
+            telemetry.addData("position: ", position);
+            telemetry.addData("sorterTimer: ", sorterTimer.milliseconds());
+            telemetry.addData("stageTimer: ", stageTimer.milliseconds());
+
+            //limelight detection
+            llResult = limelight.getLatestResult();
+            Double tx = null;
+            Double ty = null;
+            if (llResult != null && llResult.isValid()) {
+                tx = llResult.getTx();
+                ty = llResult.getTy();
+            }
+            turret.update(tx, ty);
+            //Then update telemetry with this data, in order to know for sure
+            telemetry.addData("tx", tx);
+            telemetry.addData("ty", ty);
+            telemetry.addData("llResult", llResult);
+            telemetry.update();
 
             //Process Telemetry
-//            processTelemetry();
+            processTelemetry();
 
             //State machine, going through the enum autoState
             switch (autoState) {
                 case FIRST_SHOT:
                     //Set max RPM to 3500 rpm, move to initial position, and set hood position
 //                    shooterSubsystem.setMaxRPM(3500);
-                    mecanumCommand.moveToPos(26, -6, 0.36);
+//                    mecanumCommand.moveToPos(26, -6, 0.36);
 //                    hood.setPosition(0.43);
 
                     //Depending on pattern, call respective processPattern function
@@ -361,6 +348,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     switch (stage) {
                         case 0: //align with artifacts
                             mecanumCommand.moveToPos(82, 32, Math.PI / 2); //align with artifacts
+                            gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
                             break;
@@ -416,6 +404,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     break;
                 //Repeat last process once more
                 case SECOND_SHOT:
+                    gate.setPosition(GATE_DOWN);
                     if (mecanumCommand.isPositionReached()) {
                         intakeFlag = false;
                         switch (pattern) {
@@ -447,6 +436,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     switch (stage) {
                         case 0: //align with artifacts
                             mecanumCommand.moveToPos(142, 28, Math.PI / 2); //align with artifacts
+                            gate.setPosition(GATE_UP);
                             stageTimer.reset();
                             stage++;
                             break;
@@ -504,6 +494,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                 //Shoot once more
                 case THIRD_SHOT:
                     if (mecanumCommand.isPositionReached()) {
+                        gate.setPosition(GATE_DOWN);
                         switch (pattern) {
                             case GPP_1:
                                 processGPP1(AUTO_STATE.FINISH);
@@ -521,6 +512,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                     break;
                 //Turn off outtake and intake
                 case FINISH:
+                    gate.setPosition(GATE_DOWN);
                     outtakeFlag = false;
                     intakeFlag = false;
                     mecanumCommand.stop();
@@ -529,12 +521,13 @@ public class NewBlueAutoOp extends LinearOpMode {
             }
         }
     }
-        //processGPP1, takes in an AUTO_STATE to navigate to after the process, and then unloads and shoots all artifacts in GPP order
+    //processGPP1, takes in an AUTO_STATE to navigate to after the process, and then unloads and shoots all artifacts in GPP order
     public void processGPP1(AUTO_STATE reset){
         switch (stage) {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
+                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
@@ -595,6 +588,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
+                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
@@ -654,6 +648,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
+                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;

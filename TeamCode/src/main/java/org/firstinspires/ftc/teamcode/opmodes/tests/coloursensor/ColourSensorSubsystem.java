@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 public class ColourSensorSubsystem {
     private boolean lastArtifactPresent = false;
+
     private Hardware hw;
     private ColorSensor colourSensor1;
     private ColorSensor colourSensor2;
@@ -17,6 +18,7 @@ public class ColourSensorSubsystem {
     private Servo light;
 
     private boolean detectedColor = false;
+
     private ArrayList<Artifact> sorterList = new ArrayList<>();
 
     private int red, green, blue, alpha;
@@ -92,4 +94,6 @@ public class ColourSensorSubsystem {
     public int getAlpha2() { return alpha2; }
     public int getCount() { return sorterList.size(); }
 }
+
+
 
