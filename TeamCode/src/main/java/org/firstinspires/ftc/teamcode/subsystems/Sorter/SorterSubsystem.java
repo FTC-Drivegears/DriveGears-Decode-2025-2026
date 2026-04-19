@@ -59,40 +59,6 @@ public class SorterSubsystem {
         curSorterPositionIndex++;
     }
 
-    public void setIsPusherUp(boolean isPusherUp) {
-        this.isPusherUp = isPusherUp;
-    }
-
-    public void intakeBall(char color){
-        // fail-safe
-        if (this.sorterList.size() == MAX_NUM_BALLS){
-            telemetry.addLine("Cannot intake any more balls, max capacity");
-            telemetry.update();
-            return;
-        }
-
-//        telemetry.addData("numIntakeBalls before turn to intake", numIntakeBalls);
-        turnToIntake(); // First turn to a position that allows robot to take in ball without being blocked.
-        numIntakeBalls++;
-        telemetry.update();
-
-        this.sorterList.add(new Artifact(color, sorter.getPosition()));
-    }
-
-    public void turnToIntake() { // turn sorter before intaking a ball
-
-        if (sorter.getPosition() != 1 && !isPusherUp) { // ensure the sorter cannot turn more than max
-            telemetry.addData("how many balls?", this.sorterList.size());
-            if (curSorterPositionIndex >= MAX_NUM_BALLS) {
-                curSorterPositionIndex = 0;
-            }
-            sorter.setPosition(this.sorterPositions[curSorterPositionIndex]);
-            curSorterPositionIndex++;
-            telemetry.addLine("turning to position");
-            telemetry.update();
-        }
-        telemetry.update();
-    }
     public void push(){
 
         pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
@@ -107,7 +73,6 @@ public class SorterSubsystem {
         }
     }
 
-    // quickFire fires a random ball
     public void quickFire() {
         if (this.sorterList.isEmpty()){
             telemetry.addLine("Nothing in sorter");

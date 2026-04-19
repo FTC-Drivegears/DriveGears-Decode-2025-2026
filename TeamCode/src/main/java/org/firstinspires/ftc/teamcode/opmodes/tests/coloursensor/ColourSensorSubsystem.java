@@ -10,15 +10,13 @@ import java.util.ArrayList;
 
 public class ColourSensorSubsystem {
     private boolean lastArtifactPresent = false;
-
     private Hardware hw;
     private ColorSensor colourSensor1;
     private ColorSensor colourSensor2;
     private Servo sorter;
     private Servo light;
 
-    private boolean detectedColor = false;
-
+    private int colour_threshold = 80;
     private ArrayList<Artifact> sorterList = new ArrayList<>();
 
     private int red, green, blue, alpha;
@@ -47,53 +45,55 @@ public class ColourSensorSubsystem {
         blue2 = colourSensor2.blue();
         alpha2 = colourSensor2.alpha();
 
-        if (!intakeOn) return;
         if (sorterList.size() == 3) return;
 
         boolean artifactPresent = alpha > 150 || alpha2 > 150;
-        if (artifactPresent && !lastArtifactPresent) {
+        boolean artifactCleared = alpha < colour_threshold && alpha2 < colour_threshold;
 
+        boolean purple_colour1 = blue > red + 50 && blue > green + 30;
+        boolean purple_colour2 = blue2 > red2 + 50 && blue2 > green2 + 30;
+
+        boolean green_colour1 = green > blue + 70 && green > red + 70;
+        boolean green_colour2 = green2 > blue2 + 70 && green2 > red2 + 70;
+
+        if (intakeOn && artifactPresent && !lastArtifactPresent) {
             if (sorterList.size() < 3) {
-
-                // PURPLE
-                if (blue > red + 30 && blue > green + 30 || blue2 > red2 + 30 && blue2 > green2 + 30) {
+                if (purple_colour1 || purple_colour2) {
                     sorterList.add(new Artifact("Purple", sorter.getPosition()));
                     light.setPosition(0.7);
                     turnSorter();
-                }
-
-                // GREEN
-                else if (green > blue + 30 && green > red + 30 || green2 > blue2 + 30 && green2 > red2 + 30) {
+                } else if (green_colour1 || green_colour2) {
                     sorterList.add(new Artifact("Green", sorter.getPosition()));
                     light.setPosition(0.5);
                     turnSorter();
-                }
-
-                else {
+                } else {
                     light.setPosition(0);
                 }
             }
         }
-        lastArtifactPresent = artifactPresent;
+        if (artifactCleared) {
+            lastArtifactPresent = false;
+        } else {
+            lastArtifactPresent = artifactPresent;
+        }
     }
 
-    private void turnSorter() {
-        double pos = Math.min(sorterList.size() * 0.43, 1.0);
-        sorter.setPosition(pos);
+        public int getRed () { return red; }
+        public int getGreen () {return green; }
+        public int getBlue () { return blue; }
+        public int getAlpha () { return alpha; }
+        public int getRed2 () { return red2; }
+        public int getGreen2 () {return green2; }
+        public int getBlue2 () { return blue2; }
+        public int getAlpha2 () { return alpha2; }
+        public int getCount () { return sorterList.size(); }
+
+        private void turnSorter () {
+            double pos = Math.min(sorterList.size() * 0.43, 1.0);
+            sorter.setPosition(pos);
     }
-
-    public int getRed() { return red; }
-
-    public int getGreen() { return green; }
-
-    public int getBlue() { return blue; }
-    public int getAlpha() { return alpha; }
-    public int getRed2() { return red2; }
-    public int getGreen2() { return green2; }
-    public int getBlue2() { return blue2; }
-    public int getAlpha2() { return alpha2; }
-    public int getCount() { return sorterList.size(); }
 }
+
 
 
 

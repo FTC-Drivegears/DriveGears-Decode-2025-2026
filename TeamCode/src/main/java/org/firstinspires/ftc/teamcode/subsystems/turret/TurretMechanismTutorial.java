@@ -35,7 +35,7 @@ public class TurretMechanismTutorial {
     private final double MIN_DISTANCE = 0.3;
     private final double MAX_DISTANCE = 2.0;
 
-    private final double MIN_RPM = 3000;
+    private final double MIN_RPM = 3100;
     private final double MAX_RPM = 4000;
     private double shootRPM = MIN_RPM;
 
