@@ -311,9 +311,9 @@ public class NewBlueAutoOp extends LinearOpMode {
             switch (autoState) {
                 case FIRST_SHOT:
                     //Set max RPM to 3500 rpm, move to initial position, and set hood position
-//                    shooterSubsystem.setMaxRPM(3500);
-//                    mecanumCommand.moveToPos(26, -6, 0.36);
-//                    hood.setPosition(0.43);
+                    shooterSubsystem.setMaxRPM(3500);
+                    mecanumCommand.moveToPos(26, -6, 0.36);
+                    hood.setPosition(0.43);
 
                     //Depending on pattern, call respective processPattern function
                     if (mecanumCommand.isPositionReached()) {

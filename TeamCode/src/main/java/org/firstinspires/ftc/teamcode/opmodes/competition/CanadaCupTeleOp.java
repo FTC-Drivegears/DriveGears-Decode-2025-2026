@@ -227,14 +227,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
             previousXState = currentXState;
 
-            //LIGHT INDICATION
-//            if (isShooterOn) {
-//                if (shooterSubsystem.isRPMReached()) {
-//                    light.setPosition(0.3);
-//                } else {
-//                    light.setPosition(0.0);
-//                }
-//            }
             if (isShooterOn && tx != null && Math.abs(tx) < 3) {
                 if (shooterSubsystem.isRPMReached()) {
                     light.setPosition(0.3);
