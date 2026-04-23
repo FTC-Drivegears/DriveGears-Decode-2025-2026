@@ -35,7 +35,7 @@ public class TurretMechanismTutorial {
     private final double MIN_DISTANCE = 0.3;
     private final double MAX_DISTANCE = 2.0;
 
-    private final double MIN_RPM = 3100;
+    private final double MIN_RPM = 3000;
     private final double MAX_RPM = 4000;
     private double shootRPM = MIN_RPM;
 
@@ -100,7 +100,11 @@ public class TurretMechanismTutorial {
 
             // raise hood a little more for longer shots
             if (distance > 0.55) {
-                hoodPos += 0.1;
+                hoodPos += 0.05;
+            }
+
+            if (distance < 0.55) {
+                hoodPos += 0.412;
             }
 
             hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
@@ -109,7 +113,7 @@ public class TurretMechanismTutorial {
 
             // boost RPM for farther shots
             if (distance > 0.55) {
-                shootRPM += 250;
+                shootRPM += 270;
             }
 
             shootRPM = Range.clip(shootRPM, MIN_RPM, MAX_RPM);

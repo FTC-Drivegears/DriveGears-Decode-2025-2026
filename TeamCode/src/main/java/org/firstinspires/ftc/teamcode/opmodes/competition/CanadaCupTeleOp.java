@@ -80,7 +80,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
         hw.sorter.setPosition(0.0);
         hw.light.setPosition(0.0);
-        gate.setPosition(0.5);
+        gate.setPosition(0.6);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         boolean autoAimEnabled = false;
@@ -227,12 +227,22 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
             previousXState = currentXState;
 
-            if (isShooterOn) {
-                if (shooterSubsystem.isRPMReached()) { //add && tx<5
+            //LIGHT INDICATION
+//            if (isShooterOn) {
+//                if (shooterSubsystem.isRPMReached()) {
+//                    light.setPosition(0.3);
+//                } else {
+//                    light.setPosition(0.0);
+//                }
+//            }
+            if (isShooterOn && tx != null && Math.abs(tx) < 3) {
+                if (shooterSubsystem.isRPMReached()) {
                     light.setPosition(0.3);
                 } else {
-                    light.setPosition(0.0);
+                    light.setPosition(0.1);
                 }
+            } else {
+                light.setPosition(0.0);
             }
 
             // ---------------- PUSHER CONTROL ----------------
@@ -252,7 +262,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
                 togglePusher = false;
             }
-// --sorter override ---
+
+            // ---------------- SORTER OVERRIDE ----------------
 
             if (gamepad1.b && sorterTimer.milliseconds() > 500) {
                 sorterPosition = (sorterPosition + 1) % 3;
@@ -262,6 +273,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 else hw.sorter.setPosition(0.875);
             }
 
+            // ---------------- QUICKFIRE ----------------
+//            if (gamepad1.dpad_left && sorterTimer.milliseconds() > 500) {
+//               sorterSubsystem.quickfireState();
+//            }
             // ---------------- ODOMETRY RESET ----------------
             if (gamepad1.start) {
                 mecanumCommand.resetPinPointOdometry();
