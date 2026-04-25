@@ -112,7 +112,7 @@ public class SorterSubsystem {
                 break;
 
             case WAIT_UP:
-                if (pusherTimer.milliseconds() >= 500) {
+                if (pusherTimer.milliseconds() >= 300) {
                     quickfireState = QuickfireState.DOWN;
                 }
                 break;
@@ -125,7 +125,7 @@ public class SorterSubsystem {
                 break;
 
             case WAIT_DOWN:
-                if (pusherTimer.milliseconds() >= 450) {
+                if (pusherTimer.milliseconds() >= 400) {
                     quickfireState = QuickfireState.SORT;
                 }
                 break;
@@ -138,7 +138,7 @@ public class SorterSubsystem {
                 break;
 
             case WAIT_SORT:
-                if (sorterTimer.milliseconds() >= 350) {
+                if (sorterTimer.milliseconds() >= 470) {
                     quickfireState = QuickfireState.PUSH;
                 }
                 break;

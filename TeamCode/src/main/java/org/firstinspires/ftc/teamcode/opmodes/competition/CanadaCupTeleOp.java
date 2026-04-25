@@ -131,6 +131,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             if (curA && !prevA) {
                 autoAimEnabled = !autoAimEnabled;
+                if (autoAimEnabled) {
+                    light.setPosition(0.44);
+                } else {
+                    light.setPosition(0.0);
+                }
             }
 
             prevA = curA;
@@ -233,10 +238,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 if (shooterSubsystem.isRPMReached()) {
                     light.setPosition(0.3);
                 } else {
-                    light.setPosition(0.1);
+                    light.setPosition(0.0);
                 }
-            } else {
-                light.setPosition(0.0);
             }
 
             // ---------------- PUSHER CONTROL ----------------
@@ -271,10 +274,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
             // ---------------- QUICKFIRE ----------------
             boolean curDpadLeft = gamepad1.dpad_left;
 
-            if (curDpadLeft && !prevDpadLeft) {
+            if (curDpadLeft && !prevDpadLeft && isShooterOn && tx != null && Math.abs(tx) < 3 ) {
                 sorterSubsystem.startQuickfire();
             }
-//            prevDpadLeft = curDpadLeft;
             if (sorterSubsystem.isActive()) {
                 sorterSubsystem.quickfireState();
             }
