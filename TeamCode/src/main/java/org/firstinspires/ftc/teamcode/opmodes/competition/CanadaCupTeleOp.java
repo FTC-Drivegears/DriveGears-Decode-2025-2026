@@ -76,6 +76,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         light = hw.light;
         gate = hw.gate;
 
+
         pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
         hw.sorter.setPosition(0.0);
@@ -100,6 +101,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean isIntakeMotorOn = false;
         boolean isOuttakeMotorOn = false;
         boolean isShooterOn = false;
+        boolean prevDpadLeft = false;
 
         // ---------------- MAIN CONTROL LOOP ----------------
         while (opModeIsActive()) {
@@ -265,10 +267,24 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 else hw.sorter.setPosition(0.875);
             }
 
+
             // ---------------- QUICKFIRE ----------------
-//            if (gamepad1.dpad_left && sorterTimer.milliseconds() > 500) {
-//               sorterSubsystem.quickfireState();
-//            }
+            boolean curDpadLeft = gamepad1.dpad_left;
+
+            if (curDpadLeft && !prevDpadLeft) {
+                sorterSubsystem.startQuickfire();
+            }
+//            prevDpadLeft = curDpadLeft;
+            if (sorterSubsystem.isActive()) {
+                sorterSubsystem.quickfireState();
+            }
+
+
+            // ---------------- ANTI QUICKFIRE ----------------
+            if (gamepad1.dpad_right) {
+                sorterSubsystem.stopQuickfire();
+            }
+
             // ---------------- ODOMETRY RESET ----------------
             if (gamepad1.start) {
                 mecanumCommand.resetPinPointOdometry();

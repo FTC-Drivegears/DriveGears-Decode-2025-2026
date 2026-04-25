@@ -28,6 +28,7 @@ public class SorterSubsystem {
     private Servo light;
 
     // ---------------- TIMERS ----------------
+    private static final ElapsedTime stageTimer = new ElapsedTime();
     private final ElapsedTime sorterTimer = new ElapsedTime();
     private final ElapsedTime pusherTimer = new ElapsedTime();
 
@@ -39,10 +40,10 @@ public class SorterSubsystem {
     private double sorterPosition = 0.0;
     private boolean isPusherUp = false;
     public static final int MAX_NUM_BALLS = 3;
+    private int NUM_BALL_OUTTAKED = 0;
 
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.0, 0.42, 0.875};
-    private int numIntakeBalls = 0;
 
     public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter = hw.sorter;
@@ -73,87 +74,77 @@ public class SorterSubsystem {
         this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
         curSorterPositionIndex++;
     }
-
-    //QUICKFIRE WHEN: CAMERA ALIGNED, RPM REACHED & GAMEPAD1.DPADLEFT CLICK AGAIN = STOP QUICKFIRE
-    public QuickFire quickfireState = QuickFire.PUSH;
-
-    public enum QuickFire {
+    public QuickfireState quickfireState = QuickfireState.FINISH;
+    public enum QuickfireState {
         PUSH,
+        WAIT_UP,
+        DOWN,
+        WAIT_DOWN,
         SORT,
-        PUSH_2,
-        SORT_2,
+        WAIT_SORT,
         FINISH
     }
-
+    public void startQuickfire() {
+        NUM_BALL_OUTTAKED = 0;
+        quickfireState = QuickfireState.PUSH;
+    }
+    public boolean isActive() {
+        return quickfireState != QuickfireState.FINISH;
+    }
+    public void stopQuickfire() {
+        quickfireState = QuickfireState.FINISH;
+        pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
+        pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
+    }
     public void quickfireState() {
-//        pusher_R = hw.pusher_R;
-//        pusher_L = hw.pusher_L;
-//        light = hw.light;
-//        gate = hw.gate;
-//
-//        hw.sorter.setPosition(0.0);
-//        hw.light.setPosition(0.0);
-//        gate.setPosition(0.5);
-//
-//
-//        pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
-//        pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
-
+        if (NUM_BALL_OUTTAKED >= 3) {
+            quickfireState = QuickfireState.FINISH;
+            pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
+            pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
+            return;
+        }
         switch (quickfireState) {
-            //if camera aligned, turn on & wait rpm
-//            if () {
             case PUSH:
-//                pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
-//                pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
-//                if (pusherTimer.milliseconds() > 500);{
-//                pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
-//                pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
+                pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
+                pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
+                pusherTimer.reset();
+                quickfireState = QuickfireState.WAIT_UP;
+                break;
 
-//                        pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
-//                        pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
-//                        pusherTimer.reset();
-//                        pusherTimer.milliseconds() >= 500
-//                    pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
-//                    pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
-//                break;
+            case WAIT_UP:
+                if (pusherTimer.milliseconds() >= 500) {
+                    quickfireState = QuickfireState.DOWN;
+                }
+                break;
 
+            case DOWN:
+                pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
+                pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
+                pusherTimer.reset();
+                quickfireState = QuickfireState.WAIT_DOWN;
+                break;
 
-//            case SORT:
-//                sorterPosition = (sorterPosition + 1) % 3;
-//                sorterTimer.reset();
+            case WAIT_DOWN:
+                if (pusherTimer.milliseconds() >= 450) {
+                    quickfireState = QuickfireState.SORT;
+                }
+                break;
 
-//                if (curSorterPositionIndex >= 3) {
-//                    sorterPosition = (sorterPosition + 1) % 3;
-//                    sorterTimer.reset();
-//                    if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
-//                    else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
-//                    else hw.sorter.setPosition(0.875);
-//                    manualSpin();
-//                }
-//                sorterPosition = (sorterPosition + 1) % 3;
-//        sorterTimer.reset();
-//                if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
-//                else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
-//                else hw.sorter.setPosition(0.875);
+            case SORT:
+                manualSpin();
+                sorterTimer.reset();
+                NUM_BALL_OUTTAKED++;
+                quickfireState = QuickfireState.WAIT_SORT;
+                break;
+
+            case WAIT_SORT:
+                if (sorterTimer.milliseconds() >= 350) {
+                    quickfireState = QuickfireState.PUSH;
+                }
+                break;
 
             case FINISH:
                 break;
-            }
         }
     }
-
-//
-//            if (sorterPosition == 0)
-//                hw.sorter.setPosition(0.0);
-//            else if (sorterPosition == 1)
-//                hw.sorter.setPosition(0.43);
-//            else
-//                hw.sorter.setPosition(0.875);
-//            break;
-//    }
-//}
-//sorterPosition = (sorterPosition + 1) % 3;
-//        sorterTimer.reset();
-//                if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
-//                else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
-//                else hw.sorter.setPosition(0.875);
+} //🦄🦄
