@@ -38,13 +38,15 @@ public class CanadaCupTeleOp extends LinearOpMode {
     private DcMotor shooter;
     private Servo pusher_R;
     private Servo pusher_L;
-
     private Servo gate;
-
     private Servo light;
 
     private double theta;
     private double sorterPosition = 0.0;
+
+    // ---------------- SOFT LIMITS ----------------
+    private static final int TURRET_MIN_TICKS = -240;
+    private static final int TURRET_MAX_TICKS =  240;
 
     // ---------------- TIMERS ----------------
     private final ElapsedTime sorterTimer = new ElapsedTime();
@@ -64,7 +66,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         turret.setkD(0.001);
 
         limelight = hw.limelight;
-        limelight.pipelineSwitch(0); //obelisk detection
+        limelight.pipelineSwitch(0);
         limelight.start();
 
         colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw);
@@ -76,7 +78,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
         light = hw.light;
         gate = hw.gate;
 
-
         pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
         hw.sorter.setPosition(0.0);
@@ -84,6 +85,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         gate.setPosition(0.6);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        hw.llmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         boolean autoAimEnabled = false;
         boolean prevA = false;
 
@@ -105,7 +107,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         // ---------------- MAIN CONTROL LOOP ----------------
         while (opModeIsActive()) {
-            limelight.pipelineSwitch(8); //blue side
+            limelight.pipelineSwitch(8);
 
             // ---------------- DRIVE ----------------
             mecanumCommand.processOdometry();
@@ -126,7 +128,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 ty = llResult.getTy();
             }
 
-// ---------------- AUTO AIM TOGGLE ----------------
+            // ---------------- AUTO AIM TOGGLE ----------------
             boolean curA = gamepad1.a;
 
             if (curA && !prevA) {
@@ -137,38 +139,53 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     light.setPosition(0.0);
                 }
             }
-
             prevA = curA;
 
-// ---------------- MANUAL OVERRIDE ----------------
+            // ---------------- MANUAL OVERRIDE ----------------
             double manualPower = 0;
+            int turretPos = hw.llmotor.getCurrentPosition();
 
-            if (gamepad1.left_bumper) {
-                manualPower = 0.35;
+            boolean curLeftBumper = gamepad1.left_bumper;
+            boolean curRightBumper = gamepad1.right_bumper;
+
+            if (curLeftBumper) {
+                if (turretPos >= TURRET_MAX_TICKS) {
+                    manualPower = -0.3;
+                } else {
+                    double distToLimit = TURRET_MAX_TICKS - turretPos;
+                    double scale = Math.min(distToLimit / 50.0, 1.0);
+                    manualPower = 0.15 + 0.2 * scale;
+                }
+            } else if (curRightBumper) {
+                if (turretPos <= TURRET_MIN_TICKS) {
+                    manualPower = 0.3;
+                } else {
+                    double distToLimit = turretPos - TURRET_MIN_TICKS;
+                    double scale = Math.min(distToLimit / 50.0, 1.0);
+                    manualPower = -(0.15 + 0.2 * scale);
+                }
             }
-            else if (gamepad1.right_bumper) {
-                manualPower = -0.35;
-            }
 
-// ---------------- TURRET CONTROL ----------------
-            if (manualPower != 0) {
-
-                // manual override
+            // ---------------- TURRET CONTROL ----------------
+            if (turretPos > TURRET_MAX_TICKS) {
+                // past max limit - correct back regardless of input
+                hw.llmotor.setPower(-0.3);
+            } else if (turretPos < TURRET_MIN_TICKS) {
+                // past min limit - correct back regardless of input
+                hw.llmotor.setPower(0.3);
+            } else if (manualPower != 0) {
                 hw.llmotor.setPower(manualPower);
-
-            }
-            else if (autoAimEnabled) {
-
-                // auto aim using odometry + limelight
-                turret.update(tx, ty);
-
-            }
-            else {
-
-                // idle
+            } else if (autoAimEnabled) {
+                if ((turretPos >= TURRET_MAX_TICKS && hw.llmotor.getPower() > 0) ||
+                        (turretPos <= TURRET_MIN_TICKS && hw.llmotor.getPower() < 0)) {
+                    hw.llmotor.setPower(0);
+                } else {
+                    turret.update(tx, ty);
+                }
+            } else {
                 hw.llmotor.setPower(0);
-
             }
+
             if (autoAimEnabled && tx != null) {
                 RobotLog.i(String.format(
                         "time:%.2f target:%.1f position:%.1f error:%.1f power:%.2f",
@@ -185,7 +202,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
-                // if intake turns on, outtake turns off
                 if (isIntakeMotorOn) {
                     isOuttakeMotorOn = false;
                     intake.setPower(0.8);
@@ -196,13 +212,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
             prevRightTrigger = curRightTrigger;
             colourSubsystem.update(isIntakeMotorOn);
 
-
-// ---------------- OUTTAKE TOGGLE -----------------
+            // ---------------- OUTTAKE TOGGLE ----------------
             boolean curLeftTrigger = gamepad1.left_trigger > 0;
             if (curLeftTrigger && !prevLeftTrigger) {
                 isOuttakeMotorOn = !isOuttakeMotorOn;
 
-                // if outtake turns on, intake turns off
                 if (isOuttakeMotorOn) {
                     isIntakeMotorOn = false;
                     intake.setPower(-0.8);
@@ -212,13 +226,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
             prevLeftTrigger = curLeftTrigger;
 
-// ---------------- GATE CONTROL ----------------
-// gate opens only while intake OR outtake is on
+            // ---------------- GATE CONTROL ----------------
             if (isIntakeMotorOn || isOuttakeMotorOn) {
                 gate.setPosition(0.7);
             } else {
                 gate.setPosition(0.6);
             }
+
             // ---------------- SHOOTER TOGGLE ----------------
             boolean currentXState = gamepad1.x;
 
@@ -261,7 +275,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 
             // ---------------- SORTER OVERRIDE ----------------
-
             if (gamepad1.b && sorterTimer.milliseconds() > 500) {
                 sorterPosition = (sorterPosition + 1) % 3;
                 sorterTimer.reset();
@@ -270,17 +283,15 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 else hw.sorter.setPosition(0.875);
             }
 
-
             // ---------------- QUICKFIRE ----------------
             boolean curDpadLeft = gamepad1.dpad_left;
 
-            if (curDpadLeft && !prevDpadLeft && isShooterOn && tx != null && Math.abs(tx) < 3 ) {
+            if (curDpadLeft && !prevDpadLeft && isShooterOn && tx != null && Math.abs(tx) < 3) {
                 sorterSubsystem.startQuickfire();
             }
             if (sorterSubsystem.isActive()) {
                 sorterSubsystem.quickfireState();
             }
-
 
             // ---------------- ANTI QUICKFIRE ----------------
             if (gamepad1.dpad_right) {
@@ -310,7 +321,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             telemetry.addData("Robot Y", mecanumCommand.getY());
             telemetry.addData("Theta (rad)", mecanumCommand.getOdoHeading());
             telemetry.addData("Auto Aim Enabled", autoAimEnabled);
-            telemetry.addData("Manual Override", gamepad1.right_bumper || gamepad1.left_bumper);
+            telemetry.addData("Manual Override", curLeftBumper || curRightBumper);
 
             telemetry.addData("Red", colourSubsystem.getRed());
             telemetry.addData("Green", colourSubsystem.getGreen());

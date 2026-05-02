@@ -106,6 +106,9 @@ public class TurretMechanismTutorial {
             if (distance < 0.55) {
                 hoodPos += 0.412;
             }
+            if (distance < 0.55) {
+                hoodPos += 0.25;
+            }
 
             hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
 
