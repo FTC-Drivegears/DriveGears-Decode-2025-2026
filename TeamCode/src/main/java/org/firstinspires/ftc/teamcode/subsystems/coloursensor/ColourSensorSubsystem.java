@@ -1,9 +1,10 @@
-package org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor;
+package org.firstinspires.ftc.teamcode.subsystems.coloursensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.Artifact;
 
 import java.util.ArrayList;
@@ -11,24 +12,28 @@ import java.util.ArrayList;
 public class ColourSensorSubsystem {
     private boolean lastArtifactPresent = false;
     private Hardware hw;
+    private SorterSubsystem sorterSubsystem;
     private ColorSensor colourSensor1;
     private ColorSensor colourSensor2;
     private Servo sorter;
     private Servo light;
 
     private int colour_threshold = 80;
-    private ArrayList<Artifact> sorterList = new ArrayList<>();
-
+    private Artifact[] sorterList;
+    private int[] artifactCount;
     private int red, green, blue, alpha;
     private int red2, green2, blue2, alpha2;
 
-    public ColourSensorSubsystem(HardwareMap hardwareMap, Hardware hw) {
+    public ColourSensorSubsystem(HardwareMap hardwareMap, Hardware hw, SorterSubsystem sorterSubsystem) {
         this.hw = hw;
         this.colourSensor1 = hardwareMap.get(ColorSensor.class, "colour1");
         this.colourSensor2 = hardwareMap.get(ColorSensor.class, "colour2");
 
         this.sorter = hw.sorter;
         this.light = hw.light;
+
+        this.sorterList = sorterSubsystem.getSorterList();
+        this.artifactCount = sorterSubsystem.getArtifactCount();
 
         colourSensor1.enableLed(true);
         colourSensor2.enableLed(true);
@@ -45,7 +50,7 @@ public class ColourSensorSubsystem {
         blue2 = colourSensor2.blue();
         alpha2 = colourSensor2.alpha();
 
-        if (sorterList.size() == 3) return;
+        if (artifactCount[0] == 3) return;
 
         boolean artifactPresent = alpha > 150 || alpha2 > 150;
         boolean artifactCleared = alpha < colour_threshold && alpha2 < colour_threshold;
@@ -57,18 +62,20 @@ public class ColourSensorSubsystem {
         boolean green_colour2 = green2 > blue2 + 70 && green2 > red2 + 70;
 
         if (intakeOn && artifactPresent && !lastArtifactPresent) {
-            if (sorterList.size() < 3) {
-                if (purple_colour1 || purple_colour2) {
-                    sorterList.add(new Artifact("Purple", sorter.getPosition()));
-                    light.setPosition(0.7);
+            if (purple_colour1 || purple_colour2) {
+                sorterList[artifactCount[0]] = new Artifact("Purple");
+                artifactCount[0]++;
+                light.setPosition(0.7);
+                if (artifactCount[0] < 3)
                     turnSorter();
-                } else if (green_colour1 || green_colour2) {
-                    sorterList.add(new Artifact("Green", sorter.getPosition()));
-                    light.setPosition(0.5);
+                lastArtifactPresent = true;
+            } else if (green_colour1 || green_colour2) {
+                sorterList[artifactCount[0]] = new Artifact("Green");
+                artifactCount[0]++;
+                light.setPosition(0.5);
+                if (artifactCount[0] < 3)
                     turnSorter();
-                } else {
-                    light.setPosition(0);
-                }
+                lastArtifactPresent = true;
             }
         }
         if (artifactCleared) {
@@ -86,10 +93,10 @@ public class ColourSensorSubsystem {
         public int getGreen2 () {return green2; }
         public int getBlue2 () { return blue2; }
         public int getAlpha2 () { return alpha2; }
-        public int getCount () { return sorterList.size(); }
+        public int getCount () { return artifactCount[0]; }
 
         private void turnSorter () {
-            double pos = Math.min(sorterList.size() * 0.43, 1.0);
+            double pos = Math.min(artifactCount[0] * 0.43, 1.0);
             sorter.setPosition(pos);
     }
 }

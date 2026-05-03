@@ -11,12 +11,14 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor.ColourSensorSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.coloursensor.ColourSensorSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
+
+import java.util.Arrays;
 
 @TeleOp(name = "CanadaCup", group = "TeleOp")
 public class CanadaCupTeleOp extends LinearOpMode {
@@ -69,7 +71,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
         limelight.pipelineSwitch(0);
         limelight.start();
 
-        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw);
+
+        if (sorterSubsystem == null) {
+            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
+        }
+        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw, sorterSubsystem);
 
         intake = hw.intake;
         shooter = hw.shooter;
@@ -88,10 +94,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
         hw.llmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         boolean autoAimEnabled = false;
         boolean prevA = false;
-
-        if (sorterSubsystem == null) {
-            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
-        }
 
         waitForStart();
 
@@ -286,7 +288,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             // ---------------- QUICKFIRE ----------------
             boolean curDpadLeft = gamepad1.dpad_left;
 
-            if (curDpadLeft && !prevDpadLeft && isShooterOn && tx != null && Math.abs(tx) < 3) {
+            if (curDpadLeft && !prevDpadLeft) {
                 sorterSubsystem.startQuickfire();
             }
             if (sorterSubsystem.isActive()) {
@@ -301,6 +303,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
             // ---------------- ODOMETRY RESET ----------------
             if (gamepad1.start) {
                 mecanumCommand.resetPinPointOdometry();
+            }
+
+            if (gamepad1.dpad_up) {
+                telemetry.addLine(Arrays.toString(sorterSubsystem.getSorterList()));
+                telemetry.addLine(Arrays.toString(sorterSubsystem.getArtifactCount()));
             }
 
             // ---------------- TELEMETRY ----------------
