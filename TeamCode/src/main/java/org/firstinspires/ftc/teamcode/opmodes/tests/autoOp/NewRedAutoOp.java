@@ -11,13 +11,12 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.opmodes.tests.coloursensor.ColourSensorSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.coloursensor.ColourSensorSubsystem;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LogitechVisionSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
-import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
 @Autonomous (name = "New Red Auto")
@@ -207,7 +206,7 @@ public class NewRedAutoOp extends LinearOpMode {
         limelight.pipelineSwitch(8);
         limelight.start();
 
-        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw);
+        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw, sorterSubsystem);
 
 
         //set the sorter, pusher, hood, initial positions

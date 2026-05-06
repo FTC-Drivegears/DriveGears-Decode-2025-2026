@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.opmodes.tests.autoOp.NewBlueAutoOp;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
+import org.firstinspires.ftc.teamcode.util.Artifact;
 
 import java.util.ArrayList;
 
@@ -36,11 +37,11 @@ public class SorterSubsystem {
     private final Telemetry telemetry;
     public final LinearOpMode opMode;
     private ArrayList<Character> pattern;
-    private final ArrayList<Artifact> sorterList;
+    private final Artifact[] sorterList = new Artifact[]{ new Artifact("none"), new Artifact("none"), new Artifact("none") };;
+    private int artifactCount[] = new int[]{ 0 };
     private double sorterPosition = 0.0;
     private boolean isPusherUp = false;
     public static final int MAX_NUM_BALLS = 3;
-    private int NUM_BALL_OUTTAKED = 0;
 
     private int curSorterPositionIndex = 0;
     private final double[] sorterPositions = new double[]{0.0, 0.42, 0.875};
@@ -51,10 +52,13 @@ public class SorterSubsystem {
         this.pusher_L = hw.pusher_L;
         this.opMode = opMode;
         this.telemetry = telemetry;
-        this.sorterList = new ArrayList<>();
 
         this.reinitPattern(pattern);
     }
+
+    // get sorter list used for colour sensor subsystem
+    public Artifact[] getSorterList() { return sorterList; }
+    public int[] getArtifactCount() { return artifactCount; }
 
     // reinitPattern re-initializes the pattern. Call reinitPattern when reading a new pattern.
     public void reinitPattern(String pattern) {
@@ -85,7 +89,6 @@ public class SorterSubsystem {
         FINISH
     }
     public void startQuickfire() {
-        NUM_BALL_OUTTAKED = 0;
         quickfireState = QuickfireState.PUSH;
     }
     public boolean isActive() {
@@ -97,7 +100,8 @@ public class SorterSubsystem {
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
     }
     public void quickfireState() {
-        if (NUM_BALL_OUTTAKED >= 3) {
+        if (artifactCount[0] <= 0) {
+            artifactCount[0] = 0;
             quickfireState = QuickfireState.FINISH;
             pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
             pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
@@ -131,9 +135,10 @@ public class SorterSubsystem {
                 break;
 
             case SORT:
+                sorterList[artifactCount[0]-1] = new Artifact("none");
                 manualSpin();
                 sorterTimer.reset();
-                NUM_BALL_OUTTAKED++;
+                artifactCount[0]--;
                 quickfireState = QuickfireState.WAIT_SORT;
                 break;
 
