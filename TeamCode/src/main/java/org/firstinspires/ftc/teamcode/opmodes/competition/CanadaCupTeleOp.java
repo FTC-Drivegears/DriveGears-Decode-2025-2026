@@ -62,6 +62,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         turret = new TurretMechanismTutorial();
         turret.init(hardwareMap);
+        turret.setMecanumCommand(mecanumCommand);
         turret.setkP(0.01);
         turret.setkD(0.001);
 
@@ -104,6 +105,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean isOuttakeMotorOn = false;
         boolean isShooterOn = false;
         boolean prevDpadLeft = false;
+        boolean prevManual = false;
 
         // ---------------- MAIN CONTROL LOOP ----------------
         while (opModeIsActive()) {
@@ -166,18 +168,22 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 }
             }
 
+            // Detect manual -> auto transition and reset turret control state
+            boolean isManual = (manualPower != 0);
+            if (prevManual && !isManual) {
+            }
+            prevManual = isManual;
+
             // ---------------- TURRET CONTROL ----------------
             if (turretPos > TURRET_MAX_TICKS) {
-                // past max limit - correct back regardless of input
                 hw.llmotor.setPower(-0.3);
             } else if (turretPos < TURRET_MIN_TICKS) {
-                // past min limit - correct back regardless of input
                 hw.llmotor.setPower(0.3);
             } else if (manualPower != 0) {
                 hw.llmotor.setPower(manualPower);
             } else if (autoAimEnabled) {
-                if ((turretPos >= TURRET_MAX_TICKS && hw.llmotor.getPower() > 0) ||
-                        (turretPos <= TURRET_MIN_TICKS && hw.llmotor.getPower() < 0)) {
+                if ((turretPos >= TURRET_MAX_TICKS && tx != null && tx < 0) ||
+                        (turretPos <= TURRET_MIN_TICKS && tx != null && tx > 0)) {
                     hw.llmotor.setPower(0);
                 } else {
                     turret.update(tx, ty);
@@ -304,7 +310,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 
             // ---------------- TELEMETRY ----------------
+            telemetry.addData("Heading Delta", turret.getDebugHeadingDelta());
+            telemetry.addData("Target Ticks", turret.getDebugTargetTicks());
+            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
+            telemetry.addData("Has Target", turret.hasTarget());
+            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
             telemetry.addData("Y state", currentYState);
+            telemetry.addData("Has Target", turret.hasTarget());
             telemetry.addData("Target Visible", tx != null);
             telemetry.addData("tx", tx);
             telemetry.addData("ty", ty);

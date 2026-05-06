@@ -214,7 +214,9 @@ public class MecanumCommand {
         mecanumSubsystem.stop(true);
     }
 
-
+    public double getHeadingVelocity() {
+        return pinPointOdoSubsystem.getHeadingVelocity();
+    }
     public void processOdometry() {
         pinPointOdoSubsystem.processOdometry();
     }

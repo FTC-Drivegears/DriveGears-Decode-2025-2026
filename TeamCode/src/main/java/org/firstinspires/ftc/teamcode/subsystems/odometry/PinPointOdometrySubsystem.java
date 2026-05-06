@@ -213,6 +213,10 @@ public class PinPointOdometrySubsystem {
         return x;
     }
 
+    public double getHeadingVelocity() {
+        return pinpointDriver.getHeadingVelocity();
+    }
+
     /**
      * Get current estimated y position in cm.
      * @return current y position
