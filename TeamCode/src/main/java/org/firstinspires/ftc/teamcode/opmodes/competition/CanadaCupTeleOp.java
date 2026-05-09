@@ -58,6 +58,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
     public void runOpMode() {
 
         // ---------------- INITIALIZATION ----------------
+        Hardware.resetInstance(); // Force fresh hardware init — avoids stale singleton from auto
         hw = Hardware.getInstance(hardwareMap);
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
@@ -71,7 +72,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
         limelight = hw.limelight;
         limelight.pipelineSwitch(0);
         limelight.start();
-
 
         if (sorterSubsystem == null) {
             sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
@@ -93,6 +93,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         hw.llmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        // NOTE: Pinpoint odometry heading is intentionally NOT reset here.
+        // Heading carries over from auto so field-centric drive is correct
+        // from the first driver input. Use gamepad1.start to re-zero mid-match if needed.
+
         boolean autoAimEnabled = false;
         boolean prevA = false;
 
@@ -113,13 +118,23 @@ public class CanadaCupTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
             limelight.pipelineSwitch(8);
 
-            // ---------------- DRIVE ----------------
+            // ---------------- DRIVE (FIELD-CENTRIC) ----------------
             mecanumCommand.processOdometry();
-            theta = mecanumCommand.normalMove(
-                    -gamepad1.left_stick_y,
-                    gamepad1.left_stick_x,
-                    gamepad1.right_stick_x
-            );
+
+            double heading = mecanumCommand.getOdoHeading(); // Pinpoint returns radians, CW = negative
+
+            // Raw driver inputs
+            double inputY = -gamepad1.left_stick_y; // forward/back
+            double inputX =  gamepad1.left_stick_x; // strafe
+            double inputR =  gamepad1.right_stick_x; // rotation stays robot-centric
+
+            // Rotate the translation vector by -heading to align to field forward
+            double fieldX = inputX * Math.cos(-heading) - inputY * Math.sin(-heading);
+            double fieldY = inputX * Math.sin(-heading) + inputY * Math.cos(-heading);
+
+            // NOTE: Field-centric rotation already applied above via cos/sin math.
+            // Use normalMove here, NOT fieldOrientedMove — that would double-rotate.
+            theta = mecanumCommand.normalMove(fieldY, fieldX, inputR);
 
             // ---------------- LIMELIGHT DATA ----------------
             llResult = limelight.getLatestResult();
@@ -300,6 +315,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (sorterSubsystem.isActive()) {
                 sorterSubsystem.quickfireState();
             }
+            prevDpadLeft = curDpadLeft;
 
             // ---------------- ANTI QUICKFIRE ----------------
             if (gamepad1.dpad_right) {
@@ -307,6 +323,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 
             // ---------------- ODOMETRY RESET ----------------
+            // Resets heading to 0 (current robot direction becomes new field-forward).
+            // Useful mid-match if driver gets disoriented.
             if (gamepad1.start) {
                 mecanumCommand.resetPinPointOdometry();
             }
@@ -321,9 +339,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             telemetry.addData("Target Ticks", turret.getDebugTargetTicks());
             telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
             telemetry.addData("Has Target", turret.hasTarget());
-            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
             telemetry.addData("Y state", currentYState);
-            telemetry.addData("Has Target", turret.hasTarget());
             telemetry.addData("Target Visible", tx != null);
             telemetry.addData("tx", tx);
             telemetry.addData("ty", ty);
@@ -333,15 +349,12 @@ public class CanadaCupTeleOp extends LinearOpMode {
             telemetry.addData("Shooter RPM", turret.getShootRPM());
             telemetry.addData("Intake On", isIntakeMotorOn);
             telemetry.addData("Outtake On", isOuttakeMotorOn);
-            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
-
             telemetry.addLine("---------------------------------");
             telemetry.addData("Robot X", mecanumCommand.getX());
             telemetry.addData("Robot Y", mecanumCommand.getY());
-            telemetry.addData("Theta (rad)", mecanumCommand.getOdoHeading());
+            telemetry.addData("Heading (rad)", heading);
             telemetry.addData("Auto Aim Enabled", autoAimEnabled);
             telemetry.addData("Manual Override", curLeftBumper || curRightBumper);
-
             telemetry.addData("Red", colourSubsystem.getRed());
             telemetry.addData("Green", colourSubsystem.getGreen());
             telemetry.addData("Blue", colourSubsystem.getBlue());

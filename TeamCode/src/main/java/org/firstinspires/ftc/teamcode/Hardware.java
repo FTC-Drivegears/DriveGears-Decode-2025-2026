@@ -18,6 +18,7 @@ public class Hardware {
 
     // Motors
     public final DcMotorEx lf;
+    public static double fieldHeadingOffset = 0.0;
     public final DcMotorEx rf;
     public final DcMotorEx lb;
     public final DcMotorEx rb;
@@ -80,5 +81,8 @@ public class Hardware {
             instance = new Hardware(hwMap);
         }
         return instance;
+    }
+    public static void resetInstance() {
+        instance = null;
     }
 }
