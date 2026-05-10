@@ -26,6 +26,10 @@ public class TurretMechanismTutorial {
     private final double MAX_POWER = 0.6;
     private final double HOLD_POWER = 0.5;
 
+    // ---------------- SOFT LIMITS ----------------
+    private static final int TURRET_MAX_TICKS = 240;
+    private static final int TURRET_MIN_TICKS = -240;
+
     private final ElapsedTime loopTimer = new ElapsedTime();
 
     // ---------------- HOOD / SHOOTER ----------------
@@ -99,6 +103,11 @@ public class TurretMechanismTutorial {
             double power = (Math.abs(error) < ANGLE_TOLERANCE_DEG)
                     ? 0 : Range.clip(error * kP + dTerm, -MAX_POWER, MAX_POWER);
 
+            // prevent limelight from driving past limits
+            int currentTicks = turret.getCurrentPosition();
+            if (currentTicks >= TURRET_MAX_TICKS && power > 0) power = 0;
+            if (currentTicks <= TURRET_MIN_TICKS && power < 0) power = 0;
+
             turret.setPower(power);
             lastError = error;
             hasTarget = true;
@@ -129,6 +138,9 @@ public class TurretMechanismTutorial {
 
             // shift target opposite to robot rotation
             int newTarget = turret.getTargetPosition() - ticksDelta;
+
+            // clamp target to soft limits
+            newTarget = Math.max(TURRET_MIN_TICKS, Math.min(TURRET_MAX_TICKS, newTarget));
 
             debugHeadingDelta = headingDeltaDeg;
             debugTargetTicks = newTarget;
