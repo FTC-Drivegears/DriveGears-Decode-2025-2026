@@ -72,7 +72,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
         limelight.pipelineSwitch(0);
         limelight.start();
 
-
         if (sorterSubsystem == null) {
             sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
         }
@@ -264,6 +263,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 }
             }
 
+            if (gamepad2.a) {
+                hw.llmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            }
+
             // ---------------- PUSHER CONTROL ----------------
             boolean currentYState = gamepad1.y;
             if (currentYState && !previousYState) {
@@ -317,11 +320,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 
             // ---------------- TELEMETRY ----------------
+
             telemetry.addData("Heading Delta", turret.getDebugHeadingDelta());
             telemetry.addData("Target Ticks", turret.getDebugTargetTicks());
             telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
             telemetry.addData("Has Target", turret.hasTarget());
-            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
             telemetry.addData("Y state", currentYState);
             telemetry.addData("Has Target", turret.hasTarget());
             telemetry.addData("Target Visible", tx != null);
@@ -333,7 +336,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
             telemetry.addData("Shooter RPM", turret.getShootRPM());
             telemetry.addData("Intake On", isIntakeMotorOn);
             telemetry.addData("Outtake On", isOuttakeMotorOn);
-            telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
 
             telemetry.addLine("---------------------------------");
             telemetry.addData("Robot X", mecanumCommand.getX());
@@ -342,14 +344,14 @@ public class CanadaCupTeleOp extends LinearOpMode {
             telemetry.addData("Auto Aim Enabled", autoAimEnabled);
             telemetry.addData("Manual Override", curLeftBumper || curRightBumper);
 
-            telemetry.addData("Red", colourSubsystem.getRed());
-            telemetry.addData("Green", colourSubsystem.getGreen());
-            telemetry.addData("Blue", colourSubsystem.getBlue());
-            telemetry.addData("Alpha", colourSubsystem.getAlpha());
-            telemetry.addData("Red2", colourSubsystem.getRed2());
-            telemetry.addData("Green2", colourSubsystem.getGreen2());
-            telemetry.addData("Blue2", colourSubsystem.getBlue2());
-            telemetry.addData("Alpha2", colourSubsystem.getAlpha2());
+            telemetry.addData("Red", colourSubsystem.getRed() + colourSubsystem.getRed2() / 2);
+            telemetry.addData("Green", colourSubsystem.getGreen() + colourSubsystem.getGreen2() / 2);
+            telemetry.addData("Blue", colourSubsystem.getBlue() + colourSubsystem.getBlue2() / 2);
+            telemetry.addData("Alpha", colourSubsystem.getAlpha() + colourSubsystem.getAlpha2() / 2);
+//            telemetry.addData("Red2", colourSubsystem.getRed2());
+//            telemetry.addData("Green2", colourSubsystem.getGreen2());
+//            telemetry.addData("Blue2", colourSubsystem.getBlue2());
+//            telemetry.addData("Alpha2", colourSubsystem.getAlpha2());
             telemetry.addData("Detected Count", colourSubsystem.getCount());
             telemetry.update();
         }
