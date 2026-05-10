@@ -19,8 +19,8 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
-@Autonomous (name = "New Blue Auto")
-public class NewBlueAutoOp extends LinearOpMode {
+@Autonomous (name = "blueautoTest")
+public class blue2test extends LinearOpMode {
     //Initialize mecanumCommand, shooterSubsystem, and sorterSubsystem
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
@@ -49,7 +49,7 @@ public class NewBlueAutoOp extends LinearOpMode {
     private static final double PUSHER_DOWN_L = PusherConsts.PUSHER_DOWN_POSITION_L;
     private static final double PUSHER_UP_R = PusherConsts.PUSHER_UP_POSITION_R;
     private static final double PUSHER_DOWN_R = PusherConsts.PUSHER_DOWN_POSITION_R;
-    private static final long PUSHER_TIME = 100;
+    private static final long PUSHER_TIME = 400;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
     private static final long PUSHER_SAFE_MARGIN = 150;
@@ -298,6 +298,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                 tx = llResult.getTx();
                 ty = llResult.getTy();
             }
+
             turret.update(tx, ty);
             //Then update telemetry with this data, in order to know for sure
             telemetry.addData("tx", tx);
@@ -312,9 +313,11 @@ public class NewBlueAutoOp extends LinearOpMode {
             switch (autoState) {
                 case FIRST_SHOT:
                     //Set max RPM to 3500 rpm, move to initial position, and set hood position
-                    shooterSubsystem.setMaxRPM(3500);
+//                    shooterSubsystem.setMaxRPM(3500);
+                    shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
+                    turret.update(tx, ty);
                     mecanumCommand.moveToPos(26, -6, 0.36);
-                    hood.setPosition(0.43);
+//                    hood.setPosition(0.43);
 
                     //Depending on pattern, call respective processPattern function
                     if (mecanumCommand.isPositionReached()) {

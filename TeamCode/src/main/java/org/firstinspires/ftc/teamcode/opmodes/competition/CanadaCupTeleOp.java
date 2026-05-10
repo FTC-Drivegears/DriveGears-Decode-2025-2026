@@ -70,7 +70,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         turret.setkD(0.001);
 
         limelight = hw.limelight;
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(8); //blue
         limelight.start();
 
         if (sorterSubsystem == null) {
@@ -116,7 +116,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         // ---------------- MAIN CONTROL LOOP ----------------
         while (opModeIsActive()) {
-            limelight.pipelineSwitch(8);
+            limelight.pipelineSwitch(8); //blue
 
             // ---------------- DRIVE (FIELD-CENTRIC) ----------------
             mecanumCommand.processOdometry();
@@ -264,6 +264,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 if (isShooterOn) {
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     shooterSubsystem.spinup();
+                    light.setPosition(0.3);
                 } else {
                     shooterSubsystem.stopShooter();
                     light.setPosition(0.0);
