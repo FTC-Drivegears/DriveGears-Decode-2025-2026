@@ -167,8 +167,9 @@ public class TurretMechanismTutorial {
                     / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
 
             distanceTrack = distance;
-            distance *= 0.9;
-            distance = Range.clip(distance, MIN_DISTANCE, MAX_DISTANCE);
+            distance = Range.clip(distance * 0.9, MIN_DISTANCE, MAX_DISTANCE);
+//            distance *= 0.9;
+//            distance = Range.clip(distance, MIN_DISTANCE, MAX_DISTANCE);
 
             double normalized = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
             normalized = Range.clip(normalized, 0, 1);
@@ -176,15 +177,25 @@ public class TurretMechanismTutorial {
             double hoodCurve = Math.pow(normalized, 3.0);
             double hoodPos = HOOD_MIN + hoodCurve * (HOOD_MAX - HOOD_MIN);
 
-            if (distance > 0.55) hoodPos += 0.05;
-            if (distance < 0.55) hoodPos += 0.412;
-            if (distance < 0.55) hoodPos += 0.25;
-
+            if (distance > 0.55) {
+                hoodPos += 0.05;
+            } else {
+                hoodPos += 0.05;
+        }
             hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
-
             shootRPM = MIN_RPM + normalized * 300;
             if (distance > 0.55) shootRPM += 270;
             shootRPM = Range.clip(shootRPM, MIN_RPM, MAX_RPM);
+
+//            if (distance > 0.55) hoodPos += 0.05;
+//            if (distance < 0.55) hoodPos += 0.412;
+//            if (distance < 0.55) hoodPos += 0.25;
+//
+//            hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
+//
+//            shootRPM = MIN_RPM + normalized * 300;
+//            if (distance > 0.55) shootRPM += 270;
+//            shootRPM = Range.clip(shootRPM, MIN_RPM, MAX_RPM);
         }
     }
 }

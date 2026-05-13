@@ -77,7 +77,7 @@ public class blue2test extends LinearOpMode {
     private static int collectedCount = 0;
 
     //Hood position variable
-    private static double hoodPos = 0.359;
+//    private static double hoodPos = 0.359;
 
     //Gate variables
     private static final double GATE_UP = 0.7;
@@ -219,7 +219,7 @@ public class blue2test extends LinearOpMode {
         sorter.setPosition(pos1);
         pusher_L.setPosition(PUSHER_DOWN_L);
         pusher_R.setPosition(PUSHER_DOWN_R);
-        hood.setPosition(hoodPos);
+//        hood.setPosition(hoodPos);
         gate.setPosition(GATE_DOWN);
 
         //set position and stage to 0
@@ -254,20 +254,24 @@ public class blue2test extends LinearOpMode {
             //limelight detection
             llResult = limelight.getLatestResult();
 
-            Double tx = null;
-            Double ty = null;
-
-            if (llResult != null && llResult.isValid()) {
-                tx = llResult.getTx();
-                ty = llResult.getTy();
-            }
+//            Double tx = null;
+//            Double ty = null;
+//
+//            if (llResult != null && llResult.isValid()) {
+//                tx = llResult.getTx();
+//                ty = llResult.getTy();
+//            }
 
             //Then update telemetry with this data, in order to know for sure
             telemetry.addData("Pattern:", detected);
-            telemetry.addData("tx", tx);
-            telemetry.addData("ty", ty);
+            if (llResult != null && llResult.isValid()) {
+                telemetry.addData("Tag Detected", "ID: " + llResult.getFiducialResults().get(0).getFiducialId());
+            } else {
+                telemetry.addData("Tag Detected", "None");
+            }
             telemetry.update();
         }
+
 
         //Wait for start
         waitForStart();
@@ -299,7 +303,6 @@ public class blue2test extends LinearOpMode {
                 ty = llResult.getTy();
             }
 
-            turret.update(tx, ty);
             //Then update telemetry with this data, in order to know for sure
             telemetry.addData("tx", tx);
             telemetry.addData("ty", ty);
@@ -309,6 +312,7 @@ public class blue2test extends LinearOpMode {
             //Process Telemetry
             processTelemetry();
 
+            turret.update(tx, ty);
             //State machine, going through the enum autoState
             switch (autoState) {
                 case FIRST_SHOT:
@@ -399,7 +403,7 @@ public class blue2test extends LinearOpMode {
                                 autoState = AUTO_STATE.SECOND_SHOT;
                                 shooterSubsystem.setMaxRPM(3500);
                                 mecanumCommand.moveToPos(26, -6, 0.355);
-                                hood.setPosition(0.43);
+//                                hood.setPosition(0.43);
                                 break;
                             }
                             break;
@@ -487,7 +491,7 @@ public class blue2test extends LinearOpMode {
                                 autoState = AUTO_STATE.FINISH;
                                 shooterSubsystem.setMaxRPM(3500);
                                 mecanumCommand.moveToPos(26, -6, 0.355);
-                                hood.setPosition(0.43);
+//                                hood.setPosition(0.43);
                                 break;
                             }
                             break;
