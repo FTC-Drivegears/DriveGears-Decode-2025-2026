@@ -49,7 +49,11 @@ public class blue2test extends LinearOpMode {
     private static final double PUSHER_DOWN_L = PusherConsts.PUSHER_DOWN_POSITION_L;
     private static final double PUSHER_UP_R = PusherConsts.PUSHER_UP_POSITION_R;
     private static final double PUSHER_DOWN_R = PusherConsts.PUSHER_DOWN_POSITION_R;
+<<<<<<< HEAD
     private static final long PUSHER_TIME = 400;
+=======
+    private static final long PUSHER_TIME = 100;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
     private static final long PUSHER_SAFE_MARGIN = 150;
@@ -130,11 +134,14 @@ public class blue2test extends LinearOpMode {
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
+<<<<<<< HEAD
     static void push(){
         if (halfPush(true)) {
             halfPush(false);
         }
     }
+=======
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
 
     //sort, taking in integer sp, which sets the position to the specified position
     static boolean sort(int sp) {
@@ -355,6 +362,10 @@ public class blue2test extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
+<<<<<<< HEAD
+=======
+                            outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                             mecanumCommand.moveToPos(82, 32, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
@@ -443,6 +454,10 @@ public class blue2test extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
+<<<<<<< HEAD
+=======
+                            outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                             mecanumCommand.moveToPos(142, 28, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
@@ -550,7 +565,11 @@ public class blue2test extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -560,7 +579,11 @@ public class blue2test extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 300) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -587,6 +610,10 @@ public class blue2test extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+<<<<<<< HEAD
+=======
+                outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                 break;
         }
     }
@@ -611,7 +638,11 @@ public class blue2test extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -620,7 +651,11 @@ public class blue2test extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 300) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -647,6 +682,10 @@ public class blue2test extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+<<<<<<< HEAD
+=======
+                outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                 break;
         }
     }
@@ -671,7 +710,11 @@ public class blue2test extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -680,7 +723,11 @@ public class blue2test extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -708,6 +755,10 @@ public class blue2test extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+<<<<<<< HEAD
+=======
+                outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                 break;
         }
     }

@@ -274,6 +274,7 @@ public class NewBlueAutoOp extends LinearOpMode {
 
         //While running
         while (opModeIsActive()) {
+            limelight.pipelineSwitch(8);//blue
             //Call motorProcess and processOdometry
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();

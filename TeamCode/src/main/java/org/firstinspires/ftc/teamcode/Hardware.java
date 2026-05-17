@@ -74,8 +74,6 @@ public class Hardware {
         this.rightLight = hwMap.get(Servo.class, Specifications.LIGHT_R);
         this.llmotor = hwMap.get(DcMotorEx.class, Specifications.LLMOTOR);
         this.limelight = hwMap.get(Limelight3A.class, "limelight");
-
-
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {
