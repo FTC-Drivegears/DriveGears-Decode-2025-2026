@@ -49,7 +49,7 @@ public class blue2test extends LinearOpMode {
     private static final double PUSHER_DOWN_L = PusherConsts.PUSHER_DOWN_POSITION_L;
     private static final double PUSHER_UP_R = PusherConsts.PUSHER_UP_POSITION_R;
     private static final double PUSHER_DOWN_R = PusherConsts.PUSHER_DOWN_POSITION_R;
-    private static final long PUSHER_TIME = 400;
+    private static final long PUSHER_TIME = 100;
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
     private static final long PUSHER_SAFE_MARGIN = 150;
@@ -130,11 +130,6 @@ public class blue2test extends LinearOpMode {
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
-    static void push(){
-        if (halfPush(true)) {
-            halfPush(false);
-        }
-    }
 
     //sort, taking in integer sp, which sets the position to the specified position
     static boolean sort(int sp) {
@@ -355,6 +350,7 @@ public class blue2test extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
+                            outtakeFlag = false;
                             mecanumCommand.moveToPos(82, 32, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
@@ -443,6 +439,7 @@ public class blue2test extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
+                            outtakeFlag = false;
                             mecanumCommand.moveToPos(142, 28, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
@@ -550,7 +547,7 @@ public class blue2test extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
-                if (stageTimer.milliseconds() > 500) {
+                if (stageTimer.milliseconds() > 150) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -560,7 +557,7 @@ public class blue2test extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
-                if (stageTimer.milliseconds() > 300) {
+                if (stageTimer.milliseconds() > 150) {
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -587,6 +584,7 @@ public class blue2test extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+                outtakeFlag = false;
                 break;
         }
     }
@@ -611,7 +609,7 @@ public class blue2test extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
-                if (stageTimer.milliseconds() > 500) {
+                if (stageTimer.milliseconds() > 150) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -620,7 +618,7 @@ public class blue2test extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
-                if (stageTimer.milliseconds() > 300) {
+                if (stageTimer.milliseconds() > 150) {
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -647,6 +645,7 @@ public class blue2test extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+                outtakeFlag = false;
                 break;
         }
     }
@@ -671,7 +670,7 @@ public class blue2test extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
-                if (stageTimer.milliseconds() > 500) {
+                if (stageTimer.milliseconds() > 150) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -680,7 +679,7 @@ public class blue2test extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
-                if (stageTimer.milliseconds() > 500) {
+                if (stageTimer.milliseconds() > 150) {
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -708,6 +707,7 @@ public class blue2test extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+                outtakeFlag = false;
                 break;
         }
     }
