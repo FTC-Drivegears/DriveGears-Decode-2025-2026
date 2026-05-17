@@ -32,7 +32,8 @@ public class Hardware {
 
     public final Servo sorter;
 
-    public final Servo light;
+    public final Servo leftLight;
+    public final Servo rightLight;
 
     public final Servo pusher_R;
 
@@ -69,7 +70,8 @@ public class Hardware {
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.pusher_R = hwMap.get(Servo.class, Specifications.PUSHER_R);
         this.pusher_L = hwMap.get(Servo.class, Specifications.PUSHER_L);
-        this.light = hwMap.get(Servo.class, Specifications.LIGHT);
+        this.leftLight = hwMap.get(Servo.class, Specifications.LIGHT_L);
+        this.rightLight = hwMap.get(Servo.class, Specifications.LIGHT_R);
         this.llmotor = hwMap.get(DcMotorEx.class, Specifications.LLMOTOR);
         this.limelight = hwMap.get(Limelight3A.class, "limelight");
 

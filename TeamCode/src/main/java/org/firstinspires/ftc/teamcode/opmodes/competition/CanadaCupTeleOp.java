@@ -41,8 +41,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
     private Servo pusher_R;
     private Servo pusher_L;
     private Servo gate;
-    private Servo light;
-
+    private Servo leftLight;
+    private Servo rightLight;
     private double theta;
     private double sorterPosition = 0.0;
 
@@ -73,22 +73,25 @@ public class CanadaCupTeleOp extends LinearOpMode {
         limelight.pipelineSwitch(0);
         limelight.start();
 
-        if (sorterSubsystem == null) {
-            sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
-        }
+        sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
+
+        sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
+
         colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw, sorterSubsystem);
 
         intake = hw.intake;
         shooter = hw.shooter;
         pusher_R = hw.pusher_R;
         pusher_L = hw.pusher_L;
-        light = hw.light;
+        leftLight = hw.leftLight;
+        rightLight = hw.rightLight;
         gate = hw.gate;
 
         pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
         hw.sorter.setPosition(0.0);
-        hw.light.setPosition(0.0);
+        hw.leftLight.setPosition(0.0);
+        hw.rightLight.setPosition(1.0);
         gate.setPosition(0.6);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -113,6 +116,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean isShooterOn = false;
         boolean prevDpadLeft = false;
         boolean prevManual = false;
+        boolean attemptedFullIntake = false;
 
         // ---------------- MAIN CONTROL LOOP ----------------
         while (opModeIsActive()) {
@@ -153,9 +157,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (curA && !prevA) {
                 autoAimEnabled = !autoAimEnabled;
                 if (autoAimEnabled) {
-                    light.setPosition(0.44);
+                    leftLight.setPosition(0.44);
                 } else {
-                    light.setPosition(0.0);
+                    leftLight.setPosition(0.0);
                 }
             }
             prevA = curA;
@@ -225,6 +229,12 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (curRightTrigger && !prevRightTrigger) {
                 isIntakeMotorOn = !isIntakeMotorOn;
 
+                if (sorterSubsystem.getArtifactCount() == 3) {
+                    attemptedFullIntake = true;
+                } else {
+                    attemptedFullIntake = false;
+                }
+
                 if (isIntakeMotorOn) {
                     isOuttakeMotorOn = false;
                     intake.setPower(0.8);
@@ -232,6 +242,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     intake.setPower(0);
                 }
             }
+            if (sorterSubsystem.getArtifactCount() == 3 && isIntakeMotorOn && !attemptedFullIntake) {
+                isIntakeMotorOn = false;
+                intake.setPower(0);
+            }
+
             prevRightTrigger = curRightTrigger;
             colourSubsystem.update(isIntakeMotorOn);
 
@@ -266,16 +281,16 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     shooterSubsystem.spinup();
                 } else {
                     shooterSubsystem.stopShooter();
-                    light.setPosition(0.0);
+                    leftLight.setPosition(0.0);
                 }
             }
             previousXState = currentXState;
 
             if (isShooterOn && tx != null && Math.abs(tx) < 3) {
                 if (shooterSubsystem.isRPMReached()) {
-                    light.setPosition(0.3);
+                    leftLight.setPosition(0.3);
                 } else {
-                    light.setPosition(0.0);
+                    leftLight.setPosition(0.0);
                 }
             }
 
@@ -299,11 +314,29 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // ---------------- SORTER OVERRIDE ----------------
             if (gamepad1.b && sorterTimer.milliseconds() > 500) {
-                sorterPosition = (sorterPosition + 1) % 3;
+//                sorterPosition = (sorterPosition + 1) % 3;
+//                sorterTimer.reset();
+//                if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
+//                else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
+//                else hw.sorter.setPosition(0.875);
                 sorterTimer.reset();
-                if (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
-                else if (sorterPosition == 1) hw.sorter.setPosition(0.43);
-                else hw.sorter.setPosition(0.875);
+                sorterSubsystem.manualSpin();
+            }
+
+            // ---------------- COLOUR SELECTION ----------------
+            if (gamepad1.dpad_up) {
+                sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.GREEN;
+                hw.rightLight.setPosition(0.5);
+            }
+
+            if (gamepad1.dpad_down) {
+                sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.PURPLE;
+                hw.rightLight.setPosition(0.722);
+            }
+
+            if (gamepad1.back) {
+                sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
+                hw.rightLight.setPosition(1.0);
             }
 
             // ---------------- QUICKFIRE ----------------
@@ -329,12 +362,12 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 mecanumCommand.resetPinPointOdometry();
             }
 
-            if (gamepad1.dpad_up) {
-                telemetry.addLine(Arrays.toString(sorterSubsystem.getSorterList()));
-                telemetry.addLine(Arrays.toString(sorterSubsystem.getArtifactCount()));
-            }
-
             // ---------------- TELEMETRY ----------------
+            if (llResult != null && llResult.isValid()) {
+                telemetry.addData("Tag Detected", "ID: " + llResult.getFiducialResults().get(0).getFiducialId());
+            } else {
+                telemetry.addData("Tag Detected", "None");
+            }
             telemetry.addData("Heading Delta", turret.getDebugHeadingDelta());
             telemetry.addData("Target Ticks", turret.getDebugTargetTicks());
             telemetry.addData("Turret Ticks", hw.llmotor.getCurrentPosition());
@@ -363,7 +396,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
             telemetry.addData("Green2", colourSubsystem.getGreen2());
             telemetry.addData("Blue2", colourSubsystem.getBlue2());
             telemetry.addData("Alpha2", colourSubsystem.getAlpha2());
-            telemetry.addData("Detected Count", colourSubsystem.getCount());
+            telemetry.addData("Detected Count", sorterSubsystem.getArtifactCount());
+            telemetry.addData("Current Balls", Arrays.toString(sorterSubsystem.getSorterList()));
+            telemetry.addData("Current Sorter Position", sorterSubsystem.getSorterPos());
             telemetry.update();
         }
     }
