@@ -40,7 +40,8 @@ public class Specifications {
 
     public static final String LIME_LIGHT = "lime";
 
-    public static final String LIGHT = "light";
+    public static final String LIGHT_L = "lightL";
+    public static final String LIGHT_R = "lightR";
 
     public static final String PIN_POINT_ODOMETRY = "odo";
 

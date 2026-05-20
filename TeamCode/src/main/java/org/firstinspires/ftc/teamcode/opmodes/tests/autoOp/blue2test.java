@@ -19,8 +19,8 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
-@Autonomous (name = "New Blue Auto")
-public class NewBlueAutoOp extends LinearOpMode {
+@Autonomous (name = "blueautoTest")
+public class blue2test extends LinearOpMode {
     //Initialize mecanumCommand, shooterSubsystem, and sorterSubsystem
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
@@ -49,7 +49,11 @@ public class NewBlueAutoOp extends LinearOpMode {
     private static final double PUSHER_DOWN_L = PusherConsts.PUSHER_DOWN_POSITION_L;
     private static final double PUSHER_UP_R = PusherConsts.PUSHER_UP_POSITION_R;
     private static final double PUSHER_DOWN_R = PusherConsts.PUSHER_DOWN_POSITION_R;
+<<<<<<< HEAD
+    private static final long PUSHER_TIME = 400;
+=======
     private static final long PUSHER_TIME = 100;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
     private static boolean isPusherUp = false;
     private static final ElapsedTime pusherTimer = new ElapsedTime();
     private static final long PUSHER_SAFE_MARGIN = 150;
@@ -77,7 +81,7 @@ public class NewBlueAutoOp extends LinearOpMode {
     private static int collectedCount = 0;
 
     //Hood position variable
-    private static double hoodPos = 0.359;
+//    private static double hoodPos = 0.359;
 
     //Gate variables
     private static final double GATE_UP = 0.7;
@@ -130,11 +134,14 @@ public class NewBlueAutoOp extends LinearOpMode {
         return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
+<<<<<<< HEAD
     static void push(){
         if (halfPush(true)) {
             halfPush(false);
         }
     }
+=======
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
 
     //sort, taking in integer sp, which sets the position to the specified position
     static boolean sort(int sp) {
@@ -219,7 +226,7 @@ public class NewBlueAutoOp extends LinearOpMode {
         sorter.setPosition(pos1);
         pusher_L.setPosition(PUSHER_DOWN_L);
         pusher_R.setPosition(PUSHER_DOWN_R);
-        hood.setPosition(hoodPos);
+//        hood.setPosition(hoodPos);
         gate.setPosition(GATE_DOWN);
 
         //set position and stage to 0
@@ -254,20 +261,24 @@ public class NewBlueAutoOp extends LinearOpMode {
             //limelight detection
             llResult = limelight.getLatestResult();
 
-            Double tx = null;
-            Double ty = null;
-
-            if (llResult != null && llResult.isValid()) {
-                tx = llResult.getTx();
-                ty = llResult.getTy();
-            }
+//            Double tx = null;
+//            Double ty = null;
+//
+//            if (llResult != null && llResult.isValid()) {
+//                tx = llResult.getTx();
+//                ty = llResult.getTy();
+//            }
 
             //Then update telemetry with this data, in order to know for sure
             telemetry.addData("Pattern:", detected);
-            telemetry.addData("tx", tx);
-            telemetry.addData("ty", ty);
+            if (llResult != null && llResult.isValid()) {
+                telemetry.addData("Tag Detected", "ID: " + llResult.getFiducialResults().get(0).getFiducialId());
+            } else {
+                telemetry.addData("Tag Detected", "None");
+            }
             telemetry.update();
         }
+
 
         //Wait for start
         waitForStart();
@@ -298,7 +309,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                 tx = llResult.getTx();
                 ty = llResult.getTy();
             }
-            turret.update(tx, ty);
+
             //Then update telemetry with this data, in order to know for sure
             telemetry.addData("tx", tx);
             telemetry.addData("ty", ty);
@@ -308,13 +319,16 @@ public class NewBlueAutoOp extends LinearOpMode {
             //Process Telemetry
             processTelemetry();
 
+            turret.update(tx, ty);
             //State machine, going through the enum autoState
             switch (autoState) {
                 case FIRST_SHOT:
                     //Set max RPM to 3500 rpm, move to initial position, and set hood position
-                    shooterSubsystem.setMaxRPM(3500);
+//                    shooterSubsystem.setMaxRPM(3500);
+                    shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
+                    turret.update(tx, ty);
                     mecanumCommand.moveToPos(26, -6, 0.36);
-                    hood.setPosition(0.43);
+//                    hood.setPosition(0.43);
 
                     //Depending on pattern, call respective processPattern function
                     if (mecanumCommand.isPositionReached()) {
@@ -348,6 +362,10 @@ public class NewBlueAutoOp extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
+<<<<<<< HEAD
+=======
+                            outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                             mecanumCommand.moveToPos(82, 32, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
@@ -396,7 +414,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                                 autoState = AUTO_STATE.SECOND_SHOT;
                                 shooterSubsystem.setMaxRPM(3500);
                                 mecanumCommand.moveToPos(26, -6, 0.355);
-                                hood.setPosition(0.43);
+//                                hood.setPosition(0.43);
                                 break;
                             }
                             break;
@@ -436,6 +454,10 @@ public class NewBlueAutoOp extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
+<<<<<<< HEAD
+=======
+                            outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                             mecanumCommand.moveToPos(142, 28, Math.PI / 2); //align with artifacts
                             gate.setPosition(GATE_UP);
                             stageTimer.reset();
@@ -484,7 +506,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                                 autoState = AUTO_STATE.FINISH;
                                 shooterSubsystem.setMaxRPM(3500);
                                 mecanumCommand.moveToPos(26, -6, 0.355);
-                                hood.setPosition(0.43);
+//                                hood.setPosition(0.43);
                                 break;
                             }
                             break;
@@ -543,7 +565,11 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -553,7 +579,11 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 300) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -580,6 +610,10 @@ public class NewBlueAutoOp extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+<<<<<<< HEAD
+=======
+                outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                 break;
         }
     }
@@ -604,7 +638,11 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -613,7 +651,11 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 300) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -640,6 +682,10 @@ public class NewBlueAutoOp extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+<<<<<<< HEAD
+=======
+                outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                 break;
         }
     }
@@ -664,7 +710,11 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -673,7 +723,11 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 3: //push off
             case 6:
             case 9:
+<<<<<<< HEAD
                 if (stageTimer.milliseconds() > 500) {
+=======
+                if (stageTimer.milliseconds() > 150) {
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                     if(halfPush(false)) {
                         stage++;
                         stageTimer.reset();
@@ -701,6 +755,10 @@ public class NewBlueAutoOp extends LinearOpMode {
                 stage = 0;
                 stageTimer.reset();
                 autoState = reset;
+<<<<<<< HEAD
+=======
+                outtakeFlag = false;
+>>>>>>> 486e14bba0f2df185237fe2761660932bad45b36
                 break;
         }
     }
