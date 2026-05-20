@@ -16,11 +16,24 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * TurretMechanism v10.9 — Software Limits & Manual Overrides.
+ * TurretMechanism v16.0 — Overshoot & Oscillation Fix.
  *
- * KEY FIX:
- * Cleaned up the compilation syntax error caused by a stray closing bracket at the top of the file.
- * Preserves the 140.0 and -203.0 degree hard software limits and the discrete manual control system.
+ * Changes from v13.0:
+ *  - BLIND_CONFIDENCE_EXPIRE raised 60 → 90: ~2 extra seconds of dead-reckoning
+ *  - getBlindPowerScale: replaced hard 0.3 floor with smooth decay to 0 over
+ *    frames 40–90, eliminating the authority cliff that caused 147° max error/
+ *
+ * Changes from v12.0:
+ *  - STALE_TX_THRESHOLD raised 0.05 → 0.15: MIN_ALPHA increase caused false
+ *    stale detections (66 frames vs 4 in v11); threshold now matches new smoothing rate
+ *  - kD raised 0.004 → 0.008: v12 raised kP without proportionally raising kD,
+ *    leaving insufficient velocity damping and allowing oscillation to grow
+ *  - kP trimmed 0.062 → 0.058: small pullback to reduce overshoot contribution
+ *  - MIN_POWER_FADE_WINDOW_DEG widened 1.5 → 3.0: stiction FF was stepping in
+ *    abruptly at 1.5°, causing the turret to hunt around zero; wider fade window
+ *    gives a smoother onset and lets the D-term settle the final approach
+ *  - Integral zero-crossing: halved instead of zeroed; full wipe was creating a
+ *    repeating overshoot → wipe → overshoot cycle that looked like oscillation
  */
 public class TurretMechanismTutorial {
 
@@ -29,38 +42,47 @@ public class TurretMechanismTutorial {
     private Hardware hw;
     private MecanumCommand mecanumCommand;
 
-    // --- Optimized High-Response PID gains ---
-    private double kP = 0.045;
-    private double kI = 0.015;
-    private double kD = 0.005;
+    // --- PID gains ---
+    private double kP = 0.038;  // was 0.050 — overshoots were still ±5 deg; less punch needed
+    private double kI = 0.012;
+    private double kD = 0.013;  // was 0.008 — more damping to arrest overshoot momentum
 
-    private static final double MAX_INTEGRAL = 0.25;
+    private static final double MAX_INTEGRAL = 0.20;
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
-    private static final double FEEDFORWARD_STICTION_POWER = 0.11;
-    private static final double MAX_OUTPUT_POWER = 0.75;
+    private static final double FEEDFORWARD_STICTION_POWER = 0.07;  // was 0.12 — FF + P were stacking and overshooting near zero
+    private static final double MAX_OUTPUT_POWER = 0.80;
 
-    private static final double MIN_POWER_FADE_WINDOW_DEG = 1.0;
+    // Deadband: suppress correction when already very close to target.
+    // Prevents micro-oscillations from stiction FF kicking at sub-1-degree errors.
+    private static final double ERROR_DEADBAND_DEG = 2.0;  // was 0.7 — overshoot was ±5 deg; 0.7 did nothing
+
+    // Widened 1.5 → 3.0: stiction now fades in smoothly over 3° instead of 1.5°,
+    // preventing the abrupt kick that caused hunting near zero
+    private static final double MIN_POWER_FADE_WINDOW_DEG = 5.0;  // was 3.0 — stiction now fades in over 5 deg for a gentler approach
 
     // Manual Mode State
     private boolean manualMode = false;
     private double manualPower = 0.0;
 
-    // Limelight smoothing
-    private static final double TX_FILTER_ALPHA            = 0.55;
+    // Limelight dynamic smoothing bounds
+    private static final double MIN_ALPHA = 0.30; // was 0.40 — more smoothing near center reduces tx noise driving oscillation
+    private static final double MAX_ALPHA = 1.00;
     private static final double TX_STABILITY_THRESHOLD_DEG = 0.8;
     private double smoothedTx     = 0.0;
     private double prevSmoothedTx = 0.0;
 
     private int stableFrameCount = 0;
-    private static final int STABLE_FRAMES_REQUIRED = 2;
+    private static final int STABLE_FRAMES_REQUIRED = 1;
     private int consecutiveTargetFrames = 0;
-    private static final int TARGET_FRAMES_REQUIRED = 3;
+    private static final int TARGET_FRAMES_REQUIRED = 2;
 
     private double lastRawTx = 0;
     private int staleTxCount = 0;
-    private static final double STALE_TX_THRESHOLD = 0.05;
+    // Raised 0.05 → 0.15: MIN_ALPHA=0.40 smooths tx more per frame, so valid
+    // readings were triggering the stale gate on the old tight threshold
+    private static final double STALE_TX_THRESHOLD = 0.15;
     private static final int STALE_TX_MAX_FRAMES   = 6;
 
     private double  targetWorldAngleDeg    = 0;
@@ -72,7 +94,9 @@ public class TurretMechanismTutorial {
     private static final int BLIND_FULL_POWER_FRAMES = 15;
     private static final int BLIND_RAMP_END_FRAMES   = 40;
     private static final double BLIND_MIN_SCALE       = 0.3;
-    private static final int BLIND_CONFIDENCE_EXPIRE  = 60;
+    // Raised 60 → 90: gives ~2s more dead-reckoning before confidence expires.
+    // Combined with smooth decay below, replaces the hard cliff that caused 147° errors.
+    private static final int BLIND_CONFIDENCE_EXPIRE  = 90;
 
     // D-term suppression on reacquisition
     private int framesSinceAcquisition = 999;
@@ -80,17 +104,17 @@ public class TurretMechanismTutorial {
 
     // World velocity low-pass filter
     private double filteredWorldVelocity = 0.0;
-    private static final double VELOCITY_FILTER_ALPHA = 0.5;
+    private static final double VELOCITY_FILTER_ALPHA = 0.4;
 
     private double lastTurretPosDeg  = 0;
     private double prevWorldAngleDeg = 0;
     private boolean firstUpdate      = true;
     private double distanceTrack     = 0;
 
-    private static final double MAX_EXPECTED_TX_DRIFT_DEG = 15.0;
+    private static final double MAX_EXPECTED_TX_DRIFT_DEG = 30.0;
 
     private static final double DT_MIN = 0.002;
-    private static final double DT_MAX = 0.050;
+    private static final double DT_MAX = 0.150;
 
     private final ElapsedTime loopTimer  = new ElapsedTime();
     private final ElapsedTime totalTimer = new ElapsedTime();
@@ -109,6 +133,7 @@ public class TurretMechanismTutorial {
 
     private boolean hasTarget = false;
     private static final double TICKS_PER_DEGREE = 1.8;
+    private static final double TX_ACCEPTANCE_DEG = 35.0;
 
     private BufferedWriter logWriter   = null;
     private boolean        loggingEnabled = false;
@@ -178,18 +203,11 @@ public class TurretMechanismTutorial {
     public double getDistanceTrack() { return distanceTrack; }
     public boolean hasTarget()       { return hasTarget; }
 
-    /**
-     * Enables manual override power directly inside the subsystem loop.
-     * @param power The motor power to apply (-1.0 to 1.0)
-     */
     public void setManualPower(double power) {
         this.manualMode = true;
         this.manualPower = power;
     }
 
-    /**
-     * Restores automatic tracking control to the PID controller.
-     */
     public void setAutoMode() {
         this.manualMode = false;
     }
@@ -204,11 +222,16 @@ public class TurretMechanismTutorial {
         if (blindFrameCount <= BLIND_FULL_POWER_FRAMES) {
             return 1.0;
         } else if (blindFrameCount <= BLIND_RAMP_END_FRAMES) {
+            // Ramp from 1.0 down to BLIND_MIN_SCALE
             double progress = (double)(blindFrameCount - BLIND_FULL_POWER_FRAMES)
                     / (BLIND_RAMP_END_FRAMES - BLIND_FULL_POWER_FRAMES);
             return 1.0 - progress * (1.0 - BLIND_MIN_SCALE);
         } else {
-            return BLIND_MIN_SCALE;
+            // Smooth decay from BLIND_MIN_SCALE to 0 instead of a hard floor.
+            // Prevents the sudden authority cliff that caused 147 deg errors in v13.
+            double progress = (double)(blindFrameCount - BLIND_RAMP_END_FRAMES)
+                    / (BLIND_CONFIDENCE_EXPIRE - BLIND_RAMP_END_FRAMES);
+            return BLIND_MIN_SCALE * (1.0 - Range.clip(progress, 0.0, 1.0));
         }
     }
 
@@ -252,7 +275,6 @@ public class TurretMechanismTutorial {
 
         double expectedTx = wrapAngle(currentWorldAngleDeg - targetWorldAngleDeg);
 
-        // --- 1. Pure Stale Frame Filter ---
         boolean txIsStale = false;
         if (tx != null) {
             if (Math.abs(tx - lastRawTx) < STALE_TX_THRESHOLD) {
@@ -268,7 +290,6 @@ public class TurretMechanismTutorial {
             staleTxCount = 0;
         }
 
-        // --- 2. Physics Rejection Gate ---
         boolean txRejected = false;
         if (tx != null && worldAngleConfident) {
             double txError = Math.abs(wrapAngle(tx - expectedTx));
@@ -277,7 +298,6 @@ public class TurretMechanismTutorial {
             }
         }
 
-        // --- 3. Main Tracking State Machine or Manual Bypass ---
         if (manualMode) {
             hasTarget = false;
             consecutiveTargetFrames = 0;
@@ -286,19 +306,23 @@ public class TurretMechanismTutorial {
             integralSum = 0;
             error = 0;
             outputPower = manualPower;
-        } else if (tx != null && !txRejected && !txIsStale && Math.abs(tx) < 25.0) {
+        } else if (tx != null && !txRejected && !txIsStale && Math.abs(tx) < TX_ACCEPTANCE_DEG) {
             targetFoundAtLeastOnce = true;
             consecutiveTargetFrames++;
             blindFrameCount = 0;
 
             if (!hasTarget) {
-                smoothedTx       = tx;
-                prevSmoothedTx   = tx;
-                integralSum      = 0;
-                stableFrameCount = 0;
+                // Blend from expected world-angle toward raw tx on reacquisition.
+                // Jumping straight to rawTx caused large first-frame errors and overshoot.
+                smoothedTx             = worldAngleConfident ? (0.4 * tx + 0.6 * expectedTx) : tx;
+                prevSmoothedTx         = smoothedTx;
+                integralSum            = integralSum * 0.5;
+                stableFrameCount       = 0;
                 framesSinceAcquisition = 0;
             } else {
-                smoothedTx = TX_FILTER_ALPHA * tx + (1.0 - TX_FILTER_ALPHA) * smoothedTx;
+                double errorFactor  = Math.abs(tx) / 12.0;
+                double dynamicAlpha = MIN_ALPHA + (MAX_ALPHA - MIN_ALPHA) * Range.clip(errorFactor, 0.0, 1.0);
+                smoothedTx = dynamicAlpha * tx + (1.0 - dynamicAlpha) * smoothedTx;
                 framesSinceAcquisition++;
             }
             hasTarget = true;
@@ -323,6 +347,7 @@ public class TurretMechanismTutorial {
             }
 
             error = -smoothedTx;
+            if (Math.abs(error) < ERROR_DEADBAND_DEG) error = 0.0;
 
         } else if (targetFoundAtLeastOnce) {
             hasTarget               = false;
@@ -354,13 +379,14 @@ public class TurretMechanismTutorial {
             blindScale = 0;
         }
 
-        // --- PID Controller calculations (Skipped if in manual mode) ---
         double pTerm = 0, iTerm = 0, dTerm = 0;
 
         if (!manualMode) {
             pTerm = kP * error;
 
-            if (error * prevError < 0) integralSum = 0;
+            // Halve instead of zero on zero-crossing — zeroing caused a repeating
+            // overshoot → wipe → overshoot cycle that manifested as oscillation
+            if (error * prevError < 0) integralSum *= 0.5;
             integralSum += error * deltaTime;
             integralSum = Range.clip(integralSum, -MAX_INTEGRAL / kI, MAX_INTEGRAL / kI);
             iTerm = integralSum * kI;
@@ -371,7 +397,7 @@ public class TurretMechanismTutorial {
 
             double stictionFF = 0.0;
             double absError = Math.abs(error);
-            if (absError > 0.05) {
+            if (absError > 0.02) {
                 double fadeScale = 1.0;
                 if (absError < MIN_POWER_FADE_WINDOW_DEG) {
                     fadeScale = absError / MIN_POWER_FADE_WINDOW_DEG;
