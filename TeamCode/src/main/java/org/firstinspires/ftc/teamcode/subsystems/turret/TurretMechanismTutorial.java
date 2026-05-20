@@ -8,21 +8,19 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 /**
- * TurretMechanism: Advanced "Infinite Rotation" Field-Oriented Version.
+ * TurretMechanism v10.9 — Software Limits & Manual Overrides.
  *
- * FIXES APPLIED:
- *  1. kP/kD restored to effective defaults; TeleOp no longer overrides them down.
- *  2. D-term now differentiates turret encoder position (velocity), not raw error,
- *     eliminating derivative kick from tx noise.
- *  3. lastError and lastTurretPosDeg are now separate, properly-typed variables so
- *     mixing camera-space and encoder-space values is impossible.
- *  4. tx is low-pass filtered before use, eliminating camera noise micro-jitter.
- *  5. deltaTime is clamped on BOTH ends — no catastrophic D spikes from loop stalls.
- *  6. targetWorldAngleDeg is only re-pinned when the smoothed tx is stable enough
- *     (below a confidence threshold), preventing drift from noisy re-pinning.
- *  7. Feedforward sign comment clarified; sign constant kFF_SIGN lets you flip it
- *     in one place after empirical validation on the physical robot.
+ * KEY FIX:
+ * Cleaned up the compilation syntax error caused by a stray closing bracket at the top of the file.
+ * Preserves the 140.0 and -203.0 degree hard software limits and the discrete manual control system.
  */
 public class TurretMechanismTutorial {
 
@@ -31,52 +29,71 @@ public class TurretMechanismTutorial {
     private Hardware hw;
     private MecanumCommand mecanumCommand;
 
-    // --- PD Gains ---
-    // Restored to effective values. Lower these only if the physical robot oscillates
-    // after the D-term derivative-kick bug is fixed.
-    private double kP = 0.022;
-    private double kD = 0.0015;
+    // --- Optimized High-Response PID gains ---
+    private double kP = 0.045;
+    private double kI = 0.015;
+    private double kD = 0.005;
 
-    // --- Feedforward Gain ---
-    // Compensates for robot rotation so the turret feels field-oriented.
-    // kFF_SIGN: set to +1.0 or -1.0 after verifying on the robot.
-    // If spinning the robot CW causes the turret to drift CW instead of staying put,
-    // flip this sign.
-    private double kFF      = 0.011;
-    private double kFF_SIGN = -1.0;  // <-- flip to +1.0 if feedforward fights you
+    private static final double MAX_INTEGRAL = 0.25;
+    private double integralSum = 0.0;
+    private double prevError   = 0.0;
 
-    // --- Low-pass filter alpha for tx ---
-    // 0 = frozen (never updates), 1 = no filtering (raw).
-    // 0.35 gives a good balance of lag vs. noise rejection.
-    private static final double TX_FILTER_ALPHA = 0.35;
-    private double smoothedTx = 0.0;
+    private static final double FEEDFORWARD_STICTION_POWER = 0.11;
+    private static final double MAX_OUTPUT_POWER = 0.75;
 
-    // --- tx stability gate ---
-    // Only re-pin the field target when smoothed tx is moving slowly.
-    // If |smoothedTx - prevSmoothedTx| > this threshold the camera is still
-    // swinging onto target; don't commit the pin yet.
+    private static final double MIN_POWER_FADE_WINDOW_DEG = 1.0;
+
+    // Manual Mode State
+    private boolean manualMode = false;
+    private double manualPower = 0.0;
+
+    // Limelight smoothing
+    private static final double TX_FILTER_ALPHA            = 0.55;
     private static final double TX_STABILITY_THRESHOLD_DEG = 0.8;
+    private double smoothedTx     = 0.0;
     private double prevSmoothedTx = 0.0;
 
-    // --- Field-centric memory ---
-    private double targetWorldAngleDeg   = 0;
+    private int stableFrameCount = 0;
+    private static final int STABLE_FRAMES_REQUIRED = 2;
+    private int consecutiveTargetFrames = 0;
+    private static final int TARGET_FRAMES_REQUIRED = 3;
+
+    private double lastRawTx = 0;
+    private int staleTxCount = 0;
+    private static final double STALE_TX_THRESHOLD = 0.05;
+    private static final int STALE_TX_MAX_FRAMES   = 6;
+
+    private double  targetWorldAngleDeg    = 0;
     private boolean targetFoundAtLeastOnce = false;
+    private boolean worldAngleConfident    = false;
 
-    // FIX: Track turret encoder position for the D-term, NOT error.
-    // This avoids derivative kick entirely — we're measuring actual velocity.
-    private double lastTurretPosDeg = 0;
+    // Soft confidence decay
+    private int blindFrameCount = 0;
+    private static final int BLIND_FULL_POWER_FRAMES = 15;
+    private static final int BLIND_RAMP_END_FRAMES   = 40;
+    private static final double BLIND_MIN_SCALE       = 0.3;
+    private static final int BLIND_CONFIDENCE_EXPIRE  = 60;
 
-    private double distanceTrack;
+    // D-term suppression on reacquisition
+    private int framesSinceAcquisition = 999;
+    private static final int DTERM_SUPPRESS_FRAMES = 2;
 
-    private static final double ANGLE_TOLERANCE_DEG = 0.15;
-    private static final double MAX_POWER           = 1.0;
+    // World velocity low-pass filter
+    private double filteredWorldVelocity = 0.0;
+    private static final double VELOCITY_FILTER_ALPHA = 0.5;
 
-    // deltaTime clamped: minimum 1 ms, maximum 50 ms.
-    // The 50 ms cap prevents a stall/GC pause from producing a violent D spike.
-    private static final double DT_MIN = 0.001;
+    private double lastTurretPosDeg  = 0;
+    private double prevWorldAngleDeg = 0;
+    private boolean firstUpdate      = true;
+    private double distanceTrack     = 0;
+
+    private static final double MAX_EXPECTED_TX_DRIFT_DEG = 15.0;
+
+    private static final double DT_MIN = 0.002;
     private static final double DT_MAX = 0.050;
 
-    private final ElapsedTime loopTimer = new ElapsedTime();
+    private final ElapsedTime loopTimer  = new ElapsedTime();
+    private final ElapsedTime totalTimer = new ElapsedTime();
 
     private static final double LIMELIGHT_HEIGHT = 0.31;
     private static final double LIMELIGHT_ANGLE  = Math.toRadians(40);
@@ -91,136 +108,342 @@ public class TurretMechanismTutorial {
     private double shootRPM = MIN_RPM;
 
     private boolean hasTarget = false;
-
     private static final double TICKS_PER_DEGREE = 1.8;
 
-    // -------------------------------------------------------------------------
+    private BufferedWriter logWriter   = null;
+    private boolean        loggingEnabled = false;
 
     public void init(HardwareMap hwMap) {
         this.hw = Hardware.getInstance(hwMap);
-        turret = hw.llmotor;
+        turret  = hw.llmotor;
 
         turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        turret.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        turret.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         turret.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        hood = hw.hood;
-
-        lastTurretPosDeg = 0;
+        hood                    = hw.hood;
+        lastTurretPosDeg        = 0;
+        prevWorldAngleDeg       = 0;
+        firstUpdate             = true;
+        targetFoundAtLeastOnce  = false;
+        worldAngleConfident     = false;
+        integralSum             = 0;
+        prevError               = 0;
+        stableFrameCount        = 0;
+        consecutiveTargetFrames = 0;
+        staleTxCount            = 0;
+        lastRawTx               = 0;
+        blindFrameCount         = 0;
+        framesSinceAcquisition  = 999;
+        filteredWorldVelocity   = 0;
+        manualMode              = false;
+        manualPower             = 0.0;
         loopTimer.reset();
+        totalTimer.reset();
+
+        try {
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+            String path      = "/sdcard/FIRST/turret_log_" + timestamp + ".csv";
+            logWriter        = new BufferedWriter(new FileWriter(path));
+            loggingEnabled   = true;
+            logWriter.write("time_ms,raw_tx,smoothed_tx,error,turret_rel_deg,world_angle_deg," +
+                    "robot_heading_deg,world_velocity,filtered_velocity,p_term,i_term,d_term,output_power," +
+                    "motor_power,has_target,target_world_angle_deg,tx_rejected,stale_tx_count," +
+                    "consec_target_frames,blind_frames,confident,blind_scale\n");
+            logWriter.flush();
+        } catch (IOException e) {
+            loggingEnabled = false;
+        }
+    }
+
+    public void closeLog() {
+        if (logWriter != null) {
+            try {
+                logWriter.flush();
+                logWriter.close();
+            } catch (IOException e) {}
+            logWriter = null;
+        }
     }
 
     public void setMecanumCommand(MecanumCommand mc) { this.mecanumCommand = mc; }
-    public void setkP(double newkP)                  { this.kP = newkP; }
-    public void setkD(double newkD)                  { this.kD = newkD; }
-    public double getkP()                            { return kP; }
-    public double getkD()                            { return kD; }
-    public double getShootRPM()                      { return shootRPM; }
-    public double getDistanceTrack()                 { return distanceTrack; }
-    public boolean hasTarget()                       { return hasTarget; }
+    public void setkP(double v)  { this.kP = v; }
+    public void setkI(double v)  { this.kI = v; }
+    public void setkD(double v)  { this.kD = v; }
 
-    // -------------------------------------------------------------------------
+    public double getkP()            { return kP; }
+    public double getkI()            { return kI; }
+    public double getkD()            { return kD; }
+    public double getShootRPM()      { return shootRPM; }
+    public double getDistanceTrack() { return distanceTrack; }
+    public boolean hasTarget()       { return hasTarget; }
 
-    /** Normalises angle to [-180, 180] so the turret always takes the shortest path. */
+    /**
+     * Enables manual override power directly inside the subsystem loop.
+     * @param power The motor power to apply (-1.0 to 1.0)
+     */
+    public void setManualPower(double power) {
+        this.manualMode = true;
+        this.manualPower = power;
+    }
+
+    /**
+     * Restores automatic tracking control to the PID controller.
+     */
+    public void setAutoMode() {
+        this.manualMode = false;
+    }
+
     private double wrapAngle(double angle) {
         while (angle >  180) angle -= 360;
         while (angle < -180) angle += 360;
         return angle;
     }
 
-    // -------------------------------------------------------------------------
+    private double getBlindPowerScale() {
+        if (blindFrameCount <= BLIND_FULL_POWER_FRAMES) {
+            return 1.0;
+        } else if (blindFrameCount <= BLIND_RAMP_END_FRAMES) {
+            double progress = (double)(blindFrameCount - BLIND_FULL_POWER_FRAMES)
+                    / (BLIND_RAMP_END_FRAMES - BLIND_FULL_POWER_FRAMES);
+            return 1.0 - progress * (1.0 - BLIND_MIN_SCALE);
+        } else {
+            return BLIND_MIN_SCALE;
+        }
+    }
 
     public void update(Double tx, Double ty) {
-
-        // --- 1. Safe deltaTime — clamped on both sides ---
-        double deltaTime = Range.clip(loopTimer.seconds(), DT_MIN, DT_MAX);
+        double deltaTime = loopTimer.seconds();
         loopTimer.reset();
 
-        // --- 2. Robot state from odometry ---
-        double robotHeadingDeg   = 0;
-        double robotRotVelocity  = 0;
-
-        if (mecanumCommand != null) {
-            robotHeadingDeg  = Math.toDegrees(mecanumCommand.getOdoHeading());
-            robotRotVelocity = mecanumCommand.getHeadingVelocity(); // deg/s
+        if (Double.isNaN(deltaTime) || deltaTime < DT_MIN) {
+            deltaTime = DT_MIN;
+        } else if (deltaTime > DT_MAX) {
+            deltaTime = DT_MAX;
         }
 
-        // --- 3. Current turret world angle ---
-        double currentTurretRelDeg = turret.getCurrentPosition() / TICKS_PER_DEGREE;
-        double currentWorldAngle   = wrapAngle(robotHeadingDeg + currentTurretRelDeg);
+        double robotHeadingDeg = (mecanumCommand != null) ? Math.toDegrees(mecanumCommand.getOdoHeading()) : 0;
 
-        // --- 4. Turret encoder velocity for D-term (avoids derivative kick) ---
-        // We differentiate the POSITION, not the error, so sudden tx changes
-        // don't cause a power jolt.
-        double turretPosDeg    = currentTurretRelDeg;
-        double turretVelocity  = (turretPosDeg - lastTurretPosDeg) / deltaTime; // deg/s
-        lastTurretPosDeg       = turretPosDeg;
+        if (Double.isNaN(robotHeadingDeg)) {
+            robotHeadingDeg = 0;
+        }
+
+        double currentTurretRelDeg  = turret.getCurrentPosition() / TICKS_PER_DEGREE;
+        double currentWorldAngleDeg = wrapAngle(robotHeadingDeg + currentTurretRelDeg);
+
+        if (firstUpdate) {
+            prevWorldAngleDeg = currentWorldAngleDeg;
+            firstUpdate = false;
+        }
+
+        double currentWorldVelocity = wrapAngle(currentWorldAngleDeg - prevWorldAngleDeg) / deltaTime;
+        prevWorldAngleDeg       = currentWorldAngleDeg;
+        lastTurretPosDeg        = currentTurretRelDeg;
+
+        if (Double.isFinite(currentWorldVelocity)) {
+            filteredWorldVelocity = VELOCITY_FILTER_ALPHA * currentWorldVelocity
+                    + (1.0 - VELOCITY_FILTER_ALPHA) * filteredWorldVelocity;
+        }
 
         double error       = 0;
         double outputPower = 0;
+        double rawTx       = (tx != null) ? tx : 0.0;
+        double blindScale  = 1.0;
 
+        double expectedTx = wrapAngle(currentWorldAngleDeg - targetWorldAngleDeg);
+
+        // --- 1. Pure Stale Frame Filter ---
+        boolean txIsStale = false;
         if (tx != null) {
-            hasTarget = true;
-            targetFoundAtLeastOnce = true;
-
-            // --- 5. Low-pass filter on tx to kill camera noise ---
-            smoothedTx = TX_FILTER_ALPHA * tx + (1.0 - TX_FILTER_ALPHA) * smoothedTx;
-
-            // --- 6. Only re-pin the field target when tx has stabilised ---
-            // If the camera is still swinging onto the goal the smoothed value
-            // is changing quickly — wait until it settles before committing.
-            double txDelta = Math.abs(smoothedTx - prevSmoothedTx);
-            if (txDelta < TX_STABILITY_THRESHOLD_DEG) {
-                targetWorldAngleDeg = wrapAngle(currentWorldAngle - smoothedTx);
+            if (Math.abs(tx - lastRawTx) < STALE_TX_THRESHOLD) {
+                if (Math.abs(filteredWorldVelocity) > 20.0) {
+                    staleTxCount++;
+                }
+            } else {
+                staleTxCount = 0;
             }
+            lastRawTx = tx;
+            txIsStale = (staleTxCount >= STALE_TX_MAX_FRAMES);
+        } else {
+            staleTxCount = 0;
+        }
+
+        // --- 2. Physics Rejection Gate ---
+        boolean txRejected = false;
+        if (tx != null && worldAngleConfident) {
+            double txError = Math.abs(wrapAngle(tx - expectedTx));
+            if (txError > MAX_EXPECTED_TX_DRIFT_DEG) {
+                txRejected = true;
+            }
+        }
+
+        // --- 3. Main Tracking State Machine or Manual Bypass ---
+        if (manualMode) {
+            hasTarget = false;
+            consecutiveTargetFrames = 0;
+            smoothedTx = 0.0;
+            prevSmoothedTx = 0.0;
+            integralSum = 0;
+            error = 0;
+            outputPower = manualPower;
+        } else if (tx != null && !txRejected && !txIsStale && Math.abs(tx) < 25.0) {
+            targetFoundAtLeastOnce = true;
+            consecutiveTargetFrames++;
+            blindFrameCount = 0;
+
+            if (!hasTarget) {
+                smoothedTx       = tx;
+                prevSmoothedTx   = tx;
+                integralSum      = 0;
+                stableFrameCount = 0;
+                framesSinceAcquisition = 0;
+            } else {
+                smoothedTx = TX_FILTER_ALPHA * tx + (1.0 - TX_FILTER_ALPHA) * smoothedTx;
+                framesSinceAcquisition++;
+            }
+            hasTarget = true;
+
+            double txDelta = Math.abs(smoothedTx - prevSmoothedTx);
             prevSmoothedTx = smoothedTx;
 
-            // Drive error from the filtered tx so noise doesn't feed the P term
+            if (worldAngleConfident) {
+                if (staleTxCount == 0) {
+                    targetWorldAngleDeg = wrapAngle(currentWorldAngleDeg - smoothedTx);
+                }
+            } else {
+                if (txDelta < TX_STABILITY_THRESHOLD_DEG) {
+                    stableFrameCount++;
+                    if (stableFrameCount >= STABLE_FRAMES_REQUIRED && consecutiveTargetFrames >= TARGET_FRAMES_REQUIRED) {
+                        targetWorldAngleDeg = wrapAngle(currentWorldAngleDeg - smoothedTx);
+                        worldAngleConfident = true;
+                    }
+                } else {
+                    stableFrameCount = 0;
+                }
+            }
+
             error = -smoothedTx;
 
         } else if (targetFoundAtLeastOnce) {
-            // Target lost — hold the last known world-angle pin
-            hasTarget  = false;
-            smoothedTx = 0.0;       // reset filter so it doesn't have stale state
-            // when the target reappears
-            prevSmoothedTx = 0.0;
-            error = wrapAngle(targetWorldAngleDeg - currentWorldAngle);
+            hasTarget               = false;
+            smoothedTx              = 0.0;
+            prevSmoothedTx          = 0.0;
+            stableFrameCount        = 0;
+            consecutiveTargetFrames = 0;
+            framesSinceAcquisition  = 999;
+
+            blindFrameCount++;
+
+            if (worldAngleConfident) {
+                if (blindFrameCount >= BLIND_CONFIDENCE_EXPIRE) {
+                    worldAngleConfident = false;
+                    integralSum = 0;
+                    error = 0;
+                    blindScale = 0;
+                } else {
+                    error = -expectedTx;
+                    blindScale = getBlindPowerScale();
+                }
+            } else {
+                error = 0;
+                blindScale = 0;
+            }
+        } else {
+            hasTarget               = false;
+            consecutiveTargetFrames = 0;
+            blindScale = 0;
         }
 
-        // --- 7. PD control ---
-        // P term: proportional to angular error
-        // D term: proportional to turret *velocity* (not error delta) — no kick
-        double pTerm = error * kP;
-        double dTerm = -turretVelocity * kD;   // negative: resist motion direction
+        // --- PID Controller calculations (Skipped if in manual mode) ---
+        double pTerm = 0, iTerm = 0, dTerm = 0;
 
-        outputPower = (Math.abs(error) < ANGLE_TOLERANCE_DEG) ? 0.0 : (pTerm + dTerm);
+        if (!manualMode) {
+            pTerm = kP * error;
 
-        // --- 8. Feedforward: cancel robot rotation before error develops ---
-        // kFF_SIGN must be validated on the physical robot.
-        // If the turret drifts WITH robot spin, flip kFF_SIGN.
-        double feedForward = kFF_SIGN * robotRotVelocity * kFF;
+            if (error * prevError < 0) integralSum = 0;
+            integralSum += error * deltaTime;
+            integralSum = Range.clip(integralSum, -MAX_INTEGRAL / kI, MAX_INTEGRAL / kI);
+            iTerm = integralSum * kI;
 
-        double totalPower = Range.clip(outputPower + feedForward, -MAX_POWER, MAX_POWER);
+            if (framesSinceAcquisition >= DTERM_SUPPRESS_FRAMES) {
+                dTerm = -filteredWorldVelocity * kD;
+            }
+
+            double stictionFF = 0.0;
+            double absError = Math.abs(error);
+            if (absError > 0.05) {
+                double fadeScale = 1.0;
+                if (absError < MIN_POWER_FADE_WINDOW_DEG) {
+                    fadeScale = absError / MIN_POWER_FADE_WINDOW_DEG;
+                }
+                stictionFF = Math.copySign(FEEDFORWARD_STICTION_POWER * fadeScale, error);
+            }
+
+            outputPower = pTerm + iTerm + dTerm + stictionFF;
+
+            if (!hasTarget && blindScale < 1.0) {
+                outputPower *= blindScale;
+            }
+        }
+
+        prevError = error;
+
+        if (Double.isNaN(outputPower)) {
+            outputPower = 0;
+        }
+
+        double totalPower = Range.clip(outputPower, -MAX_OUTPUT_POWER, MAX_OUTPUT_POWER);
+
+        // Hard Software Limit Safety Locks
+        if (currentTurretRelDeg >= 140.0 && totalPower > 0) {
+            totalPower = 0;
+        } else if (currentTurretRelDeg <= -203.0 && totalPower < 0) {
+            totalPower = 0;
+        }
+
         turret.setPower(totalPower);
 
-        // --- 9. Hood angle and RPM from ty ---
-        if (ty != null) {
-            double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT)
-                    / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
-            distanceTrack = distance;
+        // Logging
+        if (loggingEnabled && logWriter != null) {
+            try {
+                logWriter.write(
+                        totalTimer.milliseconds() + "," +
+                                rawTx + "," +
+                                smoothedTx + "," +
+                                error + "," +
+                                currentTurretRelDeg + "," +
+                                currentWorldAngleDeg + "," +
+                                robotHeadingDeg + "," +
+                                currentWorldVelocity + "," +
+                                filteredWorldVelocity + "," +
+                                pTerm + "," +
+                                iTerm + "," +
+                                dTerm + "," +
+                                outputPower + "," +
+                                totalPower + "," +
+                                (hasTarget ? 1 : 0) + "," +
+                                targetWorldAngleDeg + "," +
+                                (txRejected ? 1 : 0) + "," +
+                                staleTxCount + "," +
+                                consecutiveTargetFrames + "," +
+                                blindFrameCount + "," +
+                                (worldAngleConfident ? 1 : 0) + "," +
+                                blindScale + "\n"
+                );
+                if ((int)(totalTimer.milliseconds()) % 1000 < 20) logWriter.flush();
+            } catch (IOException e) { loggingEnabled = false; }
+        }
 
+        // Hood and RPM
+        if (ty != null) {
+            double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT) / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
+            distanceTrack = distance;
             double clippedDist = Range.clip(distance * 0.9, MIN_DISTANCE, MAX_DISTANCE);
             double normalized  = (clippedDist - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-
             double hoodPos = HOOD_MIN + Math.pow(normalized, 3) * (HOOD_MAX - HOOD_MIN);
-
-            if (distance > 0.55) hoodPos += 0.05;
-            else                 hoodPos += 0.33;
-
+            hoodPos += (distance > 0.55) ? 0.05 : 0.33;
             hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
-            shootRPM = Range.clip(
-                    MIN_RPM + (normalized * 300) + (distance > 0.55 ? 270 : 0),
-                    MIN_RPM, MAX_RPM);
+            shootRPM = Range.clip(MIN_RPM + (normalized * 300) + (distance > 0.55 ? 270 : 0), MIN_RPM, MAX_RPM);
         }
     }
 }

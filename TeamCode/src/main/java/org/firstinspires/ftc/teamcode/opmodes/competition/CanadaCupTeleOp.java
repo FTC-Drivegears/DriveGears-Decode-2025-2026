@@ -49,7 +49,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
     private double prevRawTx       = 0;
     private boolean prevHadTarget  = false;
     private double firstFrameTxJump = 0;
-    private int    firstFrameTimer  = 0;   // loop-count countdown so reading stays visible
+    private int    firstFrameTimer  = 0;
 
     // -------------------------------------------------------------------------
 
@@ -64,8 +64,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
         turret.init(hardwareMap);
         turret.setMecanumCommand(mecanumCommand);
 
+        // OPTIMIZATION: Initialize the Limelight directly to pipeline 8.
+        // This avoids calling pipelineSwitch inside the loop which choked loop times.
         limelight = hw.limelight;
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(8);
         limelight.start();
 
         if (sorterSubsystem == null) {
@@ -99,13 +101,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            limelight.pipelineSwitch(8);
+            // OPTIMIZATION: Removed limelight.pipelineSwitch(8) from here to prevent blocking hardware calls.
             mecanumCommand.processOdometry();
 
             // Snapshot values used in both control and telemetry
             double heading        = mecanumCommand.getOdoHeading();
             double headingDeg     = Math.toDegrees(heading);
-            double robotRotVelDeg = mecanumCommand.getHeadingVelocity(); // deg/s
+            double robotRotVelDeg = mecanumCommand.getHeadingVelocity();
             double turretRelDeg   = hw.llmotor.getCurrentPosition() / 1.8;
             double turretPower    = hw.llmotor.getPower();
 
@@ -210,100 +212,58 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // =================================================================
             // DIAGNOSTIC TELEMETRY
-            // Each section is labelled with which check it supports.
             // =================================================================
 
-            double rawTxVal    = hasTarget ? tx : 0.0;
+            double rawTxVal     = hasTarget ? tx : 0.0;
             double txFrameDelta = Math.abs(rawTxVal - prevRawTx);
             double powerDelta   = turretPower - prevMotorPower;
-            // Expected feedforward power given current kFF & sign=-1
-            double expectedFF  = -1.0 * robotRotVelDeg * 0.011;
 
-            // Detect first frame target appears for stability gate check
+            // Detect first frame target appears
             if (hasTarget && !prevHadTarget) {
                 firstFrameTxJump = Math.abs(rawTxVal);
-                firstFrameTimer  = 150; // stays visible for ~150 loops (~3 s at 50 Hz)
+                firstFrameTimer  = 150;
             }
             if (firstFrameTimer > 0) firstFrameTimer--;
 
-            // ----- CHECK 1 & 2: Feedforward sign + magnitude -----
-            // HOW TO TEST: auto-aim ON, no target visible, slowly rotate robot by hand.
-            // GOOD: "FF Sign OK?" shows YES and turret visually stays still.
-            // BAD sign: turret rotates WITH the robot instead of against it → flip kFF_SIGN.
-            // BAD magnitude: turret still drifts despite correct sign → increase kFF (0.011).
-            //                turret overshoots centre during spin → decrease kFF.
-            telemetry.addLine("=== CHECK 1+2: FF Sign & Magnitude ===");
-            telemetry.addData("Robot Rot Vel  (deg/s)", String.format("%.2f", robotRotVelDeg));
-            telemetry.addData("Turret Power (actual)",  String.format("%.4f", turretPower));
-            telemetry.addData("Expected FF Power",      String.format("%.4f", expectedFF));
-            telemetry.addData("FF Sign OK?",
-                    Math.abs(robotRotVelDeg) < 5.0
-                            ? "spin robot to test"
-                            : (Math.signum(turretPower) != Math.signum(robotRotVelDeg)
-                            ? "YES - sign correct"
-                            : "NO  - flip kFF_SIGN in subsystem"));
+            // ----- Turret status (most important — always visible) -----
+            telemetry.addLine("=== TURRET STATUS ===");
+            telemetry.addData("Auto Aim",          autoAimEnabled);
+            telemetry.addData("Has Target",        turret.hasTarget());
+            telemetry.addData("LL reports target", hasTarget);
+            telemetry.addData("tx (raw)",          hasTarget ? String.format("%.2f°", tx) : "none");
+            telemetry.addData("Error (turret)",    String.format("%.2f°", rawTxVal));
+            telemetry.addData("Motor power",       String.format("%.3f", turretPower));
+            telemetry.addData("Turret pos",        String.format("%.1f°", turretRelDeg));
 
-            // ----- CHECK 3: Filter alpha -----
-            // HOW TO TEST: aim at a stationary target.
-            // GOOD: tx delta is small and turret sits still on target.
-            // High delta + jittery turret → lower TX_FILTER_ALPHA (currently 0.35).
-            // Turret slow to acquire even with large tx → raise TX_FILTER_ALPHA.
-            telemetry.addLine("=== CHECK 3: Filter Alpha ===");
-            telemetry.addData("Raw tx          (deg)", hasTarget ? String.format("%.3f", tx) : "no target");
-            telemetry.addData("tx frame delta  (deg)", String.format("%.3f", txFrameDelta));
-            telemetry.addData("Filter verdict",
-                    txFrameDelta > 1.5 ? "noisy  - consider lowering TX_FILTER_ALPHA" :
-                            txFrameDelta < 0.1 ? "stable - if sluggish raise TX_FILTER_ALPHA" :
-                                    "normal");
+            // ----- Stale detection (new — catches false LL detections) -----
+            telemetry.addLine("=== STALE DETECTION ===");
+            telemetry.addData("tx frame delta",    String.format("%.3f°", txFrameDelta));
+            telemetry.addData("Stale?",
+                    hasTarget && !turret.hasTarget() ? "YES — LL rejected (frozen tx)"
+                            : hasTarget ? "no — tracking normally"
+                            : "— (no LL target)");
 
-            // ----- CHECK 4: kP tuning -----
-            // HOW TO TEST: drive toward/away from target while watching tx vs power.
-            // Large tx, low power → kP too small.
-            // Turret repeatedly crosses zero and hunts → kP too large (or kD too small).
-            telemetry.addLine("=== CHECK 4: kP Tuning ===");
-            telemetry.addData("tx error        (deg)", hasTarget ? String.format("%.3f", tx) : "—");
-            telemetry.addData("kP",                    String.format("%.4f", turret.getkP()));
-            telemetry.addData("P contribution  (est)", hasTarget
-                    ? String.format("%.4f", -tx * turret.getkP()) : "—");
-            telemetry.addData("Turret Rel      (deg)", String.format("%.2f", turretRelDeg));
-            telemetry.addData("Turret World    (deg)", String.format("%.2f", headingDeg + turretRelDeg));
+            // ----- PID check -----
+            telemetry.addLine("=== PID ===");
+            double estP = hasTarget ? turret.getkP() * rawTxVal : 0.0;
+            telemetry.addData("kP (linear)",       String.format("%.3f", turret.getkP()));
+            telemetry.addData("kD",               String.format("%.4f", turret.getkD()));
+            telemetry.addData("kI",               String.format("%.4f", turret.getkI()));
+            telemetry.addData("Est. P-term",      String.format("%.3f", estP));
+            telemetry.addData("Power delta/loop",  String.format("%.4f", powerDelta));
 
-            // ----- CHECK 5: kD tuning -----
-            // HOW TO TEST: watch power trend as turret settles onto target.
-            // Power cuts then turret ticks past zero → raise kD.
-            // Turret slows way too early, creeps last few degrees → lower kD.
-            // Large per-frame power swings at rest → kD may be fighting noise, lower it.
-            telemetry.addLine("=== CHECK 5: kD Tuning ===");
-            telemetry.addData("kD",                    String.format("%.4f", turret.getkD()));
-            telemetry.addData("Motor power delta/loop", String.format("%.4f", powerDelta));
-            telemetry.addData("kD verdict",
-                    Math.abs(powerDelta) > 0.15 ? "large swing  - raise kD or check noise" :
-                            Math.abs(powerDelta) < 0.005 ? "very smooth  - kD OK (watch overshoot)" :
-                                    "moderate     - watch settle behaviour");
-
-            // ----- CHECK 6: Stability gate -----
-            // HOW TO TEST: drive until target leaves frame, re-enter, observe "first-appear tx".
-            // Large first-appear tx + turret lunges → lower TX_STABILITY_THRESHOLD_DEG (0.8).
-            // Turret hesitates before it starts tracking → raise TX_STABILITY_THRESHOLD_DEG.
-            telemetry.addLine("=== CHECK 6: Stability Gate ===");
-            telemetry.addData("Target visible",          hasTarget);
-            telemetry.addData("First-appear tx    (deg)",
+            // ----- Stability gate -----
+            telemetry.addLine("=== STABILITY GATE ===");
+            telemetry.addData("First-appear tx",
                     firstFrameTimer > 0
-                            ? String.format("%.2f  (%d loops ago)", firstFrameTxJump, 150 - firstFrameTimer)
-                            : "lose + reacquire target to test");
-            telemetry.addData("Gate verdict",
-                    firstFrameTimer > 0
-                            ? (firstFrameTxJump > 5.0 ? "large - lower TX_STABILITY_THRESHOLD_DEG" :
-                            firstFrameTxJump < 1.0 ? "small - threshold OK" :
-                                    "moderate - watch for lunge")
-                            : "—");
+                            ? String.format("%.2f° (%d loops ago)", firstFrameTxJump, 150 - firstFrameTimer)
+                            : "lose + reacquire to test");
 
             // ----- General -----
-            telemetry.addLine("=== General ===");
-            telemetry.addData("Auto Aim",     autoAimEnabled);
-            telemetry.addData("Heading (deg)",String.format("%.2f", headingDeg));
+            telemetry.addLine("=== GENERAL ===");
+            telemetry.addData("Heading",      String.format("%.1f°", headingDeg));
             telemetry.addData("Shooter RPM",  String.format("%.0f", turret.getShootRPM()));
-            telemetry.addData("Distance (m)", String.format("%.3f", turret.getDistanceTrack()));
+            telemetry.addData("Distance",     String.format("%.2f m", turret.getDistanceTrack()));
 
             // Save state for next loop
             prevMotorPower = turretPower;
@@ -312,5 +272,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             telemetry.update();
         }
+
+        // Flush and close the turret CSV log
+        turret.closeLog();
     }
 }
