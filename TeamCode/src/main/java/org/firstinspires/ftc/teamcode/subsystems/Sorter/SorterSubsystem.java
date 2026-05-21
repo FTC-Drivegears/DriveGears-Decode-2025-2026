@@ -32,6 +32,16 @@ public class SorterSubsystem {
     private final ElapsedTime sorterTimer = new ElapsedTime();
     private final ElapsedTime pusherTimer = new ElapsedTime();
 
+    // ---------------- COLOUR SELECTION ----------------
+
+    public SelectedColour selectedColour = SelectedColour.ANY;
+
+    public enum SelectedColour {
+        ANY,
+        GREEN,
+        PURPLE
+    }
+
     // ---------------- OTHER ----------------
     private final Telemetry telemetry;
     public final LinearOpMode opMode;
@@ -111,13 +121,6 @@ public class SorterSubsystem {
     }
     public void quickfireState() {
         if (selectedColour == SelectedColour.ANY) {
-            if (artifactCount[0] <= 0) {
-                artifactCount[0] = 0;
-                quickfireState = QuickfireState.FINISH;
-                pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
-                pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
-                return;
-            }
             switch (quickfireState) {
                 case PUSH:
                     if (sorterList[curSorterPositionIndex].getColour().equals("none")) {
@@ -152,6 +155,19 @@ public class SorterSubsystem {
                     break;
 
                 case SORT:
+                    boolean allEmpty = true;
+                    for (int i = 0; i < MAX_NUM_BALLS; i++) {
+                        if (!sorterList[i].getColour().equals("none")) {
+                            allEmpty = true;
+                            break;
+                        }
+                    }
+                    if (allEmpty) {
+                        quickfireState = QuickfireState.FINISH;
+                        pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
+                        pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
+                        break;
+                    }
                     manualSpin();
                     sorterTimer.reset();
                     quickfireState = QuickfireState.WAIT_SORT;
@@ -246,18 +262,11 @@ public class SorterSubsystem {
                             quickfireState = QuickfireState.PUSH;
                         }
                         break;
+
+                    case FINISH:
+                        break;
             }
         }
-    }
-
-    // ---------------- COLOUR SELECTION ----------------
-
-    public SelectedColour selectedColour;
-
-    public enum SelectedColour {
-        ANY,
-        GREEN,
-        PURPLE
     }
 
 
