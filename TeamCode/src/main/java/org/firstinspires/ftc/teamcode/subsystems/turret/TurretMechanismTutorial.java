@@ -81,7 +81,7 @@ public class TurretMechanismTutorial {
     private int stableFrameCount = 0;
     private static final int STABLE_FRAMES_REQUIRED = 1;
     private int consecutiveTargetFrames = 0;
-    private static final int TARGET_FRAMES_REQUIRED = 2;
+    private static final int TARGET_FRAMES_REQUIRED = 1;  // was 2 — limelight detection is intermittent (27%), requiring 2 consecutive frames was throwing away 105 valid readings per run
 
     private double lastRawTx = 0;
     private int staleTxCount = 0;
@@ -139,6 +139,12 @@ public class TurretMechanismTutorial {
     private boolean hasTarget = false;
     private static final double TICKS_PER_DEGREE = 1.8;
     private static final double TX_ACCEPTANCE_DEG = 35.0;
+
+    // Crosshair offset — positive shifts aim right, negative shifts aim left.
+    // Tune until turret centres on the middle of the target.
+    // If turret stops on the LEFT edge  → increase this value
+    // If turret stops on the RIGHT edge → decrease (go negative)
+    private static final double TX_OFFSET_DEG = 0.0;
 
     private BufferedWriter logWriter   = null;
     private boolean        loggingEnabled = false;
@@ -300,6 +306,15 @@ public class TurretMechanismTutorial {
             firstUpdate = false;
         }
 
+        // Heading sanity check — if world angle jumps >90° in one frame it is a PinPoint
+        // glitch (brownout reset returning 0). Freeze world angle for this frame so a
+        // single bad I2C read does not corrupt the world-angle estimate and kill tracking.
+        double headingJump = Math.abs(wrapAngle(currentWorldAngleDeg - prevWorldAngleDeg));
+        if (headingJump > 90.0) {
+            currentWorldAngleDeg = prevWorldAngleDeg;
+            robotHeadingDeg      = prevWorldAngleDeg - currentTurretRelDeg;
+        }
+
         double currentWorldVelocity = wrapAngle(currentWorldAngleDeg - prevWorldAngleDeg) / deltaTime;
         prevWorldAngleDeg       = currentWorldAngleDeg;
         lastTurretPosDeg        = currentTurretRelDeg;
@@ -311,6 +326,8 @@ public class TurretMechanismTutorial {
 
         double error       = 0;
         double outputPower = 0;
+        // Apply crosshair offset so tx=0 means turret is on the target centre
+        if (tx != null) tx = tx - TX_OFFSET_DEG;
         double rawTx       = (tx != null) ? tx : 0.0;
         double blindScale  = 1.0;
 
