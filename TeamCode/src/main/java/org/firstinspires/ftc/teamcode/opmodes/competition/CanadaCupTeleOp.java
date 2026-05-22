@@ -102,6 +102,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean isShooterOn = false;
         boolean prevDpadLeft         = false;
         int     loopCount            = 0;
+        boolean attemptedFullIntake  = false;
         boolean pusherFiredThisFrame = false;
         double  batteryV             = 0;
         final com.qualcomm.robotcore.util.ElapsedTime opTimer = new com.qualcomm.robotcore.util.ElapsedTime();
@@ -200,10 +201,21 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 
             // -----------------------------------------------------------------
-            // Intake — hold right trigger to intake, hold left trigger to outtake
+            // Intake — hold right trigger to intake, hold left trigger to outtake.
+            // Auto-stops intake when sorter is full (3 artifacts).
             // -----------------------------------------------------------------
             boolean isIntakeMotorOn  = gamepad1.right_trigger > 0;
             boolean isOuttakeMotorOn = gamepad1.left_trigger  > 0;
+
+            if (sorterSubsystem.getArtifactCount() == 3) {
+                attemptedFullIntake = true;
+            } else {
+                attemptedFullIntake = false;
+            }
+            // Stop intake automatically when full
+            if (isIntakeMotorOn && sorterSubsystem.getArtifactCount() == 3 && !attemptedFullIntake) {
+                isIntakeMotorOn = false;
+            }
 
             if (isIntakeMotorOn) {
                 intake.setPower(0.8);
@@ -269,11 +281,22 @@ public class CanadaCupTeleOp extends LinearOpMode {
             // Sorter
             // -----------------------------------------------------------------
             if (gamepad1.b && sorterTimer.milliseconds() > 500) {
-                sorterPosition = (sorterPosition + 1) % 3;
                 sorterTimer.reset();
-                if      (sorterPosition == 0.0) hw.sorter.setPosition(0.0);
-                else if (sorterPosition == 1)   hw.sorter.setPosition(0.43);
-                else                            hw.sorter.setPosition(0.875);
+                sorterSubsystem.manualSpin();
+            }
+
+            // Colour selection — dpad up: GREEN, dpad down: PURPLE, back: ANY
+            if (gamepad1.dpad_up) {
+                sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.GREEN;
+                rightLight.setPosition(0.5);
+            }
+            if (gamepad1.dpad_down) {
+                sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.PURPLE;
+                rightLight.setPosition(0.722);
+            }
+            if (gamepad1.back) {
+                sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
+                rightLight.setPosition(1.0);
             }
 
             if (gamepad1.dpad_left && !prevDpadLeft) sorterSubsystem.startQuickfire();
@@ -288,15 +311,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             // DIAGNOSTIC TELEMETRY
             // =================================================================
 
-            double rawTxVal     = hasTarget ? tx : 0.0;
-            double txFrameDelta = Math.abs(rawTxVal - prevRawTx);
-            double powerDelta   = turretPower - prevMotorPower;
-
-            if (hasTarget && !prevHadTarget) {
-                firstFrameTxJump = Math.abs(rawTxVal);
-                firstFrameTimer  = 150;
-            }
-            if (firstFrameTimer > 0) firstFrameTimer--;
+            double rawTxVal = hasTarget ? tx : 0.0;
 
 // Telemetry throttled to every 3 loops — reduces String allocation by 66%
             if (loopCount % 3 == 0) {
@@ -320,6 +335,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 telemetry.addData("LL staleness", llStaleMs + "ms");
                 telemetry.addData("Heap free",    (int)(Runtime.getRuntime().freeMemory()/1048576.0) + "MB");
                 telemetry.addData("Heading",      (int)(headingDeg*10)/10.0 + "°");
+
+                telemetry.addLine("=== SORTER ===");
+                telemetry.addData("Artifact count",  sorterSubsystem.getArtifactCount());
+                telemetry.addData("Selected colour", sorterSubsystem.selectedColour);
+                telemetry.addData("Sorter pos",      sorterSubsystem.getSorterPos());
                 telemetry.update();
             }
         }
