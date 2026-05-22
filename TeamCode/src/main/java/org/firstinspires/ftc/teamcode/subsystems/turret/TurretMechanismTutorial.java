@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * TurretMechanism v16.0 — Overshoot & Oscillation Fix.
+ * TurretMechanism v17.0 — Integral Separation & Approach Braking.
  *
  * Changes from v13.0:
  *  - BLIND_CONFIDENCE_EXPIRE raised 60 → 90: ~2 extra seconds of dead-reckoning
@@ -43,11 +43,16 @@ public class TurretMechanismTutorial {
     private MecanumCommand mecanumCommand;
 
     // --- PID gains ---
-    private double kP = 0.038;  // was 0.050 — overshoots were still ±5 deg; less punch needed
+    private double kP = 0.050;  // restored from 0.038 — too slow to track moving targets
     private double kI = 0.012;
-    private double kD = 0.013;  // was 0.008 — more damping to arrest overshoot momentum
+    private double kD = 0.009;  // was 0.018 — too high: D term spiked to ±3.4 at 190°/s, slamming motor to full reverse and causing D-induced oscillation
 
     private static final double MAX_INTEGRAL = 0.20;
+
+    // Integral separation: only accumulate when error is small.
+    // Prevents windup during approach that fires extra power at the zero-crossing.
+    // Diagnosed from logs: mean |i_term| was 0.078 during large errors vs 0.033 small.
+    private static final double INTEGRAL_SEPARATION_DEG = 6.0;
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
@@ -100,11 +105,11 @@ public class TurretMechanismTutorial {
 
     // D-term suppression on reacquisition
     private int framesSinceAcquisition = 999;
-    private static final int DTERM_SUPPRESS_FRAMES = 2;
+    private static final int DTERM_SUPPRESS_FRAMES = 0;  // was 2 — frequent reacquisitions meant D was always suppressed
 
     // World velocity low-pass filter
     private double filteredWorldVelocity = 0.0;
-    private static final double VELOCITY_FILTER_ALPHA = 0.4;
+    private static final double VELOCITY_FILTER_ALPHA = 0.42; // was 0.55 — more smoothing reduces D-term spike magnitude on fast transients
 
     private double lastTurretPosDeg  = 0;
     private double prevWorldAngleDeg = 0;
@@ -119,16 +124,16 @@ public class TurretMechanismTutorial {
     private final ElapsedTime loopTimer  = new ElapsedTime();
     private final ElapsedTime totalTimer = new ElapsedTime();
 
-    private static final double LIMELIGHT_HEIGHT = 0.31;
-    private static final double LIMELIGHT_ANGLE  = Math.toRadians(40);
+    private static final double LIMELIGHT_HEIGHT = 0.35;
+    private static final double LIMELIGHT_ANGLE  = Math.toRadians(15.34);  // calibrated from 2m test: was 40° causing 0.55m reports at actual 2.0m
     private static final double TARGET_HEIGHT     = 0.75;
-    private static final double HOOD_MIN          = 0.36;
-    private static final double HOOD_MAX          = 0.75;
+    private static final double HOOD_MIN          = 0.50;
+    private static final double HOOD_MAX          = 0.72;
     private static final double MIN_DISTANCE      = 0.3;
     private static final double MAX_DISTANCE      = 2.5;
 
-    private static final double MIN_RPM = 3000;
-    private static final double MAX_RPM = 4000;
+    private static final double MIN_RPM = 720;
+    private static final double MAX_RPM = 3460;
     private double shootRPM = MIN_RPM;
 
     private boolean hasTarget = false;
@@ -137,6 +142,24 @@ public class TurretMechanismTutorial {
 
     private BufferedWriter logWriter   = null;
     private boolean        loggingEnabled = false;
+    // Pre-allocated log buffer — reused every loop to avoid GC pressure from string concatenation
+    private final StringBuilder logLine = new StringBuilder(512);
+
+    // Extra log state
+    private double  lastTy            = 0;
+    private double  lastHoodPos       = 0;
+    private double  odoX              = 0;
+    private double  odoY              = 0;
+    private double  robotRotVel       = 0;
+    private boolean autoAimOn         = false;
+
+    // Diagnostic tracking
+    private int     loopCount        = 0;
+    private int     logFailCount     = 0;
+    private int     loopOverrunCount = 0;
+    private double  lastDeltaMs      = 0;
+    private double  batteryVoltage   = 0;
+    private long    llStalenessMs    = 0;
 
     public void init(HardwareMap hwMap) {
         this.hw = Hardware.getInstance(hwMap);
@@ -169,12 +192,14 @@ public class TurretMechanismTutorial {
         try {
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
             String path      = "/sdcard/FIRST/turret_log_" + timestamp + ".csv";
-            logWriter        = new BufferedWriter(new FileWriter(path));
+            logWriter        = new BufferedWriter(new FileWriter(path), 65536);  // 64KB buffer reduces flush frequency
             loggingEnabled   = true;
             logWriter.write("time_ms,raw_tx,smoothed_tx,error,turret_rel_deg,world_angle_deg," +
                     "robot_heading_deg,world_velocity,filtered_velocity,p_term,i_term,d_term,output_power," +
                     "motor_power,has_target,target_world_angle_deg,tx_rejected,stale_tx_count," +
-                    "consec_target_frames,blind_frames,confident,blind_scale\n");
+                    "consec_target_frames,blind_frames,confident,blind_scale,shooter_current_rpm,shooter_target_rpm,rpm_ready,pusher_fired,distance_m," +
+                    "loop_num,delta_time_ms,loop_overrun_total,heap_free_mb,heap_used_mb,battery_v,ll_staleness_ms,log_fail_count," +
+                    "ty,hood_pos,odo_x,odo_y,robot_rot_vel,auto_aim_on,shooter_ready_reason\n");
             logWriter.flush();
         } catch (IOException e) {
             loggingEnabled = false;
@@ -202,6 +227,8 @@ public class TurretMechanismTutorial {
     public double getShootRPM()      { return shootRPM; }
     public double getDistanceTrack() { return distanceTrack; }
     public boolean hasTarget()       { return hasTarget; }
+    public double getLastError()     { return prevError; }
+    public double getHoodPosition()  { return hood.getPosition(); }
 
     public void setManualPower(double power) {
         this.manualMode = true;
@@ -236,8 +263,22 @@ public class TurretMechanismTutorial {
     }
 
     public void update(Double tx, Double ty) {
+        update(tx, ty, 0, 0, false, false, 0, 0, 0, 0, 0, false);
+    }
+
+    public void update(Double tx, Double ty, double shooterCurrentRPM, double shooterTargetRPM, boolean rpmReady, boolean pusherFired, double batteryV, long llStaleMs, double odoX, double odoY, double robotRotVel, boolean autoAimOn) {
         double deltaTime = loopTimer.seconds();
         loopTimer.reset();
+
+        loopCount++;
+        lastDeltaMs    = deltaTime * 1000.0;
+        batteryVoltage = batteryV;
+        llStalenessMs  = llStaleMs;
+        this.odoX        = odoX;
+        this.odoY        = odoY;
+        this.robotRotVel = robotRotVel;
+        this.autoAimOn   = autoAimOn;
+        if (lastDeltaMs > 100) loopOverrunCount++;
 
         if (Double.isNaN(deltaTime) || deltaTime < DT_MIN) {
             deltaTime = DT_MIN;
@@ -387,7 +428,10 @@ public class TurretMechanismTutorial {
             // Halve instead of zero on zero-crossing — zeroing caused a repeating
             // overshoot → wipe → overshoot cycle that manifested as oscillation
             if (error * prevError < 0) integralSum *= 0.5;
-            integralSum += error * deltaTime;
+            // Only wind up integral when close to target — prevents approach windup overshoot
+            if (Math.abs(error) < INTEGRAL_SEPARATION_DEG) {
+                integralSum += error * deltaTime;
+            }
             integralSum = Range.clip(integralSum, -MAX_INTEGRAL / kI, MAX_INTEGRAL / kI);
             iTerm = integralSum * kI;
 
@@ -429,47 +473,74 @@ public class TurretMechanismTutorial {
 
         turret.setPower(totalPower);
 
-        // Logging
+        // Logging — uses a pre-allocated StringBuilder to avoid creating ~30 String
+        // objects per loop, which was exhausting the heap every 1.5s and causing GC pauses.
         if (loggingEnabled && logWriter != null) {
             try {
-                logWriter.write(
-                        totalTimer.milliseconds() + "," +
-                                rawTx + "," +
-                                smoothedTx + "," +
-                                error + "," +
-                                currentTurretRelDeg + "," +
-                                currentWorldAngleDeg + "," +
-                                robotHeadingDeg + "," +
-                                currentWorldVelocity + "," +
-                                filteredWorldVelocity + "," +
-                                pTerm + "," +
-                                iTerm + "," +
-                                dTerm + "," +
-                                outputPower + "," +
-                                totalPower + "," +
-                                (hasTarget ? 1 : 0) + "," +
-                                targetWorldAngleDeg + "," +
-                                (txRejected ? 1 : 0) + "," +
-                                staleTxCount + "," +
-                                consecutiveTargetFrames + "," +
-                                blindFrameCount + "," +
-                                (worldAngleConfident ? 1 : 0) + "," +
-                                blindScale + "\n"
-                );
-                if ((int)(totalTimer.milliseconds()) % 1000 < 20) logWriter.flush();
-            } catch (IOException e) { loggingEnabled = false; }
+                long freeBytes  = Runtime.getRuntime().freeMemory();
+                long totalBytes = Runtime.getRuntime().totalMemory();
+                logLine.setLength(0);
+                logLine.append(totalTimer.milliseconds()).append(',')
+                        .append(rawTx).append(',')
+                        .append(smoothedTx).append(',')
+                        .append(error).append(',')
+                        .append(currentTurretRelDeg).append(',')
+                        .append(currentWorldAngleDeg).append(',')
+                        .append(robotHeadingDeg).append(',')
+                        .append(currentWorldVelocity).append(',')
+                        .append(filteredWorldVelocity).append(',')
+                        .append(pTerm).append(',')
+                        .append(iTerm).append(',')
+                        .append(dTerm).append(',')
+                        .append(outputPower).append(',')
+                        .append(totalPower).append(',')
+                        .append(hasTarget ? 1 : 0).append(',')
+                        .append(targetWorldAngleDeg).append(',')
+                        .append(txRejected ? 1 : 0).append(',')
+                        .append(staleTxCount).append(',')
+                        .append(consecutiveTargetFrames).append(',')
+                        .append(blindFrameCount).append(',')
+                        .append(worldAngleConfident ? 1 : 0).append(',')
+                        .append(blindScale).append(',')
+                        .append(shooterCurrentRPM).append(',')
+                        .append(shooterTargetRPM).append(',')
+                        .append(rpmReady ? 1 : 0).append(',')
+                        .append(pusherFired ? 1 : 0).append(',')
+                        .append(distanceTrack).append(',')
+                        .append(loopCount).append(',')
+                        .append(lastDeltaMs).append(',')
+                        .append(loopOverrunCount).append(',')
+                        .append(freeBytes / 1048576.0).append(',')
+                        .append((totalBytes - freeBytes) / 1048576.0).append(',')
+                        .append(batteryVoltage).append(',')
+                        .append(llStalenessMs).append(',')
+                        .append(logFailCount).append(',')
+                        .append(lastTy).append(',')
+                        .append(lastHoodPos).append(',')
+                        .append(odoX).append(',')
+                        .append(odoY).append(',')
+                        .append(robotRotVel).append(',')
+                        .append(autoAimOn ? 1 : 0).append(',')
+                        .append(!rpmReady ? "rpm" : !hasTarget ? "no_target" : Math.abs(prevError) >= 4.0 ? "turret_err" : "ready").append('\n');
+                logWriter.write(logLine.toString());
+                // Flush every 5s instead of every 1s — reduces I/O blocking
+                if ((int)(totalTimer.milliseconds()) % 5000 < 80) logWriter.flush();
+            } catch (IOException e) { logFailCount++; if (logFailCount > 20) loggingEnabled = false; }
         }
 
         // Hood and RPM
         if (ty != null) {
+            lastTy = ty;
             double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT) / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
+            // Sanity check — negative or impossibly large distance means a false limelight detection; ignore it
+            if (distance < MIN_DISTANCE || distance > 6.0) return;
             distanceTrack = distance;
             double clippedDist = Range.clip(distance * 0.9, MIN_DISTANCE, MAX_DISTANCE);
             double normalized  = (clippedDist - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-            double hoodPos = HOOD_MIN + Math.pow(normalized, 3) * (HOOD_MAX - HOOD_MIN);
-            hoodPos += (distance > 0.55) ? 0.05 : 0.33;
-            hood.setPosition(Range.clip(hoodPos, HOOD_MIN, HOOD_MAX));
-            shootRPM = Range.clip(MIN_RPM + (normalized * 300) + (distance > 0.55 ? 270 : 0), MIN_RPM, MAX_RPM);
+            double hoodPos = 0.72 - Math.pow(normalized, 3) * 0.22;  // close=0.72, far=0.50
+            lastHoodPos = Range.clip(hoodPos, HOOD_MIN, HOOD_MAX);
+            hood.setPosition(lastHoodPos);
+            shootRPM = Range.clip(MIN_RPM + Math.pow(normalized, 0.4) * (MAX_RPM - MIN_RPM), MIN_RPM, MAX_RPM);
         }
     }
 }
