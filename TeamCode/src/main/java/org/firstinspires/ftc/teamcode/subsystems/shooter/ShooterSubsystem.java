@@ -30,7 +30,7 @@ public class ShooterSubsystem {
 
     // RPM tolerance for isRPMReached — 200 is ~6% at 3300 RPM, reasonable for field use.
     // Tighten to 100 for more accuracy, loosen to 300 if gate feels too slow between shots.
-    private static final double RPM_TOLERANCE = 200.0;
+    private static final double RPM_TOLERANCE = 20.0;
 
     public ShooterSubsystem(Hardware hw) {
         this.hw      = hw;

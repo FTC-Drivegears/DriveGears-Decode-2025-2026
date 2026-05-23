@@ -193,10 +193,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     && Math.abs(turret.getLastError()) < 4.0;
 
             if (isShooterOn) {
-                // Update RPM target from turret distance calc every loop
-                shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
+                // RPM target is only updated when Y is pressed (see pusher block below)
+                // — keeps flywheel stable at one speed rather than chasing distance changes
                 shooterSubsystem.spinup();
-                // Yellow = spinning up, green = ready to fire
                 setLights(readyToFire ? 0.44 : 0.22);
             }
 
@@ -229,13 +228,15 @@ public class CanadaCupTeleOp extends LinearOpMode {
             gate.setPosition((isIntakeMotorOn || isOuttakeMotorOn) ? 0.7 : 0.6);
 
             // -----------------------------------------------------------------
-            // Pusher — hold Y to continuously fire whenever readyToFire.
-            // Fires immediately on press if ready, then re-fires automatically
-            // each cycle while Y is held and conditions are still met.
-            // -----------------------------------------------------------------
-            // Pusher — Y held moves to 2/3 immediately (pre-load position).
-            // Fires all the way when flywheel is up to speed while Y is still held.
-            // Returns to down when Y released or after firing completes.
+            // While Y is held: continuously update RPM from current distance.
+            // When Y is released the last measured target is held — flywheel
+            // stays at that speed until Y is pressed again.
+            if (gamepad1.y && !togglePusher) {
+                shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
+            }
+
+            // Pusher — Y held moves to 2/3 pre-load position.
+            // Fires all the way once flywheel reaches the snapshotted RPM target.
             double partialR = PusherConsts.PUSHER_DOWN_POSITION_R
                     + (PusherConsts.PUSHER_UP_POSITION_R - PusherConsts.PUSHER_DOWN_POSITION_R) * (2.0 / 3.0);
             double partialL = PusherConsts.PUSHER_DOWN_POSITION_L
