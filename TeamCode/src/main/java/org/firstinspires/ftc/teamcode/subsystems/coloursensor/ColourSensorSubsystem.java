@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.Artifact;
 
 public class ColourSensorSubsystem {
+
     private boolean lastArtifactPresent = false;
     private Hardware hw;
     private SorterSubsystem sorterSubsystem;
@@ -18,7 +19,7 @@ public class ColourSensorSubsystem {
     private Servo sorter;
     private Servo leftLight;
 
-    private float alpha_threshold = 0.15f;  // was 150, now normalized 0.0-1.0
+    private float alpha_threshold = 0.15f;
     private Artifact[] sorterList;
     private float red, green, blue, alpha;
     private float red2, green2, blue2, alpha2;
@@ -29,64 +30,48 @@ public class ColourSensorSubsystem {
         this.sorterSubsystem = sorterSubsystem;
         this.colourSensor1 = hardwareMap.get(NormalizedColorSensor.class, "colour1");
         this.colourSensor2 = hardwareMap.get(NormalizedColorSensor.class, "colour2");
-
-        this.sorter = hw.sorter;
+        this.sorter    = hw.sorter;
         this.leftLight = hw.leftLight;
-
         this.sorterList = sorterSubsystem.getSorterList();
     }
 
     public void update(boolean intakeOn) {
-        // getNormalizedColors() returns a NormalizedRGBA object with float values 0.0 - 1.0
         NormalizedRGBA colors1 = colourSensor1.getNormalizedColors();
         NormalizedRGBA colors2 = colourSensor2.getNormalizedColors();
 
-        red   = colors1.red;
-        green = colors1.green;
-        blue  = colors1.blue;
-        alpha = colors1.alpha;
-
-        red2   = colors2.red;
-        green2 = colors2.green;
-        blue2  = colors2.blue;
-        alpha2 = colors2.alpha;
+        red   = colors1.red;   green = colors1.green;
+        blue  = colors1.blue;  alpha = colors1.alpha;
+        red2  = colors2.red;   green2 = colors2.green;
+        blue2 = colors2.blue;  alpha2 = colors2.alpha;
 
         if (sorterSubsystem.getArtifactCount() == 3) return;
 
-        boolean artifactPresent = alpha > 0.4f || alpha2 > 0.2f;  // was 150
+        boolean artifactPresent = alpha > 0.4f || alpha2 > 0.2f;
         boolean artifactCleared = alpha < alpha_threshold && alpha2 < alpha_threshold;
 
-        boolean purple_colour1 = percentMoreThan(blue, 10, red) && percentMoreThan(blue, 10, green);
+        boolean purple_colour1 = percentMoreThan(blue,  10, red)  && percentMoreThan(blue,  10, green);
         boolean purple_colour2 = percentMoreThan(blue2, 10, red2) && percentMoreThan(blue2, 10, green2);
-
-        boolean green_colour1 = percentMoreThan(green, 20, red) && percentMoreThan(green, 20, blue);
-        boolean green_colour2 = percentMoreThan(green2, 20, red2) && percentMoreThan(green2, 20, blue2);
+        boolean green_colour1  = percentMoreThan(green,  20, red)  && percentMoreThan(green,  20, blue);
+        boolean green_colour2  = percentMoreThan(green2, 20, red2) && percentMoreThan(green2, 20, blue2);
 
         if (intakeOn && artifactPresent && !lastArtifactPresent) {
             if (purple_colour1 || purple_colour2) {
-                lastRed = red;
-                lastGreen = green;
-                lastBlue = blue;
-                lastAlpha = alpha;
+                lastRed = red; lastGreen = green; lastBlue = blue; lastAlpha = alpha;
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Purple");
                 sorterSubsystem.setArtifactCount(sorterSubsystem.getArtifactCount() + 1);
                 leftLight.setPosition(0.7);
-                if (sorterSubsystem.getSorterPos() < 3)
-                    sorterSubsystem.manualSpin();
+                if (sorterSubsystem.getSorterPos() < 3) sorterSubsystem.manualSpin();
                 lastArtifactPresent = true;
             } else if (green_colour1 || green_colour2) {
-                lastRed = red;
-                lastGreen = green;
-                lastBlue = blue;
-                lastAlpha = alpha;
+                lastRed = red; lastGreen = green; lastBlue = blue; lastAlpha = alpha;
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Green");
                 sorterSubsystem.setArtifactCount(sorterSubsystem.getArtifactCount() + 1);
                 leftLight.setPosition(0.5);
-                if (sorterSubsystem.getSorterPos() < 3)
-                    sorterSubsystem.manualSpin();
+                if (sorterSubsystem.getSorterPos() < 3) sorterSubsystem.manualSpin();
                 lastArtifactPresent = true;
             }
         }
+
         if (artifactCleared) {
             lastArtifactPresent = false;
         } else {
@@ -96,6 +81,14 @@ public class ColourSensorSubsystem {
 
     private boolean percentMoreThan(double colour1, double percent, double colour2) {
         return (colour1 / colour2) >= (percent / 100 + 1);
+    }
+
+    /**
+     * Returns true if either sensor detects an object regardless of colour.
+     * Call after update() each loop.
+     */
+    public boolean isBallPresent() {
+        return alpha > 0.4f || alpha2 > 0.2f;
     }
 
     public float getRed()    { return red; }
