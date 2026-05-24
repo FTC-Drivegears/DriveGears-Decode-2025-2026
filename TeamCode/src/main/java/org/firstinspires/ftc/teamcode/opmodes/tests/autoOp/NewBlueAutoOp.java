@@ -42,8 +42,6 @@ public class NewBlueAutoOp extends LinearOpMode {
         PPG_3 //Tag ID 23
     }
 
-
-
     //Pusher variables
     private static final double PUSHER_UP_L = PusherConsts.PUSHER_UP_POSITION_L;
     private static final double PUSHER_DOWN_L = PusherConsts.PUSHER_DOWN_POSITION_L;
@@ -73,16 +71,6 @@ public class NewBlueAutoOp extends LinearOpMode {
     private static final long INTAKE_WAIT = 700;
     private static boolean intakeWasOn = false;
 
-    //Collected Count
-    private static int collectedCount = 0;
-
-    //Hood position variable
-    private static double hoodPos = 0.359;
-
-    //Gate variables
-    private static final double GATE_UP = 0.7;
-    private static final double GATE_DOWN = 0.6;
-
     //Initialize motors and servos
     private static DcMotor shooter;
     private static Servo pusher_L;
@@ -90,12 +78,14 @@ public class NewBlueAutoOp extends LinearOpMode {
     private static Servo hood;
     private static Servo sorter;
     private static DcMotorEx intake;
-    private static Servo gate;
     private TurretMechanismTutorial turret;
 
     //Outtake and intake states
     boolean outtakeFlag = false;
     boolean intakeFlag = false;
+    private boolean shooterAtSpeed() {
+        return shooterSubsystem.isRPMReached();
+    }
 
     //Set initial autoState to First Shot
     AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
@@ -105,7 +95,6 @@ public class NewBlueAutoOp extends LinearOpMode {
 
     //Initial pattern is PPG_3 (must be set to something in case AprilTag detection fails)
     PATTERN pattern = PATTERN.PPG_3; // default
-
     static boolean pusherReady() {
         return !isPusherUp && pusherTimer.milliseconds() >= (PUSHER_TIME + PUSHER_SAFE_MARGIN);
     }
@@ -184,10 +173,9 @@ public class NewBlueAutoOp extends LinearOpMode {
         }
     }
 
-
-
     @Override
     public void runOpMode() throws InterruptedException {
+
         // create Hardware using hardwareMap
         Hardware hw = Hardware.getInstance(hardwareMap);
 
@@ -204,7 +192,6 @@ public class NewBlueAutoOp extends LinearOpMode {
         sorter = hw.sorter;
         hood = hw.hood;
         intake = hw.intake;
-        gate = hw.gate;
 
         turret = new TurretMechanismTutorial();
         turret.init(hardwareMap);
@@ -219,8 +206,6 @@ public class NewBlueAutoOp extends LinearOpMode {
         sorter.setPosition(pos1);
         pusher_L.setPosition(PUSHER_DOWN_L);
         pusher_R.setPosition(PUSHER_DOWN_R);
-        hood.setPosition(hoodPos);
-        gate.setPosition(GATE_DOWN);
 
         //set position and stage to 0
         int position = 0;
@@ -258,6 +243,12 @@ public class NewBlueAutoOp extends LinearOpMode {
             Double ty = null;
 
             if (llResult != null && llResult.isValid()) {
+                telemetry.addData("Tag Detected", "ID: " + llResult.getFiducialResults().get(0).getFiducialId());
+            } else {
+                telemetry.addData("Tag Detected", "None");
+            }
+
+            if (llResult != null && llResult.isValid()) {
                 tx = llResult.getTx();
                 ty = llResult.getTy();
             }
@@ -279,6 +270,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             mecanumCommand.motorProcess();
             mecanumCommand.processOdometry();
 
+
             //Set shoot and intake to outtake and intakeFlag
             shoot(outtakeFlag);
             intake(intakeFlag);
@@ -294,6 +286,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             llResult = limelight.getLatestResult();
             Double tx = null;
             Double ty = null;
+
             if (llResult != null && llResult.isValid()) {
                 tx = llResult.getTx();
                 ty = llResult.getTy();
@@ -311,10 +304,9 @@ public class NewBlueAutoOp extends LinearOpMode {
             //State machine, going through the enum autoState
             switch (autoState) {
                 case FIRST_SHOT:
-                    //Set max RPM to 3500 rpm, move to initial position, and set hood position
-                    shooterSubsystem.setMaxRPM(3500);
+                    outtakeFlag = true;
+                    shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     mecanumCommand.moveToPos(26, -6, 0.36);
-                    hood.setPosition(0.43);
 
                     //Depending on pattern, call respective processPattern function
                     if (mecanumCommand.isPositionReached()) {
@@ -348,8 +340,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(82, 32, Math.PI / 2); //align with artifacts
-                            gate.setPosition(GATE_UP);
+                            mecanumCommand.moveToPos(82, 30, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -361,7 +352,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(82, 48, Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(82, 40, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -376,7 +367,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 750) {
-                                mecanumCommand.moveToPos(82, 63, Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(82, 60, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -394,9 +385,9 @@ public class NewBlueAutoOp extends LinearOpMode {
                                 stageTimer.reset();
                                 stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
-                                shooterSubsystem.setMaxRPM(3500);
+//                                shooterSubsystem.setMaxRPM(3500);
                                 mecanumCommand.moveToPos(26, -6, 0.355);
-                                hood.setPosition(0.43);
+//                                hood.setPosition(0.43);
                                 break;
                             }
                             break;
@@ -405,7 +396,8 @@ public class NewBlueAutoOp extends LinearOpMode {
                     break;
                 //Repeat last process once more
                 case SECOND_SHOT:
-                    gate.setPosition(GATE_DOWN);
+                    outtakeFlag = true;
+                    shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                     if (mecanumCommand.isPositionReached()) {
                         intakeFlag = false;
                         switch (pattern) {
@@ -436,8 +428,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0: //align with artifacts
-                            mecanumCommand.moveToPos(142, 28, Math.PI / 2); //align with artifacts
-                            gate.setPosition(GATE_UP);
+                            mecanumCommand.moveToPos(142, 30, Math.PI / 2); //align with artifacts
                             stageTimer.reset();
                             stage++;
                             break;
@@ -449,7 +440,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                             break;
                         case 2: //intake first ball
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(142, 48, Math.PI / 2); //go to place to intake first artifact
+                                mecanumCommand.moveToPos(142, 40, Math.PI / 2); //go to place to intake first artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -464,7 +455,7 @@ public class NewBlueAutoOp extends LinearOpMode {
                             break;
                         case 4: //intake second ball
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(142, 63, Math.PI / 2); //go to place to intake second artifact
+                                mecanumCommand.moveToPos(142, 60, Math.PI / 2); //go to place to intake second artifact
                                 stageTimer.reset();
                                 stage++;
                             }
@@ -495,7 +486,6 @@ public class NewBlueAutoOp extends LinearOpMode {
                 //Shoot once more
                 case THIRD_SHOT:
                     if (mecanumCommand.isPositionReached()) {
-                        gate.setPosition(GATE_DOWN);
                         switch (pattern) {
                             case GPP_1:
                                 processGPP1(AUTO_STATE.FINISH);
@@ -513,7 +503,6 @@ public class NewBlueAutoOp extends LinearOpMode {
                     break;
                 //Turn off outtake and intake
                 case FINISH:
-                    gate.setPosition(GATE_DOWN);
                     outtakeFlag = false;
                     intakeFlag = false;
                     mecanumCommand.stop();
@@ -528,7 +517,6 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
-                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
@@ -543,7 +531,7 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 2: //push on
             case 5:
             case 8:
-                if (stageTimer.milliseconds() > 500) {
+                if (stageTimer.milliseconds() > 500  && shooterAtSpeed()) {
                     halfPush(true);
                     stage++;
                     stageTimer.reset();
@@ -589,7 +577,6 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
-                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
@@ -649,7 +636,6 @@ public class NewBlueAutoOp extends LinearOpMode {
             case 0: //turn on outtake
                 intakeFlag = false;
                 outtakeFlag = true;
-                gate.setPosition(GATE_DOWN);
                 stage++;
                 stageTimer.reset();
                 break;
@@ -722,3 +708,4 @@ public class NewBlueAutoOp extends LinearOpMode {
         mecanumCommand.moveGlobalPartialPinPoint(0, 0, 0);
     }
 }
+
