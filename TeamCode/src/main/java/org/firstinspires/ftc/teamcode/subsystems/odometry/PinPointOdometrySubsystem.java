@@ -1,235 +1,234 @@
 package org.firstinspires.ftc.teamcode.subsystems.odometry;
 
-import android.widget.GridLayout;
-
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.Specifications;
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 /**
- * PinPointOdo class handles odometry and pose estimation using a GoBildaPinpointDriver sensor.
- * It manages position (x, y), heading, velocities, and dead reckoning fallback if sensor readings are invalid.
+ * PinPointOdometrySubsystem wraps GoBildaPinpointDriver.
+ *
+ * getHeading() returns radians (as the driver provides).
+ * DO NOT add Math.toRadians() — the driver already returns radians.
+ *
+ * CSV log columns:
+ *   time_ms          — ms since subsystem init
+ *   x_cm             — estimated x position (cm)
+ *   y_cm             — estimated y position (cm)
+ *   heading_rad      — heading in radians
+ *   heading_deg      — heading in degrees (for human readability)
+ *   raw_encoder_x    — raw x encoder ticks
+ *   raw_encoder_y    — raw y encoder ticks
+ *   vel_x            — x velocity (driver units)
+ *   vel_y            — y velocity (driver units)
+ *   heading_vel      — heading velocity (deg/s from driver)
+ *   nan_count        — cumulative NaN readings detected
+ *   using_dead_reckon— 1 if this frame used dead reckoning, 0 if sensor valid
+ *   loop_dt_ms       — time since last processOdometry() call (ms)
+ *   delta_x_cm       — change in x since last frame (cm)
+ *   delta_y_cm       — change in y since last frame (cm)
+ *   delta_heading_rad— change in heading since last frame (rad)
+ *   x_jump_flag      — 1 if |delta_x| > 50cm in one frame (sensor glitch)
+ *   h_jump_flag      — 1 if |delta_heading_rad| > 0.5 rad in one frame (glitch)
  */
 public class PinPointOdometrySubsystem {
-    // Underlying odometry driver instance
+
     private GoBildaPinpointDriver pinpointDriver;
 
-    // Current pose estimates (in cm or degrees as appropriate)
-    private double x = 0;
-    private double y = 0;
+    private double x       = 0;
+    private double y       = 0;
     private double heading = 0;
 
-    // Previous pose estimates (used for dead reckoning if sensor data invalid)
-    private double previousX = 0;
-    private double previousY = 0;
+    private double previousX       = 0;
+    private double previousY       = 0;
     private double previousHeading = 0;
 
-    // Current velocities in each direction
-    private double vx = 0;
-    private double vy = 0;
+    private double vx     = 0;
+    private double vy     = 0;
     private double vtheta = 0;
 
-    // Timer to track the control loop interval
     private ElapsedTime controllerLoopTime;
-
-    // Counter for number of NaN (invalid) sensor readings
+    private ElapsedTime totalTimer;
     private int nanCounter = 0;
 
-    /**
-     * Constructor initializes the PinPointOdo with hardware mapping, sets encoder parameters and resets sensor.
-     * @param hw Hwardware to access sensors
-     */
-    public PinPointOdometrySubsystem(Hardware hw){
-        // Get the GoBildaPinpointDriver from hardware map with configured name
+    // Logging
+    private BufferedWriter      logWriter      = null;
+    private boolean             loggingEnabled = false;
+    private final StringBuilder logLine        = new StringBuilder(256);
+    private int                 logFailCount   = 0;
+    private int                 frameCount     = 0;
+
+    // Previous frame values for delta computation
+    private double prevLogX       = 0;
+    private double prevLogY       = 0;
+    private double prevLogHeading = 0;
+
+    public PinPointOdometrySubsystem(Hardware hw) {
         pinpointDriver = hw.pinPointOdo;
 
-        // TODO: Tune these offsets for accurate positioning
-        // odo.setOffsets(0, 865);
-        pinpointDriver.setOffsets(0, 20); //left and right = -
+        pinpointDriver.setOffsets(0, 20);
+        pinpointDriver.setEncoderResolution(
+                GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        pinpointDriver.setEncoderDirections(
+                GoBildaPinpointDriver.EncoderDirection.FORWARD,
+                GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
-        // Set the encoder resolution to the 4-bar pod type
-        pinpointDriver.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-
-        // Set encoder directions to FORWARD for both encoders
-        // This means x increases when moving forward, y increases when strafing left
-        pinpointDriver.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
-
-        // Initialize and reset control loop timer
         controllerLoopTime = new ElapsedTime();
-
-        // Reset odometry position and IMU heading
+        totalTimer         = new ElapsedTime();
         pinpointDriver.resetPosAndIMU();
-
-        // Reset timer to start counting from zero
         controllerLoopTime.reset();
+        totalTimer.reset();
+
+        try {
+            String ts   = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+            String path = "/sdcard/FIRST/odo_log_" + ts + ".csv";
+            logWriter   = new BufferedWriter(new FileWriter(path), 32768);
+            loggingEnabled = true;
+            logWriter.write(
+                    "time_ms,x_cm,y_cm,heading_rad,heading_deg," +
+                            "raw_encoder_x,raw_encoder_y," +
+                            "vel_x,vel_y,heading_vel," +
+                            "nan_count,using_dead_reckon,loop_dt_ms," +
+                            "delta_x_cm,delta_y_cm,delta_heading_rad," +
+                            "x_jump_flag,h_jump_flag\n");
+            logWriter.flush();
+        } catch (IOException e) {
+            loggingEnabled = false;
+        }
     }
 
-    /**
-     * Returns the number of times NaN readings were detected from the sensors.
-     * @return count of NaN occurrences
-     */
-    public int getNanCounter(){
-        return nanCounter;
+    public void closeLog() {
+        if (logWriter != null) {
+            try { logWriter.flush(); logWriter.close(); } catch (IOException ignored) {}
+            logWriter = null;
+        }
     }
 
-    /**
-     * Returns the time elapsed since the last control loop iteration in seconds.
-     * @return elapsed time in seconds
-     */
-    public double getControlLoopTime(){
-        return controllerLoopTime.seconds();
+    public int    getNanCounter()       { return nanCounter; }
+    public double getControlLoopTime()  { return controllerLoopTime.seconds(); }
+
+    public void processOdometry() {
+        double dtMs = controllerLoopTime.milliseconds();
+        controllerLoopTime.reset();
+
+        pinpointDriver.update();
+        x       = pinpointDriver.getPosX() / 10.0;
+        y       = pinpointDriver.getPosY() / 10.0;
+        heading = pinpointDriver.getHeading();  // radians — do not convert
+
+        writeLog(dtMs, false);
     }
 
-    /**
-     * Updates odometry measurements from the GoBildaPinpointDriver.
-     * Converts encoder positions to cm by dividing by 10.
-     * Adjusts y-axis sign to fit coordinate convention (positive y when strafing right).
-     */
-    public void processOdometry(){
-        pinpointDriver.update();        // Update internal odometry data
-        x = (pinpointDriver.getPosX() / 10);           // Convert mm or encoder units to cm for x
-        y = (pinpointDriver.getPosY() / 10);           // Convert and invert y to match coordinate system
-        heading = pinpointDriver.getHeading();          // Get current heading in degrees
-    }
+    public void deadReckoning() {
+        double dtMs = controllerLoopTime.milliseconds();
+        controllerLoopTime.reset();
 
-    /**
-     * Getter for velocity in x direction.
-     * @return velocity in x (units consistent with odometry)
-     */
-    public double getVx(){
-        return vx;
-    }
+        pinpointDriver.update();
 
-    /**
-     * Getter for velocity in y direction.
-     * @return velocity in y
-     */
-    public double getVy(){
-        return vy;
-    }
-
-    /**
-     * Getter for angular velocity (heading rate).
-     * @return angular velocity (degrees per time unit)
-     */
-    public double getVtheta(){
-        return vtheta;
-    }
-
-    /**
-     * Dead reckoning update method.
-     * If odometry readings are NaN (invalid), it estimates new position based on previous pose and velocities.
-     * Otherwise, it updates pose from sensor data and velocity readings.
-     */
-    public void deadReckoning(){
-        pinpointDriver.update();                       // Update odometry sensor
-
-        // Read current raw position and heading from sensor
-        Double checkX = pinpointDriver.getPosX();
-        Double checkY = pinpointDriver.getPosY();
+        Double checkX       = pinpointDriver.getPosX();
+        Double checkY       = pinpointDriver.getPosY();
         Double checkHeading = pinpointDriver.getHeading();
 
-        // Check if any reading is NaN (invalid)
-        if (checkX.isNaN() || checkY.isNaN() || checkHeading.isNaN()){
-            nanCounter++;  // Increment NaN counter
+        boolean usedDeadReckon = false;
 
-            // Estimate new pose by adding displacement since last valid update
-            // controllerLoopTime.milliseconds() used as time delta
-            x = previousX + (vx / 10 * controllerLoopTime.milliseconds());
-            y = previousY + (vy / 10 * controllerLoopTime.milliseconds());
-            heading = previousHeading + (vtheta * controllerLoopTime.milliseconds());
-
-            // Alternative fallback (commented out) - keep pose static on invalid reading
-            // x = previousX;
-            // y = previousY;
-            // heading = previousHeading;
+        if (checkX.isNaN() || checkY.isNaN() || checkHeading.isNaN()) {
+            nanCounter++;
+            usedDeadReckon = true;
+            x       = previousX       + (vx     / 10.0 * dtMs);
+            y       = previousY       + (vy     / 10.0 * dtMs);
+            heading = previousHeading + (vtheta *        dtMs);
         } else {
-            // If readings valid, update pose from sensor, with unit conversions and sign adjustments
-            x =  (pinpointDriver.getPosX() / 10);
-            y = -(pinpointDriver.getPosY() / 10);
-            heading = pinpointDriver.getHeading();
+            x       =  pinpointDriver.getPosX() / 10.0;
+            y       = -pinpointDriver.getPosY() / 10.0;
+            heading =  pinpointDriver.getHeading();  // radians — do not convert
 
-            // Save current pose for next dead reckoning step if needed
-            previousX = x;
-            previousY = y;
+            previousX       = x;
+            previousY       = y;
             previousHeading = heading;
 
-            // Update velocity readings from odometry
-            vx = pinpointDriver.getVelX();
-            vy = pinpointDriver.getVelY();
+            vx     = pinpointDriver.getVelX();
+            vy     = pinpointDriver.getVelY();
             vtheta = pinpointDriver.getHeadingVelocity();
         }
 
-        // Reset timer for next control loop
-        controllerLoopTime.reset();
+        writeLog(dtMs, usedDeadReckon);
     }
 
-    /**
-     * Set a new known position and heading on the odometry driver.
-     * Useful for resetting or correcting pose estimate.
-     * @param x new x position (in cm)
-     * @param y new y position (in cm)
-     * @param heading new heading (in degrees)
-     */
-    public void setNewPosition(double x, double y, double heading){
-        pinpointDriver.setPosition(new Pose2D(DistanceUnit.CM, x, y, AngleUnit.DEGREES, heading));
+    private void writeLog(double dtMs, boolean usedDeadReckon) {
+        if (!loggingEnabled || logWriter == null) return;
+        frameCount++;
+
+        double deltaX   = x       - prevLogX;
+        double deltaY   = y       - prevLogY;
+        double deltaH   = heading - prevLogHeading;
+        // wrap delta heading
+        while (deltaH >  Math.PI) deltaH -= 2 * Math.PI;
+        while (deltaH < -Math.PI) deltaH += 2 * Math.PI;
+
+        int xJump = Math.abs(deltaX) > 50.0     ? 1 : 0;  // >50cm jump = glitch
+        int hJump = Math.abs(deltaH) > 0.5      ? 1 : 0;  // >~29° jump = glitch
+
+        prevLogX       = x;
+        prevLogY       = y;
+        prevLogHeading = heading;
+
+        try {
+            logLine.setLength(0);
+            logLine.append(totalTimer.milliseconds()).append(',')
+                    .append(x).append(',')
+                    .append(y).append(',')
+                    .append(heading).append(',')
+                    .append(Math.toDegrees(heading)).append(',')
+                    .append(pinpointDriver.getEncoderX()).append(',')
+                    .append(pinpointDriver.getEncoderY()).append(',')
+                    .append(vx).append(',')
+                    .append(vy).append(',')
+                    .append(vtheta).append(',')
+                    .append(nanCounter).append(',')
+                    .append(usedDeadReckon ? 1 : 0).append(',')
+                    .append(dtMs).append(',')
+                    .append(deltaX).append(',')
+                    .append(deltaY).append(',')
+                    .append(deltaH).append(',')
+                    .append(xJump).append(',')
+                    .append(hJump).append('\n');
+            logWriter.write(logLine.toString());
+            // Flush every 5s
+            if ((int)(totalTimer.milliseconds()) % 5000 < 80) logWriter.flush();
+        } catch (IOException e) {
+            logFailCount++;
+            if (logFailCount > 20) loggingEnabled = false;
+        }
     }
 
-    /**
-     * Get raw encoder count for x-axis odometry.
-     * @return raw encoder value for x
-     */
-    public double getRawX(){
-        return pinpointDriver.getEncoderX();
+    public void setNewPosition(double x, double y, double headingDeg) {
+        pinpointDriver.setPosition(
+                new Pose2D(DistanceUnit.CM, x, y, AngleUnit.DEGREES, headingDeg));
     }
 
-    /**
-     * Get raw encoder count for y-axis odometry.
-     * @return raw encoder value for y
-     */
-    public double getRawY(){
-        return pinpointDriver.getEncoderY();
-    }
-
-    /**
-     * Reset odometry position and IMU heading.
-     * Useful for initialization or re-zeroing.
-     */
     public void reset() {
         pinpointDriver.resetPosAndIMU();
+        prevLogX = 0; prevLogY = 0; prevLogHeading = 0;
     }
 
-    /**
-     * Get current estimated x position in cm.
-     * @return current x position
-     */
-    public double getX(){
-        return x;
-    }
+    public double getRawX()  { return pinpointDriver.getEncoderX(); }
+    public double getRawY()  { return pinpointDriver.getEncoderY(); }
 
-    public double getHeadingVelocity() {
-        return pinpointDriver.getHeadingVelocity();
-    }
-
-    /**
-     * Get current estimated y position in cm.
-     * @return current y position
-     */
-    public double getY(){
-        return y;
-    }
-
-    /**
-     * Get current estimated heading in degrees. (through the Driver)
-     * @return current heading
-     */
-    public double getHeading(){
-        return pinpointDriver.getHeading();
-    }
+    public double getX()              { return x; }
+    public double getY()              { return y; }
+    public double getHeading()        { return heading; }  // radians
+    public double getHeadingVelocity(){ return pinpointDriver.getHeadingVelocity(); }
+    public double getVx()             { return vx; }
+    public double getVy()             { return vy; }
+    public double getVtheta()         { return vtheta; }
 }
