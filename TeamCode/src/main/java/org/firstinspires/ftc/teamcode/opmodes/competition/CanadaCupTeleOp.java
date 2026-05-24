@@ -383,6 +383,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
             telemetry.addData("Green2", colourSubsystem.getGreen2());
             telemetry.addData("Blue2", colourSubsystem.getBlue2());
             telemetry.addData("Alpha2", colourSubsystem.getAlpha2());
+            telemetry.addData("Last Red", colourSubsystem.getLastValues()[0]);
+            telemetry.addData("Last Green", colourSubsystem.getLastValues()[1]);
+            telemetry.addData("Last Blue", colourSubsystem.getLastValues()[2]);
+            telemetry.addData("Last Alpha", colourSubsystem.getLastValues()[3]);
             telemetry.addData("Detected Count", sorterSubsystem.getArtifactCount());
             telemetry.addData("Current Balls", Arrays.toString(sorterSubsystem.getSorterList()));
             telemetry.addData("Current Sorter Position", sorterSubsystem.getSorterPos());

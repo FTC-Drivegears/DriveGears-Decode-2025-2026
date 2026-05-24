@@ -22,6 +22,7 @@ public class ColourSensorSubsystem {
     private Artifact[] sorterList;
     private float red, green, blue, alpha;
     private float red2, green2, blue2, alpha2;
+    private float lastRed = 0, lastGreen = 0, lastBlue = 0, lastAlpha = 0;
 
     public ColourSensorSubsystem(HardwareMap hardwareMap, Hardware hw, SorterSubsystem sorterSubsystem) {
         this.hw = hw;
@@ -52,17 +53,21 @@ public class ColourSensorSubsystem {
 
         if (sorterSubsystem.getArtifactCount() == 3) return;
 
-        boolean artifactPresent = alpha > 0.2f || alpha2 > 0.2f;  // was 150
+        boolean artifactPresent = alpha > 0.4f || alpha2 > 0.2f;  // was 150
         boolean artifactCleared = alpha < alpha_threshold && alpha2 < alpha_threshold;
 
-        boolean purple_colour1 = percentMoreThan(blue, 30, red) && percentMoreThan(blue, 30, green);
-        boolean purple_colour2 = percentMoreThan(blue2, 30, red2) && percentMoreThan(blue2, 30, green2);
+        boolean purple_colour1 = percentMoreThan(blue, 10, red) && percentMoreThan(blue, 10, green);
+        boolean purple_colour2 = percentMoreThan(blue2, 10, red2) && percentMoreThan(blue2, 10, green2);
 
-        boolean green_colour1 = percentMoreThan(green, 30, red) && percentMoreThan(green, 30, blue);
-        boolean green_colour2 = percentMoreThan(green2, 30, red2) && percentMoreThan(green2, 30, blue2);
+        boolean green_colour1 = percentMoreThan(green, 20, red) && percentMoreThan(green, 20, blue);
+        boolean green_colour2 = percentMoreThan(green2, 20, red2) && percentMoreThan(green2, 20, blue2);
 
         if (intakeOn && artifactPresent && !lastArtifactPresent) {
             if (purple_colour1 || purple_colour2) {
+                lastRed = red;
+                lastGreen = green;
+                lastBlue = blue;
+                lastAlpha = alpha;
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Purple");
                 sorterSubsystem.setArtifactCount(sorterSubsystem.getArtifactCount() + 1);
                 leftLight.setPosition(0.7);
@@ -70,6 +75,10 @@ public class ColourSensorSubsystem {
                     sorterSubsystem.manualSpin();
                 lastArtifactPresent = true;
             } else if (green_colour1 || green_colour2) {
+                lastRed = red;
+                lastGreen = green;
+                lastBlue = blue;
+                lastAlpha = alpha;
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Green");
                 sorterSubsystem.setArtifactCount(sorterSubsystem.getArtifactCount() + 1);
                 leftLight.setPosition(0.5);
@@ -97,4 +106,5 @@ public class ColourSensorSubsystem {
     public float getGreen2() { return green2; }
     public float getBlue2()  { return blue2; }
     public float getAlpha2() { return alpha2; }
+    public float[] getLastValues() { return new float[]{ lastRed, lastGreen, lastBlue, lastAlpha }; }
 }
