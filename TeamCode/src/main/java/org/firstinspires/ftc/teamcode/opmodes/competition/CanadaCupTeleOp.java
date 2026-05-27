@@ -130,7 +130,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean prevDpadLeft    = false;
         boolean prevManual      = false;
         boolean pusherReturning = false;
-        boolean pusherAtFire    = false;  // latches true once RPM reached; prevents RPM oscillation pulling pusher back to preload   // true while waiting for pusher to physically return down
+        boolean pusherAtFire    = false;
+        int     loopCount       = 0;   // true while waiting for pusher to physically return down
 
         waitForStart();
 
@@ -199,10 +200,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 hw.llmotor.setPower(0);
             }
 
-            if (autoAimEnabled && tx != null) {
-                RobotLog.i(String.format(
-                        "time:%.2f tx:%.1f pos:%d power:%.2f",
-                        getRuntime(), tx, turretPos, hw.llmotor.getPower()));
+            loopCount++;
+
+            if (autoAimEnabled && tx != null && loopCount % 5 == 0) {
+                RobotLog.i("time:" + (int)getRuntime() + " tx:" + (int)(tx*10)/10.0
+                        + " pos:" + turretPos + " pwr:" + (int)(hw.llmotor.getPower()*1000)/1000.0);
             }
 
             // ---------------- COLOUR SENSOR ----------------
@@ -259,7 +261,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             boolean curY = gamepad1.y;
             String pusherSource = "none";
             if (curY) {
-                if (isShooterOn && (shooterSubsystem.isRPMReached() || pusherAtFire)) {
+                if (isShooterOn && (shooterSubsystem.isRPMReached() || pusherAtFire) && tx != null) {
                     // RPM reached (or already committed to fire) — lock at full position.
                     // pusherAtFire latch prevents RPM oscillation pulling pusher back to preload.
                     pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
@@ -334,7 +336,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (gamepad1.dpad_right) sorterSubsystem.stopQuickfire();
 
             // ---------------- ODOMETRY RESET (start) ----------------
-            if (gamepad1.start) mecanumCommand.resetPinPointOdometry();
+            // Position-only reset — preserves heading so turret world-angle tracking
+            // is not corrupted. Full IMU reset (resetPinPointOdometry) is no longer
+            // bound to any button; call it manually in code if truly needed.
+            if (gamepad1.start) mecanumCommand.resetPositionOnly();
 
             // ---------------- PUSHER LOG WRITE ----------------
             double dtMs = loopDtTimer.milliseconds();
@@ -359,41 +364,38 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 } catch (IOException e) { pusherLogEnabled = false; }
             }
 
-            // ---------------- TELEMETRY ----------------
-            telemetry.addData("Turret Ticks",       turretPos);
-            telemetry.addData("Has Target",         turret.hasTarget());
-            telemetry.addData("tx",                 tx);
-            telemetry.addData("ty",                 ty);
-            telemetry.addData("Distance",           turret.getDistanceTrack());
-            telemetry.addData("Shooter RPM target", turret.getShootRPM());
-            telemetry.addData("Auto Aim",           autoAimEnabled);
-            telemetry.addData("Shooter on",         isShooterOn);
-            telemetry.addData("Intake on",          isIntakeMotorOn);
-            telemetry.addData("Outtake on",         isOuttakeMotorOn);
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("Robot X",            mecanumCommand.getX());
-            telemetry.addData("Robot Y",            mecanumCommand.getY());
-            telemetry.addData("Heading (rad)",      heading);
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("Red",    colourSubsystem.getRed());
-            telemetry.addData("Green",  colourSubsystem.getGreen());
-            telemetry.addData("Blue",   colourSubsystem.getBlue());
-            telemetry.addData("Alpha",  colourSubsystem.getAlpha());
-            telemetry.addData("Red2",   colourSubsystem.getRed2());
-            telemetry.addData("Green2", colourSubsystem.getGreen2());
-            telemetry.addData("Blue2",  colourSubsystem.getBlue2());
-            telemetry.addData("Alpha2", colourSubsystem.getAlpha2());
-            telemetry.addData("Last Red",   colourSubsystem.getLastValues()[0]);
-            telemetry.addData("Last Green", colourSubsystem.getLastValues()[1]);
-            telemetry.addData("Last Blue",  colourSubsystem.getLastValues()[2]);
-            telemetry.addData("Last Alpha", colourSubsystem.getLastValues()[3]);
-            telemetry.addData("Ball present", colourSubsystem.isBallPresent());
-            telemetry.addLine("---------------------------------");
-            telemetry.addData("Artifact count",   sorterSubsystem.getArtifactCount());
-            telemetry.addData("Sorter contents",  Arrays.toString(sorterSubsystem.getSorterList()));
-            telemetry.addData("Sorter position",  sorterSubsystem.getSorterPos());
-            telemetry.addData("Selected colour",  sorterSubsystem.selectedColour);
-            telemetry.update();
+            // ---------------- TELEMETRY (every 4 loops — reduces GC pressure) ----------------
+            if (loopCount % 4 == 0) {
+                telemetry.addData("Turret Ticks",       turretPos);
+                telemetry.addData("Has Target",         turret.hasTarget());
+                telemetry.addData("tx",                 tx);
+                telemetry.addData("ty",                 ty);
+                telemetry.addData("Distance",           turret.getDistanceTrack());
+                telemetry.addData("Shooter RPM target", turret.getShootRPM());
+                telemetry.addData("Auto Aim",           autoAimEnabled);
+                telemetry.addData("Shooter on",         isShooterOn);
+                telemetry.addData("Intake on",          isIntakeMotorOn);
+                telemetry.addData("Outtake on",         isOuttakeMotorOn);
+                telemetry.addLine("---------------------------------");
+                telemetry.addData("Robot X",            mecanumCommand.getX());
+                telemetry.addData("Robot Y",            mecanumCommand.getY());
+                telemetry.addData("Heading (rad)",      heading);
+                telemetry.addLine("---------------------------------");
+                telemetry.addData("Red",    colourSubsystem.getRed());
+                telemetry.addData("Green",  colourSubsystem.getGreen());
+                telemetry.addData("Blue",   colourSubsystem.getBlue());
+                telemetry.addData("Alpha",  colourSubsystem.getAlpha());
+                telemetry.addData("Red2",   colourSubsystem.getRed2());
+                telemetry.addData("Green2", colourSubsystem.getGreen2());
+                telemetry.addData("Blue2",  colourSubsystem.getBlue2());
+                telemetry.addData("Alpha2", colourSubsystem.getAlpha2());
+                telemetry.addData("Ball present", colourSubsystem.isBallPresent());
+                telemetry.addLine("---------------------------------");
+                telemetry.addData("Artifact count",  sorterSubsystem.getArtifactCount());
+                telemetry.addData("Sorter position", sorterSubsystem.getSorterPos());
+                telemetry.addData("Selected colour", sorterSubsystem.selectedColour);
+                telemetry.update();
+            }
         }
 
         turret.closeLog();
