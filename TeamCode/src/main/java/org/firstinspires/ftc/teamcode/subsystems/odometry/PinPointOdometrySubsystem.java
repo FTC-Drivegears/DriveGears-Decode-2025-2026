@@ -175,8 +175,11 @@ public class PinPointOdometrySubsystem {
         while (deltaH >  Math.PI) deltaH -= 2 * Math.PI;
         while (deltaH < -Math.PI) deltaH += 2 * Math.PI;
 
-        int xJump = Math.abs(deltaX) > 50.0     ? 1 : 0;  // >50cm jump = glitch
-        int hJump = Math.abs(deltaH) > 0.5      ? 1 : 0;  // >~29° jump = glitch
+        int xJump = Math.abs(deltaX) > 50.0 ? 1 : 0;   // >50cm jump in one frame = glitch
+        // Threshold raised 0.5→1.0 rad (57°): PinPoint accumulates heading unboundedly
+        // so fast rotation legitimately produces large per-frame deltas at 38ms loop rate.
+        // 1.0 rad (~57°) in one frame at 38ms = 1500°/s which is physically impossible.
+        int hJump = Math.abs(deltaH) > 1.0 ? 1 : 0;
 
         prevLogX       = x;
         prevLogY       = y;
@@ -219,6 +222,19 @@ public class PinPointOdometrySubsystem {
     public void reset() {
         pinpointDriver.resetPosAndIMU();
         prevLogX = 0; prevLogY = 0; prevLogHeading = 0;
+    }
+
+    /**
+     * Resets only the XY position to zero while preserving the current heading.
+     * Use this for mid-match re-zeroing — avoids corrupting the heading estimate
+     * (and therefore the turret's world-angle tracking) the way resetPosAndIMU() does.
+     */
+    public void resetPositionOnly() {
+        double currentHeadingDeg = Math.toDegrees(getHeading());
+        pinpointDriver.setPosition(
+                new Pose2D(DistanceUnit.CM, 0, 0, AngleUnit.DEGREES, currentHeadingDeg));
+        prevLogX = 0; prevLogY = 0;
+        // prevLogHeading preserved intentionally
     }
 
     public double getRawX()  { return pinpointDriver.getEncoderX(); }

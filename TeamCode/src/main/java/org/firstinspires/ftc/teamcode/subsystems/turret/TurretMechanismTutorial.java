@@ -123,6 +123,16 @@ public class TurretMechanismTutorial {
     private static final double TX_ACCEPTANCE_DEG = 35.0;
     private static final double TX_OFFSET_DEG     = 0.0;
 
+    // Unwind — kicks in when turret hits a soft limit during tracking
+    private boolean unwinding            = false;
+    private double  unwindGoalDeg        = 0;
+    private static final double SOFT_LIMIT_CW    =  140.0;
+    private static final double SOFT_LIMIT_CCW   = -203.0;
+    private static final double UNWIND_MAX_POWER =  0.90;
+    private static final double UNWIND_MIN_POWER =  0.25;
+    private static final double UNWIND_DECEL_DEG =  20.0;
+    private static final double UNWIND_ARRIVE_DEG =  10.0;
+
     // Logging
     private BufferedWriter      logWriter      = null;
     private boolean             loggingEnabled = false;
@@ -280,16 +290,69 @@ public class TurretMechanismTutorial {
         prevWorldAngleDeg = currentWorldAngleDeg;
         lastTurretPosDeg  = currentTurretRelDeg;
 
-        if (Double.isFinite(currentWorldVelocity)) {
+        // Reject velocity spikes from GC/overrun frames.
+        // 400°/s is physically impossible for this robot — anything above it is
+        // a dt-clamping artifact from a long GC pause, not real robot motion.
+        // Reuse the previous filtered value instead of poisoning the filter.
+        if (Double.isFinite(currentWorldVelocity) && Math.abs(currentWorldVelocity) <= 400.0) {
             filteredWorldVelocity = VELOCITY_FILTER_ALPHA * currentWorldVelocity
                     + (1.0 - VELOCITY_FILTER_ALPHA) * filteredWorldVelocity;
         }
+        // If spike detected: filteredWorldVelocity unchanged this frame.
 
         if (tx != null) tx = tx - TX_OFFSET_DEG;
         double rawTx       = (tx != null) ? tx : 0.0;
         double error       = 0;
         double outputPower = 0;
         double blindScale  = 1.0;
+
+        // =====================================================================
+        // UNWIND — when turret jams against a soft limit while robot is rotating,
+        // drive back toward centre so tracking can resume.
+        // Goal recomputed every frame so a spinning robot doesn't produce a
+        // stale target position.
+        // =====================================================================
+        if (!unwinding && !manualMode) {
+            if (currentTurretRelDeg >= SOFT_LIMIT_CW) {
+                unwinding = true; unwindGoalDeg = 0;
+                integralSum = 0; hasTarget = false;
+                consecutiveTargetFrames = 0; stableFrameCount = 0;
+            } else if (currentTurretRelDeg <= SOFT_LIMIT_CCW) {
+                unwinding = true; unwindGoalDeg = 0;
+                integralSum = 0; hasTarget = false;
+                consecutiveTargetFrames = 0; stableFrameCount = 0;
+            }
+        }
+
+        if (unwinding) {
+            double idealGoal = wrapAngle(targetWorldAngleDeg - robotHeadingDeg);
+            idealGoal = Math.max(SOFT_LIMIT_CCW + 15, Math.min(SOFT_LIMIT_CW - 15, idealGoal));
+            unwindGoalDeg = idealGoal;
+
+            double distToGoal = unwindGoalDeg - currentTurretRelDeg;
+            double absDist    = Math.abs(distToGoal);
+            boolean nearTarget = (tx != null && Math.abs(tx) < TX_ACCEPTANCE_DEG);
+
+            if (absDist <= UNWIND_ARRIVE_DEG || nearTarget || manualMode) {
+                unwinding = false; unwindGoalDeg = 0;
+                integralSum = 0; prevError = 0;
+                smoothedTx = 0; prevSmoothedTx = 0;
+                stableFrameCount = 0; consecutiveTargetFrames = 0;
+                framesSinceAcquisition = 999;
+                worldAngleConfident = false;
+                targetWorldAngleDeg = 0;
+            } else {
+                double power = (absDist < UNWIND_DECEL_DEG)
+                        ? UNWIND_MIN_POWER + (absDist / UNWIND_DECEL_DEG) * (UNWIND_MAX_POWER - UNWIND_MIN_POWER)
+                        : UNWIND_MAX_POWER;
+                double totalPower = (distToGoal > 0) ? power : -power;
+                if (currentTurretRelDeg >= SOFT_LIMIT_CW  && totalPower > 0) totalPower = 0;
+                if (currentTurretRelDeg <= SOFT_LIMIT_CCW && totalPower < 0) totalPower = 0;
+                turret.setPower(totalPower);
+                updateHoodAndRPM(ty);
+                return;
+            }
+        }
 
         double expectedTx = wrapAngle(currentWorldAngleDeg - targetWorldAngleDeg);
 
@@ -437,8 +500,10 @@ public class TurretMechanismTutorial {
 
         double totalPower = Range.clip(outputPower, -MAX_OUTPUT_POWER, MAX_OUTPUT_POWER);
 
-        if (currentTurretRelDeg >=  140.0 && totalPower > 0) totalPower = 0;
-        if (currentTurretRelDeg <= -203.0 && totalPower < 0) totalPower = 0;
+        // Safety hard stops — unwind handles the normal limit case above,
+        // these catch any edge case where unwind doesn't fire in time.
+        if (currentTurretRelDeg >= SOFT_LIMIT_CW  && totalPower > 0) totalPower = 0;
+        if (currentTurretRelDeg <= SOFT_LIMIT_CCW && totalPower < 0) totalPower = 0;
 
         turret.setPower(totalPower);
 
@@ -504,10 +569,10 @@ public class TurretMechanismTutorial {
             }
         }
 
-        // =====================================================================
-        // Hood and RPM
-        // =====================================================================
+        updateHoodAndRPM(ty);
+    }
 
+    private void updateHoodAndRPM(Double ty) {
         if (ty != null) {
             lastTy = ty;
             double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT)
