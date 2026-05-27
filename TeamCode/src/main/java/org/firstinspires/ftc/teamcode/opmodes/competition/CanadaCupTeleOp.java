@@ -18,7 +18,13 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 
 @TeleOp(name = "CanadaCup", group = "TeleOp")
 public class CanadaCupTeleOp extends LinearOpMode {
@@ -46,9 +52,16 @@ public class CanadaCupTeleOp extends LinearOpMode {
     private static final int TURRET_MAX_TICKS =  240;
 
     // ---------------- TIMERS ----------------
-    private final ElapsedTime sorterTimer      = new ElapsedTime();
-    private final ElapsedTime pusherTimer      = new ElapsedTime();
-    private final ElapsedTime pusherReturnTimer = new ElapsedTime();
+    private final ElapsedTime sorterTimer       = new ElapsedTime();
+    private final ElapsedTime pusherTimer       = new ElapsedTime();
+    private final ElapsedTime pusherReturnTimer  = new ElapsedTime();
+    private final ElapsedTime totalTimer        = new ElapsedTime();
+    private final ElapsedTime loopDtTimer       = new ElapsedTime();
+
+    // ---------------- PUSHER LOG ----------------
+    private BufferedWriter      pusherLog        = null;
+    private boolean             pusherLogEnabled = false;
+    private final StringBuilder pusherLogLine    = new StringBuilder(256);
 
     @Override
     public void runOpMode() {
@@ -90,6 +103,20 @@ public class CanadaCupTeleOp extends LinearOpMode {
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         hw.llmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // ---------------- PUSHER LOG INIT ----------------
+        try {
+            String ts = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+            pusherLog = new BufferedWriter(new FileWriter("/sdcard/FIRST/pusher_log_" + ts + ".csv"), 16384);
+            pusherLogEnabled = true;
+            pusherLog.write("time_ms,loop_dt_ms,y_button,togglePusher,pusherReturning," +
+                    "pusherReturnTimer_ms,pusher_R_cmd,pusher_L_cmd," +
+                    "quickfire_state,quickfire_active," +
+                    "pusher_source\n");
+            pusherLog.flush();
+        } catch (IOException e) { pusherLogEnabled = false; }
+        totalTimer.reset();
+        loopDtTimer.reset();
+
         // NOTE: Pinpoint heading NOT reset here — carries over from auto for correct FOD.
         // Use gamepad1.start to re-zero mid-match if needed.
 
@@ -102,7 +129,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean isShooterOn     = false;
         boolean prevDpadLeft    = false;
         boolean prevManual      = false;
-        boolean pusherReturning = false;   // true while waiting for pusher to physically return down
+        boolean pusherReturning = false;
+        boolean pusherAtFire    = false;  // latches true once RPM reached; prevents RPM oscillation pulling pusher back to preload   // true while waiting for pusher to physically return down
 
         waitForStart();
 
@@ -216,24 +244,48 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 }
             }
 
-            // ---------------- PUSHER (Y rising edge) ----------------
+            // ---------------- PUSHER (hold Y = pre-load; fire when RPM ready) ----------------
+            // Y held + flywheel not at speed → partial pre-load position (1/2 travel).
+            //   Keeps the ball close to the shooter so it doesn't have to travel far on fire.
+            //   Lower this fraction if 1/2 is still too high (e.g. try 0.4).
+            // Y held + flywheel at speed → full fire position.
+            // Y released → return to down, trigger sorter reverse.
+            final double PRELOAD_FRACTION = 0.70;
+            double preloadR = PusherConsts.PUSHER_DOWN_POSITION_R
+                    + (PusherConsts.PUSHER_UP_POSITION_R - PusherConsts.PUSHER_DOWN_POSITION_R) * PRELOAD_FRACTION;
+            double preloadL = PusherConsts.PUSHER_DOWN_POSITION_L
+                    + (PusherConsts.PUSHER_UP_POSITION_L - PusherConsts.PUSHER_DOWN_POSITION_L) * PRELOAD_FRACTION;
+
             boolean curY = gamepad1.y;
-            if (curY && !previousYState && !togglePusher) {
-                pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
-                pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
-                pusherTimer.reset();
-                togglePusher = true;
+            String pusherSource = "none";
+            if (curY) {
+                if (isShooterOn && (shooterSubsystem.isRPMReached() || pusherAtFire)) {
+                    // RPM reached (or already committed to fire) — lock at full position.
+                    // pusherAtFire latch prevents RPM oscillation pulling pusher back to preload.
+                    pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
+                    pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
+                    togglePusher  = true;
+                    pusherAtFire  = true;
+                    pusherSource  = "Y_fire";
+                } else {
+                    // Waiting for speed — hold at pre-load
+                    pusher_R.setPosition(preloadR);
+                    pusher_L.setPosition(preloadL);
+                    togglePusher = true;
+                    pusherSource = "Y_preload";
+                }
+            } else {
+                if (togglePusher) {
+                    pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
+                    pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
+                    togglePusher  = false;
+                    pusherAtFire  = false;  // reset latch on release
+                    pusherReturning = true;
+                    pusherReturnTimer.reset();
+                    pusherSource  = "Y_release";
+                }
             }
             previousYState = curY;
-
-            if (togglePusher && pusherTimer.milliseconds() >= 500) {
-                pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
-                pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
-                togglePusher = false;
-                // Start timing physical return travel before spinning sorter back.
-                pusherReturning = true;
-                pusherReturnTimer.reset();
-            }
 
             // 400ms after pusher commanded down — physically back in place.
             // Step sorter backward one slot to bring next ball to shooter position.
@@ -271,14 +323,41 @@ public class CanadaCupTeleOp extends LinearOpMode {
             // }
 
             // ---------------- QUICKFIRE (dpad left/right) ----------------
+            boolean quickfireWasActive = sorterSubsystem.isActive();
             if (gamepad1.dpad_left && !prevDpadLeft) sorterSubsystem.startQuickfire();
-            if (sorterSubsystem.isActive())          sorterSubsystem.quickfireState();
+            if (sorterSubsystem.isActive()) {
+                sorterSubsystem.quickfireState();
+                // Quickfire internally commands pusher — flag it so the log shows the conflict
+                if (quickfireWasActive) pusherSource = "quickfire:" + sorterSubsystem.quickfireState;
+            }
             prevDpadLeft = gamepad1.dpad_left;
-
             if (gamepad1.dpad_right) sorterSubsystem.stopQuickfire();
 
             // ---------------- ODOMETRY RESET (start) ----------------
             if (gamepad1.start) mecanumCommand.resetPinPointOdometry();
+
+            // ---------------- PUSHER LOG WRITE ----------------
+            double dtMs = loopDtTimer.milliseconds();
+            loopDtTimer.reset();
+            if (pusherLogEnabled && pusherLog != null) {
+                try {
+                    pusherLogLine.setLength(0);
+                    pusherLogLine.append(totalTimer.milliseconds()).append(',')
+                            .append(dtMs).append(',')
+                            .append(curY ? 1 : 0).append(',')
+                            .append(togglePusher ? 1 : 0).append(',')
+                            .append(pusherReturning ? 1 : 0).append(',')
+                            .append(pusherReturnTimer.milliseconds()).append(',')
+                            .append(pusher_R.getPosition()).append(',')
+                            .append(pusher_L.getPosition()).append(',')
+                            .append(sorterSubsystem.quickfireState).append(',')
+                            .append(sorterSubsystem.isActive() ? 1 : 0).append(',')
+                            .append(pusherSource).append('\n');
+                    pusherLog.write(pusherLogLine.toString());
+                    // Flush every 3s
+                    if ((int)(totalTimer.milliseconds()) % 3000 < 50) pusherLog.flush();
+                } catch (IOException e) { pusherLogEnabled = false; }
+            }
 
             // ---------------- TELEMETRY ----------------
             telemetry.addData("Turret Ticks",       turretPos);
@@ -318,5 +397,8 @@ public class CanadaCupTeleOp extends LinearOpMode {
         }
 
         turret.closeLog();
+        if (pusherLog != null) {
+            try { pusherLog.flush(); pusherLog.close(); } catch (IOException ignored) {}
+        }
     }
 }
