@@ -222,7 +222,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             gate.setPosition((isIntakeMotorOn || isOuttakeMotorOn) ? 0.7 : 0.6);
 
             // ---------------- SHOOTER TOGGLE (X) ----------------
-            boolean curX = gamepad1.x;
+            boolean curX = gamepad2.x;
             if (curX && !previousXState) {
                 isShooterOn = !isShooterOn;
                 if (isShooterOn) {
@@ -258,7 +258,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             double preloadL = PusherConsts.PUSHER_DOWN_POSITION_L
                     + (PusherConsts.PUSHER_UP_POSITION_L - PusherConsts.PUSHER_DOWN_POSITION_L) * PRELOAD_FRACTION;
 
-            boolean curY = gamepad1.y;
+            boolean curY = gamepad2.y;
             String pusherSource = "none";
             if (curY) {
                 if (isShooterOn && (shooterSubsystem.isRPMReached() || pusherAtFire) && tx != null) {
@@ -298,42 +298,42 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // ---------------- SORTER MANUAL ----------------
             // B button: advance one slot forward (CW)
-            if (gamepad1.b && sorterTimer.milliseconds() > 500) {
+            if (gamepad2.b && sorterTimer.milliseconds() > 500) {
                 sorterTimer.reset();
                 sorterSubsystem.manualSpin();
             }
 
             // Back button: retreat one slot backward (CCW)
-            if (gamepad1.back && sorterTimer.milliseconds() > 500) {
+            if (gamepad2.back && sorterTimer.milliseconds() > 500) {
                 sorterTimer.reset();
                 sorterSubsystem.manualSpinReverse();
             }
 
             // ---------------- COLOUR SELECTION ----------------
-            if (gamepad1.dpad_up) {
+            if (gamepad2.dpad_up) {
                 sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.GREEN;
                 rightLight.setPosition(0.5);
             }
-            if (gamepad1.dpad_down) {
+            if (gamepad2.dpad_down) {
                 sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.PURPLE;
                 rightLight.setPosition(0.722);
             }
-            // TODO: gamepad2 — move ANY colour selection to second controller
-            // if (gamepad2.back) {
-            //     sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
-            //     rightLight.setPosition(1.0);
-            // }
+
+            if (gamepad2.back) {
+                sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
+                rightLight.setPosition(1.0);
+            }
 
             // ---------------- QUICKFIRE (dpad left/right) ----------------
             boolean quickfireWasActive = sorterSubsystem.isActive();
-            if (gamepad1.dpad_left && !prevDpadLeft) sorterSubsystem.startQuickfire();
+            if (gamepad2.dpad_left && !prevDpadLeft) sorterSubsystem.startQuickfire();
             if (sorterSubsystem.isActive()) {
                 sorterSubsystem.quickfireState();
                 // Quickfire internally commands pusher — flag it so the log shows the conflict
                 if (quickfireWasActive) pusherSource = "quickfire:" + sorterSubsystem.quickfireState;
             }
-            prevDpadLeft = gamepad1.dpad_left;
-            if (gamepad1.dpad_right) sorterSubsystem.stopQuickfire();
+            prevDpadLeft = gamepad2.dpad_left;
+            if (gamepad2.dpad_right) sorterSubsystem.stopQuickfire();
 
             // ---------------- ODOMETRY RESET (start) ----------------
             // Position-only reset — preserves heading so turret world-angle tracking
