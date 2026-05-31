@@ -13,6 +13,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LimelightVision;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.coloursensor.ColourSensorSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
@@ -25,6 +26,7 @@ public class NewBlueAutoOp extends LinearOpMode {
     private MecanumCommand mecanumCommand;
     private static ShooterSubsystem shooterSubsystem;
     private static SorterSubsystem sorterSubsystem;
+    private static ColourSensorSubsystem colourSubsystem;
     private ElapsedTime resetTimer;
     private LimelightVision LimelightVision;
     private Limelight3A limelight;
@@ -183,6 +185,7 @@ public class NewBlueAutoOp extends LinearOpMode {
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
         sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
+        colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw, sorterSubsystem);
         resetTimer = new ElapsedTime();
 
         //bind the shooter, pusher, sorter, hood, intake, and turret to their respective motors and servos

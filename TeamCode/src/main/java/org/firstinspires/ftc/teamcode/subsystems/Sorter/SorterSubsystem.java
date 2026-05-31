@@ -61,6 +61,15 @@ public class SorterSubsystem {
     }
 
     public Artifact[] getSorterList()        { return sorterList; }
+    public void setSorterList(Artifact[] newSorterList) {
+        artifactCount[0] = 0;
+        for (int i = 0; i < 3; i++) {
+            sorterList[i] = newSorterList[i];
+            if (!newSorterList[i].getColour().equals("None")) {
+                artifactCount[0]++;
+            }
+        }
+    }
     public int getArtifactCount()            { return artifactCount[0]; }
     public void setArtifactCount(int count)  { artifactCount[0] = count; }
     public int getSorterPos()                { return curSorterPositionIndex; }
@@ -88,6 +97,11 @@ public class SorterSubsystem {
             curSorterPositionIndex--;
             this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
         }
+    }
+
+    public void removeCurrentBall() {
+        sorterList[curSorterPositionIndex] = new Artifact("none");
+        artifactCount[0]--;
     }
 
     // ---------------- QUICKFIRE ----------------
@@ -125,8 +139,7 @@ public class SorterSubsystem {
                         pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
                         pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
                         pusherTimer.reset();
-                        sorterList[curSorterPositionIndex] = new Artifact("none");
-                        artifactCount[0]--;
+                        removeCurrentBall();
                         quickfireState = QuickfireState.WAIT_UP;
                     }
                     break;
@@ -227,8 +240,7 @@ public class SorterSubsystem {
                             }
                             if (ballFound) {
                                 this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
-                                sorterList[curSorterPositionIndex] = new Artifact("none");
-                                artifactCount[0]--;
+                                removeCurrentBall();
                                 sorterTimer.reset();
                                 quickfireState = QuickfireState.WAIT_SORT;
                             } else {

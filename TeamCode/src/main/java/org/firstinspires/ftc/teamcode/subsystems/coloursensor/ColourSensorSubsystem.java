@@ -35,7 +35,7 @@ public class ColourSensorSubsystem {
         this.sorterList = sorterSubsystem.getSorterList();
     }
 
-    public void update(boolean intakeOn) {
+    public void update() {
         NormalizedRGBA colors1 = colourSensor1.getNormalizedColors();
         NormalizedRGBA colors2 = colourSensor2.getNormalizedColors();
 
@@ -46,7 +46,7 @@ public class ColourSensorSubsystem {
 
         if (sorterSubsystem.getArtifactCount() == 3) return;
 
-        boolean artifactPresent = alpha > 0.4f || alpha2 > 0.2f;
+        boolean artifactPresent = alpha > 0.4f || alpha2 > 0.4f;
         boolean artifactCleared = alpha < alpha_threshold && alpha2 < alpha_threshold;
 
         boolean purple_colour1 = percentMoreThan(blue,  10, red)  && percentMoreThan(blue,  10, green);
@@ -54,7 +54,9 @@ public class ColourSensorSubsystem {
         boolean green_colour1  = percentMoreThan(green,  20, red)  && percentMoreThan(green,  20, blue);
         boolean green_colour2  = percentMoreThan(green2, 20, red2) && percentMoreThan(green2, 20, blue2);
 
-        if (intakeOn && artifactPresent && !lastArtifactPresent) {
+        boolean curPosIsEmpty = sorterList[sorterSubsystem.getSorterPos()].getColour().equals("None");
+
+        if (curPosIsEmpty && artifactPresent && !lastArtifactPresent) {
             if (purple_colour1 || purple_colour2) {
                 lastRed = red; lastGreen = green; lastBlue = blue; lastAlpha = alpha;
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Purple");
@@ -87,10 +89,7 @@ public class ColourSensorSubsystem {
      * Returns true if either sensor detects an object regardless of colour.
      * Call after update() each loop.
      */
-    public boolean isBallPresent() {
-        return alpha > 0.4f || alpha2 > 0.2f;
-    }
-
+    public boolean isBallPresent() { return alpha > 0.4f || alpha2 > 0.4f; }
     public float getRed()    { return red; }
     public float getGreen()  { return green; }
     public float getBlue()   { return blue; }

@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
+import org.firstinspires.ftc.teamcode.util.Artifact;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.io.BufferedWriter;
@@ -127,7 +128,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean previousYState  = false;
         boolean togglePusher    = false;
         boolean isShooterOn     = false;
-        boolean prevDpadLeft    = false;
+        boolean prevDpadA    = false;
         boolean prevManual      = false;
         boolean pusherReturning = false;
         boolean pusherAtFire    = false;
@@ -212,7 +213,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             boolean isIntakeMotorOn  = gamepad1.right_trigger > 0.5;
             boolean isOuttakeMotorOn = gamepad1.left_trigger  > 0.5;
             if (isIntakeMotorOn) isOuttakeMotorOn = false; // intake wins
-            colourSubsystem.update(isIntakeMotorOn);
+            colourSubsystem.update();
 
             // ---------------- INTAKE (hold right trigger > 50%) ----------------
             if (isIntakeMotorOn)       intake.setPower(0.8);
@@ -266,6 +267,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     // pusherAtFire latch prevents RPM oscillation pulling pusher back to preload.
                     pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
                     pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
+                    sorterSubsystem.removeCurrentBall();
                     togglePusher  = true;
                     pusherAtFire  = true;
                     pusherSource  = "Y_fire";
@@ -298,13 +300,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // ---------------- SORTER MANUAL ----------------
             // B button: advance one slot forward (CW)
-            if (gamepad2.b && sorterTimer.milliseconds() > 500) {
+            if (gamepad2.dpad_left && sorterTimer.milliseconds() > 500) {
                 sorterTimer.reset();
                 sorterSubsystem.manualSpin();
             }
 
             // Back button: retreat one slot backward (CCW)
-            if (gamepad2.back && sorterTimer.milliseconds() > 500) {
+            if (gamepad2.dpad_right && sorterTimer.milliseconds() > 500) {
                 sorterTimer.reset();
                 sorterSubsystem.manualSpinReverse();
             }
@@ -326,14 +328,14 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // ---------------- QUICKFIRE (dpad left/right) ----------------
             boolean quickfireWasActive = sorterSubsystem.isActive();
-            if (gamepad2.dpad_left && !prevDpadLeft) sorterSubsystem.startQuickfire();
+            if (gamepad2.a && !prevDpadA) sorterSubsystem.startQuickfire();
             if (sorterSubsystem.isActive()) {
                 sorterSubsystem.quickfireState();
                 // Quickfire internally commands pusher — flag it so the log shows the conflict
                 if (quickfireWasActive) pusherSource = "quickfire:" + sorterSubsystem.quickfireState;
             }
-            prevDpadLeft = gamepad2.dpad_left;
-            if (gamepad2.dpad_right) sorterSubsystem.stopQuickfire();
+            prevDpadA = gamepad2.a;
+            if (gamepad2.b) sorterSubsystem.stopQuickfire();
 
             // ---------------- ODOMETRY RESET (start) ----------------
             // Position-only reset — preserves heading so turret world-angle tracking
@@ -392,6 +394,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 telemetry.addData("Ball present", colourSubsystem.isBallPresent());
                 telemetry.addLine("---------------------------------");
                 telemetry.addData("Artifact count",  sorterSubsystem.getArtifactCount());
+                telemetry.addData("Current Balls", Arrays.toString(sorterSubsystem.getSorterList()));
                 telemetry.addData("Sorter position", sorterSubsystem.getSorterPos());
                 telemetry.addData("Selected colour", sorterSubsystem.selectedColour);
                 telemetry.update();
