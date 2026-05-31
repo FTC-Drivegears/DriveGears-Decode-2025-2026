@@ -54,9 +54,10 @@ public class ColourSensorSubsystem {
         boolean green_colour1  = percentMoreThan(green,  20, red)  && percentMoreThan(green,  20, blue);
         boolean green_colour2  = percentMoreThan(green2, 20, red2) && percentMoreThan(green2, 20, blue2);
 
-        boolean curPosIsEmpty = sorterList[sorterSubsystem.getSorterPos()].getColour().equals("None");
+        boolean curPosIsEmpty = sorterList[sorterSubsystem.getSorterPos()].getColour().equals("none");
+        boolean notQuickfiring = sorterSubsystem.quickfireState == SorterSubsystem.QuickfireState.FINISH;
 
-        if (curPosIsEmpty && artifactPresent && !lastArtifactPresent) {
+        if (notQuickfiring && curPosIsEmpty && artifactPresent && !lastArtifactPresent) {
             if (purple_colour1 || purple_colour2) {
                 lastRed = red; lastGreen = green; lastBlue = blue; lastAlpha = alpha;
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Purple");

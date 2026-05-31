@@ -186,7 +186,7 @@ public class NewRedAutoOp extends LinearOpMode {
         //initialize mecanumCommand, shooterSubsystem, sorterSubsystem, and resetTimer
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
-        sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
+        sorterSubsystem = new SorterSubsystem(hw, shooterSubsystem, this, telemetry, "");
         resetTimer = new ElapsedTime();
 
         //bind the shooter, pusher, sorter, hood, intake, and turret to their respective motors and servos

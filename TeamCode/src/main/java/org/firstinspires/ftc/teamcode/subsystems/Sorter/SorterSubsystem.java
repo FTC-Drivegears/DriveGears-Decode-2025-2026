@@ -8,6 +8,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 import org.firstinspires.ftc.teamcode.util.Artifact;
+import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 
 import java.util.ArrayList;
 
@@ -15,6 +16,7 @@ public class SorterSubsystem {
 
     // ---------------- SUBSYSTEMS ----------------
     private Hardware hw;
+    private ShooterSubsystem shooterSubsystem;
 
     // ---------------- HARDWARE ----------------
     private final Servo sorter;
@@ -49,16 +51,21 @@ public class SorterSubsystem {
 
     private int curSorterPositionIndex = 0;
     // Position 1 changed from 0.42 → 0.43 to match physical slot
-    private final double[] sorterPositions = new double[]{ 0.00, 0.43, 0.875 };
+    private final double[] sorterPositions = new double[]{ 0.09, 0.44, 0.82 };
 
-    public SorterSubsystem(Hardware hw, LinearOpMode opMode, Telemetry telemetry, String pattern) {
+    public SorterSubsystem(Hardware hw, ShooterSubsystem shooterSubsystem, LinearOpMode opMode, Telemetry telemetry, String pattern) {
         this.sorter   = hw.sorter;
         this.pusher_R = hw.pusher_R;
         this.pusher_L = hw.pusher_L;
+        this.shooterSubsystem = shooterSubsystem;
         this.opMode   = opMode;
         this.telemetry = telemetry;
         this.reinitPattern(pattern);
     }
+
+    public double getFirstSorterPos() { return sorterPositions[0]; }
+
+    public double getServoPos() { return sorter.getPosition(); }
 
     public Artifact[] getSorterList()        { return sorterList; }
     public void setSorterList(Artifact[] newSorterList) {
@@ -160,26 +167,26 @@ public class SorterSubsystem {
                     break;
 
                 case SORT:
-                    boolean allEmpty = true;
+                    // find next non-empty slot instead of blindly spinning
+                    boolean found = false;
                     for (int i = 0; i < MAX_NUM_BALLS; i++) {
-                        if (!sorterList[i].getColour().equals("none")) {
-                            allEmpty = true;
+                        manualSpin();
+                        if (!sorterList[curSorterPositionIndex].getColour().equals("none")) {
+                            found = true;
                             break;
                         }
                     }
-                    if (allEmpty) {
+                    if (!found) {
                         quickfireState = QuickfireState.FINISH;
-                        pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
-                        pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
                         break;
                     }
-                    manualSpin();
                     sorterTimer.reset();
                     quickfireState = QuickfireState.WAIT_SORT;
                     break;
 
                 case WAIT_SORT:
-                    if (sorterTimer.milliseconds() >= 470) quickfireState = QuickfireState.PUSH;
+                    if (sorterTimer.milliseconds() >= 300 && shooterSubsystem.isRPMReached())
+                        quickfireState = QuickfireState.PUSH;
                     break;
 
                 case FINISH:
@@ -188,11 +195,16 @@ public class SorterSubsystem {
         } else {
             switch (quickfireState) {
                 case PUSH:
+                if (sorterList[curSorterPositionIndex].getColour().equals("none")) {
+                    quickfireState = QuickfireState.SORT; // slot empty, keep looking
+                } else {
                     pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
                     pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
                     pusherTimer.reset();
+                    removeCurrentBall(); // ← fix Bug 1
                     quickfireState = QuickfireState.WAIT_UP;
-                    break;
+                }
+                break;
 
                 case WAIT_UP:
                     if (pusherTimer.milliseconds() >= 300) quickfireState = QuickfireState.DOWN;
@@ -206,52 +218,30 @@ public class SorterSubsystem {
                     break;
 
                 case WAIT_DOWN:
-                    if (pusherTimer.milliseconds() >= 400) quickfireState = QuickfireState.FINISH;
+                    if (pusherTimer.milliseconds() >= 400) quickfireState = QuickfireState.SORT; // ← fix Bug 4
                     break;
 
                 case SORT:
-                    boolean ballFound;
-                    switch (selectedColour) {
-                        case GREEN:
-                            ballFound = false;
-                            for (int i = 0; i < 3; i++) {
-                                if (sorterList[i].getColour().equals("Green")) {
-                                    curSorterPositionIndex = i;
-                                    ballFound = true;
-                                    break;
-                                }
-                            }
-                            if (ballFound) {
-                                this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
-                                quickfireState = QuickfireState.PUSH;
-                            } else {
-                                quickfireState = QuickfireState.FINISH;
-                            }
+                    String targetColour = (selectedColour == SelectedColour.GREEN) ? "Green" : "Purple";
+                    boolean ballFound = false;
+                    for (int i = 0; i < 3; i++) {
+                        if (sorterList[i].getColour().equals(targetColour)) {
+                            curSorterPositionIndex = i;
+                            ballFound = true;
                             break;
-
-                        case PURPLE:
-                            ballFound = false;
-                            for (int i = 0; i < 3; i++) {
-                                if (sorterList[i].getColour().equals("Purple")) {
-                                    curSorterPositionIndex = i;
-                                    ballFound = true;
-                                    break;
-                                }
-                            }
-                            if (ballFound) {
-                                this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
-                                removeCurrentBall();
-                                sorterTimer.reset();
-                                quickfireState = QuickfireState.WAIT_SORT;
-                            } else {
-                                quickfireState = QuickfireState.FINISH;
-                            }
-                            break;
+                        }
+                    }
+                    if (ballFound) {
+                        this.sorter.setPosition(sorterPositions[curSorterPositionIndex]);
+                        sorterTimer.reset();
+                        quickfireState = QuickfireState.WAIT_SORT; // ← fix Bug 2, always wait for RPM
+                    } else {
+                        quickfireState = QuickfireState.FINISH;
                     }
                     break;
 
                 case WAIT_SORT:
-                    if (sorterTimer.milliseconds() >= 470) quickfireState = QuickfireState.PUSH;
+                    if (shooterSubsystem.isRPMReached()) quickfireState = QuickfireState.PUSH;
                     break;
 
                 case FINISH:

@@ -170,7 +170,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
 
         mecanumCommand   = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
-        sorterSubsystem  = new SorterSubsystem(hw, this, telemetry, "");
+        sorterSubsystem  = new SorterSubsystem(hw, shooterSubsystem, this, telemetry, "");
         resetTimer       = new ElapsedTime();
 
         shooter  = hw.shooter;

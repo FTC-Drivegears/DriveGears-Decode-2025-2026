@@ -83,7 +83,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         limelight.pipelineSwitch(8);
         limelight.start();
 
-        sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "pgg");
+        sorterSubsystem = new SorterSubsystem(hw, shooterSubsystem, this, telemetry, "pgg");
         colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw, sorterSubsystem);
 
         intake   = hw.intake;
@@ -95,7 +95,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
-        hw.sorter.setPosition(0.0);
+        hw.sorter.setPosition(sorterSubsystem.getFirstSorterPos());
         hw.leftLight.setPosition(0.0);
         hw.hood.setPosition(0.50);  // HOOD_MAX — resting position
         hw.rightLight.setPosition(1.0);
@@ -267,7 +267,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     // pusherAtFire latch prevents RPM oscillation pulling pusher back to preload.
                     pusher_R.setPosition(PusherConsts.PUSHER_UP_POSITION_R);
                     pusher_L.setPosition(PusherConsts.PUSHER_UP_POSITION_L);
-                    sorterSubsystem.removeCurrentBall();
                     togglePusher  = true;
                     pusherAtFire  = true;
                     pusherSource  = "Y_fire";
@@ -295,6 +294,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             // Step sorter backward one slot to bring next ball to shooter position.
             if (pusherReturning && pusherReturnTimer.milliseconds() >= 400) {
                 pusherReturning = false;
+                sorterSubsystem.removeCurrentBall();
                 sorterSubsystem.manualSpinReverse();
             }
 
@@ -312,11 +312,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
 
             // ---------------- COLOUR SELECTION ----------------
-            if (gamepad2.dpad_up) {
+            if (gamepad2.left_trigger > 0.5) {
                 sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.GREEN;
                 rightLight.setPosition(0.5);
             }
-            if (gamepad2.dpad_down) {
+            if (gamepad2.right_trigger > 0.5) {
                 sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.PURPLE;
                 rightLight.setPosition(0.722);
             }
@@ -368,6 +368,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // ---------------- TELEMETRY (every 4 loops — reduces GC pressure) ----------------
             if (loopCount % 4 == 0) {
+                telemetry.addData("Servo position aesthetic",       sorterSubsystem.getServoPos());
                 telemetry.addData("Turret Ticks",       turretPos);
                 telemetry.addData("Has Target",         turret.hasTarget());
                 telemetry.addData("tx",                 tx);

@@ -184,7 +184,7 @@ public class NewBlueAutoOp extends LinearOpMode {
         //initialize mecanumCommand, shooterSubsystem, sorterSubsystem, and resetTimer
         mecanumCommand = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
-        sorterSubsystem = new SorterSubsystem(hw, this, telemetry, "");
+        sorterSubsystem = new SorterSubsystem(hw, shooterSubsystem, this, telemetry, "");
         colourSubsystem = new ColourSensorSubsystem(hardwareMap, hw, sorterSubsystem);
         resetTimer = new ElapsedTime();
 
