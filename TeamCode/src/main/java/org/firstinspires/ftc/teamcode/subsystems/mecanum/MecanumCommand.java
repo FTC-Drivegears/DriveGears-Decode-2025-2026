@@ -35,6 +35,9 @@ public class MecanumCommand {
         velocity   = 0;
         turnOffInternalPID();
     }
+    public void disableOdoLogging() {
+        pinPointOdoSubsystem.disableLogging();
+    }
 
     public void setConstants(double kpx, double kdx, double kix,
                              double kpy, double kdy, double kiy,

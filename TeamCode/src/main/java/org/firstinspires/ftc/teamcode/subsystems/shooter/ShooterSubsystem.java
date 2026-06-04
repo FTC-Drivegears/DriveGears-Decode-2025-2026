@@ -26,7 +26,8 @@ public class ShooterSubsystem {
     private static final double PIDF_D = 2.0;
     private static final double PIDF_F = 14.0;
 
-    private static final double RPM_TOLERANCE = 80.0;
+    private static final double RPM_TOLERANCE_DEFAULT = 80.0;
+    private double rpmTolerance = RPM_TOLERANCE_DEFAULT;
 
     public ShooterSubsystem(Hardware hw) {
         this.hw        = hw;
@@ -39,8 +40,13 @@ public class ShooterSubsystem {
                 new PIDFCoefficients(PIDF_P, PIDF_I, PIDF_D, PIDF_F));
     }
 
+    /** Set dynamically each loop from distance — close shots get looser tolerance */
+    public void setRPMTolerance(double tolerance) {
+        rpmTolerance = tolerance;
+    }
+
     public boolean isRPMReached() {
-        return Math.abs(targetRPM - getCurrentRPM()) < RPM_TOLERANCE;
+        return Math.abs(targetRPM - getCurrentRPM()) < rpmTolerance;
     }
 
     public double getCurrentRPM() {
@@ -86,10 +92,12 @@ public class ShooterSubsystem {
     public void stopShooter() {
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         hw.shooter.setVelocity(0);
-        pidfApplied = false;
-        braking     = false;
+        pidfApplied  = false;
+        braking      = false;
+        rpmTolerance = RPM_TOLERANCE_DEFAULT;
     }
 
     public void setMaxRPM(int maxRPM) { targetRPM = maxRPM; }
     public double getTargetRPM()      { return targetRPM; }
+    public double getRPMTolerance()   { return rpmTolerance; }
 }

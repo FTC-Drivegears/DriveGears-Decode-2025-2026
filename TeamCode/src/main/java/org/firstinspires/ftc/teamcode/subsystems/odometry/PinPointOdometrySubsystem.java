@@ -106,7 +106,13 @@ public class PinPointOdometrySubsystem {
             loggingEnabled = false;
         }
     }
-
+    public void disableLogging() {
+        loggingEnabled = false;
+        if (logWriter != null) {
+            try { logWriter.flush(); logWriter.close(); } catch (IOException e) {}
+            logWriter = null;
+        }
+    }
     public void closeLog() {
         if (logWriter != null) {
             try { logWriter.flush(); logWriter.close(); } catch (IOException ignored) {}
