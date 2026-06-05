@@ -58,7 +58,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
 
     private static final ElapsedTime stageTimer  = new ElapsedTime();
     private static final ElapsedTime sorterTimer = new ElapsedTime();
-
+// SORTER POS
     private static double pos1      = 0.09;
     private static double pos2      = 0.44;
     private static double pos3      = 0.82;
@@ -83,8 +83,16 @@ public class NewBlueAutoOp2 extends LinearOpMode {
     boolean intakeFlag  = false;
 
     private boolean shooterAtSpeed() {
+
         return shooterSubsystem.isRPMReached();
     }
+    private boolean turretReady() {
+        return turret.hasTarget()
+                && !turret.isUnwinding()
+                && Math.abs(turret.getLastError()) < 4.0;
+    }
+
+
 
     AUTO_STATE autoState = AUTO_STATE.FIRST_SHOT;
     private static int stage;
@@ -268,8 +276,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 case FIRST_SHOT:
                     outtakeFlag = true;
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
-//                    mecanumCommand.moveToPos(26, -6, 0.36);
-                    mecanumCommand.moveToPos(0, 0, 0);
+                    mecanumCommand.moveToPos(26, -6, 0.36);
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1: processGPP1(AUTO_STATE.RESET);  break;
@@ -427,32 +434,33 @@ public class NewBlueAutoOp2 extends LinearOpMode {
             case 0:
                 intakeFlag = false; outtakeFlag = true;
                 stage++; stageTimer.reset(); break;
-            case 1:
-                if (stageTimer.milliseconds() > 500) {
+            case 1: //500
+                if (stageTimer.milliseconds() > 400) {
                     if (sort(0)) { stage++; stageTimer.reset(); }
                 } break;
             case 2: case 5: case 8:
                 // Pre-load at 2/3 while waiting; fire all the way when ready
-                if (!shooterAtSpeed()) {
+//                if (!shooterAtSpeed() || !turretReady() ) {
+                if (!shooterAtSpeed() || !turretReady() ) {
                     preload();
-                } else if (stageTimer.milliseconds() > 600) {
+                } else if (stageTimer.milliseconds() > 500) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
             case 3: case 6: case 9:
-                if (stageTimer.milliseconds() > 300) {
+                if (stageTimer.milliseconds() > 200) { //300
                     if (halfPush(false)) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 4:
-                if (stageTimer.milliseconds() > 650) {
+                if (stageTimer.milliseconds() > 550) { //650
                     if (sort(1)) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 7:
-                if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
+                if (stageTimer.milliseconds() > 1000 && !isPusherUp) { //1000
                     if (sort(2)) {
                         stage++;
                         stageTimer.reset(); }
@@ -474,7 +482,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                     if (sort(2)) { stage++; stageTimer.reset(); }
                 } break;
             case 2: case 5: case 8:
-                if (!shooterAtSpeed()) {
+                if (!shooterAtSpeed() || turretReady()) {
                     preload();
                 } else if (stageTimer.milliseconds() > 500) {
                     halfPush(true);
@@ -513,7 +521,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                     }
                 } break;
             case 2: case 5: case 8:
-                if (!shooterAtSpeed()) {
+                if (!shooterAtSpeed() || turretReady()) {
                     preload();
                 } else if (stageTimer.milliseconds() > 500) {
                     halfPush(true);

@@ -39,7 +39,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
     private LLResult llResult;
 
     private DcMotor intake;
-    private Servo pusher_R, pusher_L, gate, leftLight, rightLight;
+    private Servo pusher_R, pusher_L, leftLight, rightLight;
 
     private double theta;
 
@@ -91,7 +91,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
         pusher_L   = hw.pusher_L;
         leftLight  = hw.leftLight;
         rightLight = hw.rightLight;
-        gate       = hw.gate;
 
         pusher_R.setPosition(PusherConsts.PUSHER_DOWN_POSITION_R);
         pusher_L.setPosition(PusherConsts.PUSHER_DOWN_POSITION_L);
@@ -99,7 +98,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
         hw.leftLight.setPosition(0.0);
         hw.hood.setPosition(0.50);
         hw.rightLight.setPosition(1.0);
-        gate.setPosition(0.6);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         hw.llmotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -210,8 +208,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (isIntakeMotorOn)       intake.setPower(0.8);
             else if (isOuttakeMotorOn) intake.setPower(-0.8);
             else                       intake.setPower(0);
-
-            gate.setPosition((isIntakeMotorOn || isOuttakeMotorOn) ? 0.7 : 0.6);
 
             // --- Shooter toggle ---
             boolean curX = gamepad2.x;
