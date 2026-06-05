@@ -36,18 +36,18 @@ public class TurretMechanismTutorial {
     private MecanumCommand mecanumCommand;
 
     // --- PID gains ---
-    private double kP = 0.050;
+    private double kP = 0.036;
     private double kI = 0.012;
-    private double kD = 0.009;
+    private double kD = 0.02;
 
-    private static final double MAX_INTEGRAL            = 0.20;
-    private static final double INTEGRAL_SEPARATION_DEG = 6.0;
+    private static final double MAX_INTEGRAL            = 0.10;
+    private static final double INTEGRAL_SEPARATION_DEG = 3.0;
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
-    private static final double FEEDFORWARD_STICTION_POWER = 0.28;
+    private static final double FEEDFORWARD_STICTION_POWER = 0.12;
     private static final double MAX_OUTPUT_POWER            = 0.80;
-    private static final double ERROR_DEADBAND_DEG          = 0.5;
+    private static final double ERROR_DEADBAND_DEG          = 1.0;
     private static final double MIN_POWER_FADE_WINDOW_DEG   = 0.8;
 
     // --- Stuck-motor / integral windup protection ---
@@ -118,13 +118,13 @@ public class TurretMechanismTutorial {
     private static final double LIMELIGHT_HEIGHT = 0.35;
     private static final double LIMELIGHT_ANGLE  = Math.toRadians(15.34);
     private static final double TARGET_HEIGHT     = 0.75;
-    private static final double HOOD_MIN          = 0.45;
+    private static final double HOOD_MIN          = 0.3;
     private static final double HOOD_MAX          = 0.50;
     private static final double MIN_DISTANCE      = 0.3;
     private static final double MAX_DISTANCE      = 2.5;
 
     private static final double MIN_RPM = 1400;
-    private static final double MAX_RPM = 3100;
+    private static final double MAX_RPM = 3300;
     private double shootRPM = MIN_RPM;
 
     private boolean hasTarget = false;

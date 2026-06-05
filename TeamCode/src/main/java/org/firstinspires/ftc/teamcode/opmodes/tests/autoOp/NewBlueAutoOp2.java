@@ -438,7 +438,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 if (stageTimer.milliseconds() > 400) {
                     if (sort(0)) { stage++; stageTimer.reset(); }
                 } break;
-            case 2: case 5: case 8:
+            case 2: case 5:
                 // Pre-load at 2/3 while waiting; fire all the way when ready
 //                if (!shooterAtSpeed() || !turretReady() ) {
                 if (!shooterAtSpeed() || !turretReady() ) {
@@ -454,16 +454,23 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                         stageTimer.reset(); }
                 } break;
             case 4:
-                if (stageTimer.milliseconds() > 550) { //650
+                if (stageTimer.milliseconds() > 600) { //650
                     if (sort(1)) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 7:
-                if (stageTimer.milliseconds() > 1000 && !isPusherUp) { //1000
+                if (stageTimer.milliseconds() > 900 && !isPusherUp) { //1000
                     if (sort(2)) {
                         stage++;
                         stageTimer.reset(); }
+                } break;
+            case 8:
+                if (!shooterAtSpeed() || !turretReady() ) {
+                    preload();
+                } else if (stageTimer.milliseconds() > 300) { //600
+                    halfPush(true);
+                    stage++; stageTimer.reset();
                 } break;
             case 10:
                 stage = 0; stageTimer.reset();
