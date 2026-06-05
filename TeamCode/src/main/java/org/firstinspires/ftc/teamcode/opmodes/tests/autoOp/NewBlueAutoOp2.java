@@ -59,9 +59,9 @@ public class NewBlueAutoOp2 extends LinearOpMode {
     private static final ElapsedTime stageTimer  = new ElapsedTime();
     private static final ElapsedTime sorterTimer = new ElapsedTime();
 
-    private static double pos1      = 0.0;
-    private static double pos2      = 0.43;
-    private static double pos3      = 0.875;
+    private static double pos1      = 0.09;
+    private static double pos2      = 0.44;
+    private static double pos3      = 0.82;
     private static int    standardms = 1000;
 
     private static final long SORTER_TIME = 250;
@@ -248,8 +248,8 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                     shooterSubsystem.getShooterVelocity() * 60.0 / 28.0,
                     turret.getShootRPM(),
                     shooterSubsystem.isRPMReached(),
-                    false,   // pusherFired — managed locally
-                    0,       // batteryV
+                    false,
+                    0,
                     llStaleMs,
                     mecanumCommand.getOdoX(),
                     mecanumCommand.getOdoY(),
@@ -268,7 +268,8 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 case FIRST_SHOT:
                     outtakeFlag = true;
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
-                    mecanumCommand.moveToPos(26, -6, 0.36);
+//                    mecanumCommand.moveToPos(26, -6, 0.36);
+                    mecanumCommand.moveToPos(0, 0, 0);
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1: processGPP1(AUTO_STATE.RESET);  break;
@@ -292,23 +293,35 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 case COLLECTION_1:
                     switch (stage) {
                         case 0:
-                            mecanumCommand.moveToPos(82, 30, Math.PI / 2);
-                            stageTimer.reset(); stage++; break;
+                            mecanumCommand.moveToPos(0, 0, 0);
+//                            mecanumCommand.moveToPos(82, 30, Math.PI / 2);
+                            stageTimer.reset();
+                            stage++;
+                            break;
                         case 1:
-                            if (mecanumCommand.isPositionReached()) { stage++; stageTimer.reset(); } break;
+                            if (mecanumCommand.isPositionReached()) {
+                                stage++;
+                                stageTimer.reset();
+                            } break;
                         case 2:
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(82, 40, Math.PI / 2);
+                                mecanumCommand.moveToPos(0, 0, 0);
+//                                mecanumCommand.moveToPos(82, 40, Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
                         case 3:
                             if (stageTimer.milliseconds() > 500 && intakeTimer.milliseconds() >= INTAKE_WAIT) {
-                                if (sort(1)) { stageTimer.reset(); stage++; }
+                                if (sort(1)) {
+                                    stageTimer.reset();
+                                    stage++;
+                                }
                             } break;
                         case 4:
                             if (stageTimer.milliseconds() > 750) {
-                                mecanumCommand.moveToPos(82, 60, Math.PI / 2);
-                                stageTimer.reset(); stage++;
+                                mecanumCommand.moveToPos(0, 0, 0);
+//                                mecanumCommand.moveToPos(82, 60, Math.PI / 2);
+                                stageTimer.reset();
+                                stage++;
                             } break;
                         case 5:
                             if (stageTimer.milliseconds() > 750 && intakeTimer.milliseconds() >= INTAKE_WAIT) {
@@ -318,7 +331,8 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                             if (stageTimer.milliseconds() > 750) {
                                 stageTimer.reset(); stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
-                                mecanumCommand.moveToPos(26, -6, 0.355);
+                                mecanumCommand.moveToPos(0, 0, 0);
+//                                mecanumCommand.moveToPos(26, -6, 0.355);
                             } break;
                     }
                     break;
@@ -349,7 +363,8 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0:
-                            mecanumCommand.moveToPos(142, 28, Math.PI / 2);
+//                            mecanumCommand.moveToPos(142, 28, Math.PI / 2);
+                            mecanumCommand.moveToPos(0, 0, 0);
                             stageTimer.reset(); stage++; break;
                         case 1:
                             if (mecanumCommand.isPositionReached()) { stage++; stageTimer.reset(); } break;
@@ -426,18 +441,26 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 } break;
             case 3: case 6: case 9:
                 if (stageTimer.milliseconds() > 300) {
-                    if (halfPush(false)) { stage++; stageTimer.reset(); }
+                    if (halfPush(false)) {
+                        stage++;
+                        stageTimer.reset(); }
                 } break;
             case 4:
                 if (stageTimer.milliseconds() > 650) {
-                    if (sort(1)) { stage++; stageTimer.reset(); }
+                    if (sort(1)) {
+                        stage++;
+                        stageTimer.reset(); }
                 } break;
             case 7:
                 if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
-                    if (sort(2)) { stage++; stageTimer.reset(); }
+                    if (sort(2)) {
+                        stage++;
+                        stageTimer.reset(); }
                 } break;
             case 10:
-                stage = 0; stageTimer.reset(); autoState = reset; break;
+                stage = 0; stageTimer.reset();
+                autoState = reset;
+                break;
         }
     }
 
@@ -477,11 +500,17 @@ public class NewBlueAutoOp2 extends LinearOpMode {
     public void processPPG3(AUTO_STATE reset) {
         switch (stage) {
             case 0:
-                intakeFlag = false; outtakeFlag = true;
-                stage++; stageTimer.reset(); break;
+                intakeFlag = false;
+                outtakeFlag = true;
+                stage++;
+                stageTimer.reset();
+                break;
             case 1:
                 if (stageTimer.milliseconds() > 500) {
-                    if (sort(1)) { stage++; stageTimer.reset(); }
+                    if (sort(1)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
                 } break;
             case 2: case 5: case 8:
                 if (!shooterAtSpeed()) {
@@ -496,14 +525,22 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 } break;
             case 4:
                 if (stageTimer.milliseconds() > 650) {
-                    if (sort(2)) { stage++; stageTimer.reset(); }
+                    if (sort(2)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
                 } break;
             case 7:
                 if (stageTimer.milliseconds() > 1000 && !isPusherUp) {
-                    if (sort(0)) { stage++; stageTimer.reset(); }
+                    if (sort(0)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
                 } break;
             case 10:
-                stage = 0; stageTimer.reset(); autoState = reset; break;
+                stage = 0;
+                stageTimer.reset();
+                autoState = reset; break;
         }
     }
 
