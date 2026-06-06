@@ -118,7 +118,7 @@ public class TurretMechanismTutorial {
     private static final double LIMELIGHT_HEIGHT = 0.35;
     private static final double LIMELIGHT_ANGLE  = Math.toRadians(15.34);
     private static final double TARGET_HEIGHT     = 0.75;
-    private static final double HOOD_MIN          = 0.3;
+    private static final double HOOD_MIN          = 0.35;
     private static final double HOOD_MAX          = 0.50;
     private static final double MIN_DISTANCE      = 0.3;
     private static final double MAX_DISTANCE      = 2.5;
@@ -644,7 +644,7 @@ public class TurretMechanismTutorial {
             distanceTrack = distance;
             double clippedDist = Range.clip(distance * 0.9, MIN_DISTANCE, MAX_DISTANCE);
             double normalized  = (clippedDist - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-            double hoodPos     = 0.50 - Math.pow(normalized, 3) * 0.15;
+            double hoodPos     = HOOD_MAX - Math.pow(normalized, 3) * (HOOD_MAX - HOOD_MIN);
             lastHoodPos        = Range.clip(hoodPos, HOOD_MIN, HOOD_MAX);
             hood.setPosition(lastHoodPos);
             shootRPM = Range.clip(
