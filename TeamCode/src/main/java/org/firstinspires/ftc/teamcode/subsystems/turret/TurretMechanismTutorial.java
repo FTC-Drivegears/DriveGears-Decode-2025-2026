@@ -118,7 +118,7 @@ public class TurretMechanismTutorial {
     private static final double LIMELIGHT_HEIGHT = 0.35;
     private static final double LIMELIGHT_ANGLE  = Math.toRadians(15.34);
     private static final double TARGET_HEIGHT     = 0.75;
-    private static final double HOOD_MIN          = 0.35;
+    private static final double HOOD_MIN          = 0.1;
     private static final double HOOD_MAX          = 0.50;
     private static final double MIN_DISTANCE      = 0.3;
     private static final double MAX_DISTANCE      = 2.5;
