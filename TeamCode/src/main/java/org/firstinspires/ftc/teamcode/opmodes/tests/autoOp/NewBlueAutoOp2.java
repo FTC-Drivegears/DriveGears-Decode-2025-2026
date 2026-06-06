@@ -485,31 +485,31 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 intakeFlag = false; outtakeFlag = true;
                 stage++; stageTimer.reset(); break;
             case 1: //500
-                if (stageTimer.milliseconds() > 650) {
+                if (stageTimer.milliseconds() > 750) {
                     if (sort(2)) { stage++; stageTimer.reset(); }
                 } break;
             case 2: case 5:
                 // Pre-load at 2/3 while waiting; fire all the way when ready
                 if (!shooterAtSpeed() || !turretReady() ) {
                     preload();
-                } else if (stageTimer.milliseconds() > 650) { //600
+                } else if (stageTimer.milliseconds() > 2000) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
             case 3: case 6: case 9:
-                if (stageTimer.milliseconds() > 300) { //300
+                if (stageTimer.milliseconds() > 500) { //300
                     if (halfPush(false)) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 4:
-                if (stageTimer.milliseconds() > 650) { //650
+                if (stageTimer.milliseconds() > 750) { //650
                     if (sort()) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 7:
-                if (stageTimer.milliseconds() > 1000 && !isPusherUp) { //1000
+                if (stageTimer.milliseconds() > 1300 && !isPusherUp) { //1000
                     if (sort()) {
                         stage++;
                         stageTimer.reset(); }
@@ -517,7 +517,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
             case 8:
                 if (!shooterAtSpeed() || !turretReady() ) {
                     preload();
-                } else if (stageTimer.milliseconds() > 600) { //600
+                } else if (stageTimer.milliseconds() > 800) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;

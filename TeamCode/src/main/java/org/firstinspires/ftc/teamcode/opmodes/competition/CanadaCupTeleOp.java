@@ -132,6 +132,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
             double inputX =  gamepad1.left_stick_x;
             double inputR =  gamepad1.right_stick_x;
 
+            if (gamepad1.x) {
+                inputY /= 2;
+                inputX /= 2;
+            }
+
             double fieldX = inputX * Math.cos(-heading) - inputY * Math.sin(-heading);
             double fieldY = inputX * Math.sin(-heading) + inputY * Math.cos(-heading);
             theta = mecanumCommand.normalMove(fieldY, fieldX, inputR);
@@ -158,7 +163,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             shooterSubsystem.setRPMTolerance(rpmTolerance);
 
             // --- Auto aim toggle ---
-            boolean curA = gamepad1.a;
+            boolean curA = gamepad2.start;
             if (curA && !prevA) {
                 autoAimEnabled = !autoAimEnabled;
                 leftLight.setPosition(autoAimEnabled ? 0.44 : 0.0);
@@ -169,13 +174,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
             double turretDeg = hw.llmotor.getCurrentPosition() / TICKS_PER_DEGREE;
 
             double manualPower = 0;
-            if (gamepad1.left_bumper) {
+            if (gamepad2.left_bumper) {
                 if (turretDeg >= MANUAL_LIMIT_CW_DEG) manualPower = 0;
                 else {
                     double scale = Math.min((MANUAL_LIMIT_CW_DEG - turretDeg) / 30.0, 1.0);
                     manualPower = 0.15 + 0.25 * scale;
                 }
-            } else if (gamepad1.right_bumper) {
+            } else if (gamepad2.right_bumper) {
                 if (turretDeg <= MANUAL_LIMIT_CCW_DEG) manualPower = 0;
                 else {
                     double scale = Math.min((turretDeg - MANUAL_LIMIT_CCW_DEG) / 30.0, 1.0);
