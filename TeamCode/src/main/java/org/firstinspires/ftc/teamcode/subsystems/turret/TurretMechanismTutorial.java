@@ -38,14 +38,14 @@ public class TurretMechanismTutorial {
     // --- PID gains ---
     private double kP = 0.036;
     private double kI = 0.012;
-    private double kD = 0.02;
+    private double kD = 0; //0.02;
 
     private static final double MAX_INTEGRAL            = 0.10;
     private static final double INTEGRAL_SEPARATION_DEG = 3.0;
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
-    private static final double FEEDFORWARD_STICTION_POWER = 0.12;
+    private static final double FEEDFORWARD_STICTION_POWER = 0.05; //0.12;
     private static final double MAX_OUTPUT_POWER            = 0.80;
     private static final double ERROR_DEADBAND_DEG          = 1.0;
     private static final double MIN_POWER_FADE_WINDOW_DEG   = 0.8;
@@ -62,8 +62,8 @@ public class TurretMechanismTutorial {
     private double  manualPower = 0.0;
 
     // Tx filter
-    private static final double MIN_ALPHA                  = 0.30;
-    private static final double MAX_ALPHA                  = 1.00;
+    private static final double MIN_ALPHA                  = 0.15;
+    private static final double MAX_ALPHA                  = 0.50;
     private static final double TX_STABILITY_THRESHOLD_DEG = 0.8;
     private double smoothedTx     = 0.0;
     private double prevSmoothedTx = 0.0;
@@ -119,7 +119,7 @@ public class TurretMechanismTutorial {
     private static final double LIMELIGHT_ANGLE  = Math.toRadians(15.34);
     private static final double TARGET_HEIGHT     = 0.75;
     private static final double HOOD_MIN          = 0.1;
-    private static final double HOOD_MAX          = 0.50;
+    private static final double HOOD_MAX          = 0.3;
     private static final double MIN_DISTANCE      = 0.3;
     private static final double MAX_DISTANCE      = 2.5;
 
