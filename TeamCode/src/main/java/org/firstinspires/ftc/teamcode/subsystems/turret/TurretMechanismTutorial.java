@@ -62,8 +62,8 @@ public class TurretMechanismTutorial {
     private double  manualPower = 0.0;
 
     // Tx filter
-    private static final double MIN_ALPHA                  = 0.15;
-    private static final double MAX_ALPHA                  = 0.50;
+    private static final double MIN_ALPHA                  = 0.15; //0.30
+    private static final double MAX_ALPHA                  = 0.50; //1.00
     private static final double TX_STABILITY_THRESHOLD_DEG = 0.8;
     private double smoothedTx     = 0.0;
     private double prevSmoothedTx = 0.0;
