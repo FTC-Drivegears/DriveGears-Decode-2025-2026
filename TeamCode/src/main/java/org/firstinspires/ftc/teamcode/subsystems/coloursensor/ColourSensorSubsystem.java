@@ -70,7 +70,7 @@ public class ColourSensorSubsystem {
         }
     }
 
-    public void update() {
+    public void update(boolean isIntakeMotorOn) {
         // Read sensor 1
         if (colourSensor1 != null) {
             try {
@@ -142,16 +142,18 @@ public class ColourSensorSubsystem {
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Purple");
                 sorterSubsystem.setArtifactCount(sorterSubsystem.getArtifactCount() + 1);
                 leftLight.setPosition(0.7);
-                if (sorterSubsystem.getSorterPos() < 3) sorterSubsystem.manualSpin();
                 lastArtifactPresent = true;
             } else if (green_colour1 || green_colour2) {
                 lastRed = red; lastGreen = green; lastBlue = blue; lastAlpha = alpha;
                 sorterList[sorterSubsystem.getSorterPos()] = new Artifact("Green");
                 sorterSubsystem.setArtifactCount(sorterSubsystem.getArtifactCount() + 1);
                 leftLight.setPosition(0.5);
-                if (sorterSubsystem.getSorterPos() < 3) sorterSubsystem.manualSpin();
                 lastArtifactPresent = true;
             }
+        }
+
+        if (isIntakeMotorOn && !sorterList[sorterSubsystem.getSorterPos()].getColour().equals("none")) {
+            if (sorterSubsystem.getSorterPos() < 3) sorterSubsystem.manualSpin();
         }
 
         if (artifactCleared) {

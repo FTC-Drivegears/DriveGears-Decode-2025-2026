@@ -125,22 +125,36 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         while (opModeIsActive()) {
 
+            RobotLog.ee("DEBUG", "1 before odometry");
             mecanumCommand.processOdometry();
+
+            RobotLog.ee("DEBUG", "2 before drive");
+
             double heading = mecanumCommand.getOdoHeading();
+
+//            RobotLog.ee("DEBUG",git  "3 before limelight");
+//            llResult = limelight.getLatestResult();
+
+
+//            RobotLog.ee("DEBUG", "5 before quickfire");
+//            if (sorterSubsystem.isActive()) sorterSubsystem.quickfireState();
+
+            RobotLog.ee("DEBUG", "6 loop end");
 
             double inputY = -gamepad1.left_stick_y;
             double inputX =  gamepad1.left_stick_x;
             double inputR =  gamepad1.right_stick_x;
 
             if (gamepad1.x) {
-                inputY /= 2;
-                inputX /= 2;
+                inputY /= 3;
+                inputX /= 3;
+                inputR /= 3;
             }
 
             double fieldX = inputX * Math.cos(-heading) - inputY * Math.sin(-heading);
             double fieldY = inputX * Math.sin(-heading) + inputY * Math.cos(-heading);
             theta = mecanumCommand.normalMove(fieldY, fieldX, inputR);
-
+            RobotLog.ee("DEBUG", "3 before limelight");
             llResult = limelight.getLatestResult();
             Double tx = (llResult != null && llResult.isValid()) ? llResult.getTx() : null;
             Double ty = (llResult != null && llResult.isValid()) ? llResult.getTy() : null;
@@ -208,7 +222,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
             boolean isIntakeMotorOn  = gamepad1.right_trigger > 0.5;
             boolean isOuttakeMotorOn = gamepad1.left_trigger  > 0.5;
             if (isIntakeMotorOn) isOuttakeMotorOn = false;
-            colourSubsystem.update();
+
+            RobotLog.ee("DEBUG", "4 before colour");
+            colourSubsystem.update(isIntakeMotorOn);
 
             if (isIntakeMotorOn)       intake.setPower(0.8);
             else if (isOuttakeMotorOn) intake.setPower(-0.8);
@@ -310,6 +326,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // --- Quickfire ---
             if (gamepad2.a && !prevDpadA) sorterSubsystem.startQuickfire();
+            RobotLog.ee("DEBUG", "5 before quickfire");
             if (sorterSubsystem.isActive()) sorterSubsystem.quickfireState();
             prevDpadA = gamepad2.a;
             if (gamepad2.b) sorterSubsystem.stopQuickfire();

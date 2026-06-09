@@ -72,7 +72,7 @@ public class SorterSubsystem {
         artifactCount[0] = 0;
         for (int i = 0; i < 3; i++) {
             sorterList[i] = newSorterList[i];
-            if (!newSorterList[i].getColour().equals("None")) {
+            if (!newSorterList[i].getColour().equals("none")) {
                 artifactCount[0]++;
             }
         }
@@ -107,9 +107,12 @@ public class SorterSubsystem {
     }
 
     public void removeCurrentBall() {
-        sorterList[curSorterPositionIndex] = new Artifact("none");
-        artifactCount[0]--;
+        if (!sorterList[curSorterPositionIndex].getColour().equals("none")) {
+            sorterList[curSorterPositionIndex] = new Artifact("none");
+            artifactCount[0] = Math.max(0, artifactCount[0] - 1);
+        }
     }
+
 
     // ---------------- QUICKFIRE ----------------
 
