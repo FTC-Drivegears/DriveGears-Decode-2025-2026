@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
-import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
@@ -18,15 +17,7 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * TurretMechanism v17.3 — Added stuck-motor / integral windup protection.
- *
- * v17.2 fixes retained unchanged.
- *
- * New in v17.3:
- * STUCK DETECTION: If significant error exists but the turret hasn't moved
- * STUCK_MOVEMENT_DEG within STUCK_FRAME_THRESHOLD consecutive frames, the
- * integral is flushed. Prevents the integral winding up to max during an
- * Expansion Hub disconnect and slamming the turret on reconnect.
+ * TurretMechanism v17.4 — Optimized stuck protection and integral windows.
  */
 public class TurretMechanismTutorial {
 
@@ -38,14 +29,16 @@ public class TurretMechanismTutorial {
     // --- PID gains ---
     private double kP = 0.036;
     private double kI = 0.012;
-    private double kD = 0; //0.02;
+    private double kD = 0;
 
     private static final double MAX_INTEGRAL            = 0.10;
-    private static final double INTEGRAL_SEPARATION_DEG = 3.0;
+    // ADJUSTED: Widened from 3.0 to 6.0 so the integral can build up power and push through stiction earlier
+    private static final double INTEGRAL_SEPARATION_DEG = 6.0;
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
-    private static final double FEEDFORWARD_STICTION_POWER = 0.05; //0.12;
+    // ADJUSTED: Increased from 0.05 to 0.075 to provide more initial kick against mechanical friction
+    private static final double FEEDFORWARD_STICTION_POWER = 0.075;
     private static final double MAX_OUTPUT_POWER            = 0.80;
     private static final double ERROR_DEADBAND_DEG          = 1.0;
     private static final double MIN_POWER_FADE_WINDOW_DEG   = 0.8;
@@ -55,15 +48,16 @@ public class TurretMechanismTutorial {
     private int    stuckFrameCount                = 0;
     private static final int    STUCK_FRAME_THRESHOLD = 20;    // ~400 ms at 20 ms/loop
     private static final double STUCK_MOVEMENT_DEG    = 0.5;   // deg — less than this = not moving
-    private static final double STUCK_ERROR_THRESHOLD = 3.0;   // only check when error is meaningful
+    // ADJUSTED: Lowered from 3.0 to 1.2 so stuck routine monitors errors just outside the 1.0 deadband
+    private static final double STUCK_ERROR_THRESHOLD = 1.2;
 
     // Manual mode
     private boolean manualMode  = false;
     private double  manualPower = 0.0;
 
     // Tx filter
-    private static final double MIN_ALPHA                  = 0.15; //0.30
-    private static final double MAX_ALPHA                  = 0.50; //1.00
+    private static final double MIN_ALPHA                  = 0.15;
+    private static final double MAX_ALPHA                  = 0.50;
     private static final double TX_STABILITY_THRESHOLD_DEG = 0.8;
     private double smoothedTx     = 0.0;
     private double prevSmoothedTx = 0.0;
@@ -162,10 +156,6 @@ public class TurretMechanismTutorial {
     private double batteryVoltage   = 0;
     private long   llStalenessMs    = 0;
 
-    // =========================================================================
-    // Init
-    // =========================================================================
-
     public void init(HardwareMap hwMap) {
         this.hw = Hardware.getInstance(hwMap);
         turret  = hw.llmotor;
@@ -234,10 +224,6 @@ public class TurretMechanismTutorial {
         }
     }
 
-    // =========================================================================
-    // Public API
-    // =========================================================================
-
     public void setMecanumCommand(MecanumCommand mc) { this.mecanumCommand = mc; }
     public void setkP(double v) { this.kP = v; }
     public void setkI(double v) { this.kI = v; }
@@ -256,17 +242,9 @@ public class TurretMechanismTutorial {
     public void setManualPower(double power) { manualMode = true;  manualPower = power; }
     public void setAutoMode()                { manualMode = false; }
 
-    // =========================================================================
-    // Update — short signature
-    // =========================================================================
-
     public void update(Double tx, Double ty) {
         update(tx, ty, 0, 0, false, false, 0, 0, 0, 0, 0, false);
     }
-
-    // =========================================================================
-    // Update — full signature
-    // =========================================================================
 
     public void update(Double tx, Double ty,
                        double shooterCurrentRPM, double shooterTargetRPM,
@@ -321,9 +299,6 @@ public class TurretMechanismTutorial {
         double outputPower = 0;
         double blindScale  = 1.0;
 
-        // =====================================================================
-        // UNWIND
-        // =====================================================================
         if (!unwinding && !manualMode) {
             if (currentTurretRelDeg >= SOFT_LIMIT_CW) {
                 unwinding = true;
@@ -341,7 +316,6 @@ public class TurretMechanismTutorial {
         }
 
         if (unwinding) {
-            // Recompute goal every frame so it tracks robot rotation during fast turns
             unwindGoalDeg = computeUnwindGoal(robotHeadingDeg, unwindTriggeredAtDeg);
             double distToGoal  = unwindGoalDeg - currentTurretRelDeg;
             double absDist     = Math.abs(distToGoal);
@@ -375,7 +349,6 @@ public class TurretMechanismTutorial {
 
         double expectedTx = wrapAngle(currentWorldAngleDeg - targetWorldAngleDeg);
 
-        // Stale-tx detection
         boolean txIsStale = false;
         if (tx != null) {
             if (Math.abs(tx - lastRawTx) < STALE_TX_THRESHOLD
@@ -387,16 +360,11 @@ public class TurretMechanismTutorial {
             staleTxCount = 0;
         }
 
-        // Drift-rejection gate
         boolean txRejected = false;
         if (tx != null && worldAngleConfident) {
             if (Math.abs(wrapAngle(tx - expectedTx)) > MAX_EXPECTED_TX_DRIFT_DEG)
                 txRejected = true;
         }
-
-        // =====================================================================
-        // STATE MACHINE
-        // =====================================================================
 
         if (manualMode) {
             hasTarget               = false;
@@ -481,7 +449,7 @@ public class TurretMechanismTutorial {
         }
 
         // =====================================================================
-        // STUCK DETECTION — flush integral if motor unresponsive
+        // STUCK DETECTION — Fixed threshold bounds to catch small stalls
         // =====================================================================
         if (!manualMode) {
             double posDelta = Math.abs(currentTurretRelDeg - lastCheckedPosDeg);
@@ -492,7 +460,6 @@ public class TurretMechanismTutorial {
                     stuckFrameCount = 0;
                 }
             } else {
-                // Error is small — we're on target, not stuck
                 stuckFrameCount = 0;
             }
             lastCheckedPosDeg = currentTurretRelDeg;
@@ -508,7 +475,6 @@ public class TurretMechanismTutorial {
         // =====================================================================
         // PID
         // =====================================================================
-
         double pTerm = 0, iTerm = 0, dTerm = 0;
 
         if (!manualMode) {
@@ -550,7 +516,6 @@ public class TurretMechanismTutorial {
         // =====================================================================
         // Logging
         // =====================================================================
-
         if (loggingEnabled && logWriter != null) {
             try {
                 long freeBytes  = Runtime.getRuntime().freeMemory();
@@ -613,27 +578,14 @@ public class TurretMechanismTutorial {
         updateHoodAndRPM(ty);
     }
 
-    // =========================================================================
-    // Unwind goal
-    // =========================================================================
-
     private double computeUnwindGoal(double robotHeadingDeg, double triggerLimit) {
         if (!worldAngleConfident) {
-            // No reliable target pin — just go to center
             return 0.0;
         }
-
         double idealGoal = wrapAngle(targetWorldAngleDeg - robotHeadingDeg);
-
-        // Clamp well inside both limits so we don't immediately re-trigger
         idealGoal = Range.clip(idealGoal, SOFT_LIMIT_CCW + 25, SOFT_LIMIT_CW - 25);
-
         return idealGoal;
     }
-
-    // =========================================================================
-    // Hood / RPM
-    // =========================================================================
 
     private void updateHoodAndRPM(Double ty) {
         if (ty != null) {
@@ -652,10 +604,6 @@ public class TurretMechanismTutorial {
                     MIN_RPM, MAX_RPM);
         }
     }
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
 
     private double wrapAngle(double angle) {
         while (angle >  180) angle -= 360;
