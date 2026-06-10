@@ -22,24 +22,24 @@ import java.util.Locale;
  * DO NOT add Math.toRadians() — the driver already returns radians.
  *
  * CSV log columns:
- *   time_ms          — ms since subsystem init
- *   x_cm             — estimated x position (cm)
- *   y_cm             — estimated y position (cm)
- *   heading_rad      — heading in radians
- *   heading_deg      — heading in degrees (for human readability)
- *   raw_encoder_x    — raw x encoder ticks
- *   raw_encoder_y    — raw y encoder ticks
- *   vel_x            — x velocity (driver units)
- *   vel_y            — y velocity (driver units)
- *   heading_vel      — heading velocity (deg/s from driver)
- *   nan_count        — cumulative NaN readings detected
- *   using_dead_reckon— 1 if this frame used dead reckoning, 0 if sensor valid
- *   loop_dt_ms       — time since last processOdometry() call (ms)
- *   delta_x_cm       — change in x since last frame (cm)
- *   delta_y_cm       — change in y since last frame (cm)
- *   delta_heading_rad— change in heading since last frame (rad)
- *   x_jump_flag      — 1 if |delta_x| > 50cm in one frame (sensor glitch)
- *   h_jump_flag      — 1 if |delta_heading_rad| > 0.5 rad in one frame (glitch)
+ * time_ms          — ms since subsystem init
+ * x_cm             — estimated x position (cm)
+ * y_cm             — estimated y position (cm)
+ * heading_rad      — heading in radians
+ * heading_deg      — heading in degrees (for human readability)
+ * raw_encoder_x    — raw x encoder ticks
+ * raw_encoder_y    — raw y encoder ticks
+ * vel_x            — x velocity (driver units)
+ * vel_y            — y velocity (driver units)
+ * heading_vel      — heading velocity (deg/s from driver)
+ * nan_count        — cumulative NaN readings detected
+ * using_dead_reckon— 1 if this frame used dead reckoning, 0 if sensor valid
+ * loop_dt_ms       — time since last processOdometry() call (ms)
+ * delta_x_cm       — change in x since last frame (cm)
+ * delta_y_cm       — change in y since last frame (cm)
+ * delta_heading_rad— change in heading since last frame (rad)
+ * x_jump_flag      — 1 if |delta_x| > 50cm in one frame (sensor glitch)
+ * h_jump_flag      — 1 if |delta_heading_rad| > 0.5 rad in one frame (glitch)
  */
 public class PinPointOdometrySubsystem {
 
@@ -106,6 +106,7 @@ public class PinPointOdometrySubsystem {
             loggingEnabled = false;
         }
     }
+
     public void disableLogging() {
         loggingEnabled = false;
         if (logWriter != null) {
@@ -113,6 +114,7 @@ public class PinPointOdometrySubsystem {
             logWriter = null;
         }
     }
+
     public void closeLog() {
         if (logWriter != null) {
             try { logWriter.flush(); logWriter.close(); } catch (IOException ignored) {}
@@ -152,7 +154,7 @@ public class PinPointOdometrySubsystem {
             usedDeadReckon = true;
             x       = previousX       + (vx     / 10.0 * dtMs);
             y       = previousY       + (vy     / 10.0 * dtMs);
-            heading = previousHeading + (vtheta *        dtMs);
+            heading = previousHeading + (vtheta * dtMs);
         } else {
             x       =  pinpointDriver.getPosX() / 10.0;
             y       = -pinpointDriver.getPosY() / 10.0;
@@ -212,8 +214,13 @@ public class PinPointOdometrySubsystem {
                     .append(xJump).append(',')
                     .append(hJump).append('\n');
             logWriter.write(logLine.toString());
-            // Flush every 5s
-            if ((int)(totalTimer.milliseconds()) % 5000 < 80) logWriter.flush();
+
+            // FIXED: Replaced time-based modulus with a clean frame-count modulus schedule.
+            // This guarantees only one background flush execution occurs every 100 loops,
+            // entirely clearing heap accumulation pressure without clogging the file system.
+            if (frameCount % 100 == 0) {
+                logWriter.flush();
+            }
         } catch (IOException e) {
             logFailCount++;
             if (logFailCount > 20) loggingEnabled = false;

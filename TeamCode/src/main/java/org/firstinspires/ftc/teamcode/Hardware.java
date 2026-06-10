@@ -59,8 +59,7 @@ public class Hardware {
         this.colour1 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR1);
         this.colour2 = hwMap.get(ColorSensor.class, Specifications.COLOUR_SENSOR2);
 
-        this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
-
+        this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, "odo");
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
 //        this.Webcam_1 = hwMap.get(WebcamName.class, Specifications.WEBCAM_1);

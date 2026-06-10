@@ -35,8 +35,14 @@ public class MecanumCommand {
         velocity   = 0;
         turnOffInternalPID();
     }
+
     public void disableOdoLogging() {
         pinPointOdoSubsystem.disableLogging();
+    }
+
+    /** Flush and close the odo_log CSV safely. Call after the OpMode loop exits. */
+    public void closeOdoLog() {
+        pinPointOdoSubsystem.closeLog();
     }
 
     public void setConstants(double kpx, double kdx, double kix,
@@ -127,6 +133,20 @@ public class MecanumCommand {
     public double normalMove(double vertical, double horizontal, double rotational) {
         mecanumSubsystem.normalMove(vertical, horizontal, rotational, pinPointOdoSubsystem.getHeading());
         return pinPointOdoSubsystem.getHeading();
+    }
+
+    public int getRawX() {
+        if (this.pinPointOdoSubsystem != null) {
+            return (int) this.pinPointOdoSubsystem.getRawX();
+        }
+        return 0;
+    }
+
+    public int getRawY() {
+        if (this.pinPointOdoSubsystem != null) {
+            return (int) this.pinPointOdoSubsystem.getRawY();
+        }
+        return 0;
     }
 
     public void stop() { mecanumSubsystem.stop(true); }
