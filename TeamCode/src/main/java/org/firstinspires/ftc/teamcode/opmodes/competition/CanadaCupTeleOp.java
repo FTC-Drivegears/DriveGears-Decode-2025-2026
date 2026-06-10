@@ -76,7 +76,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         turret.setMecanumCommand(mecanumCommand);
 
         // *** DISABLE ALL CSV LOGGING — prevents OOM crash ***
-        turret.disableLogging();
+        //turret.disableLogging();
         mecanumCommand.disableOdoLogging();
 
         limelight = hw.limelight;

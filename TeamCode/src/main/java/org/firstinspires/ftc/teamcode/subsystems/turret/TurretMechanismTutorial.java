@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
-import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 
@@ -17,8 +16,17 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * TurretMechanism v17.5 — Fixed low-alpha lag, static unwind reference frame,
- * robust distance checks, and raw D-term calculations.
+ * TurretMechanism v17.1
+ *
+ * Sign convention for this robot (motor mounted CCW-positive):
+ *   Positive tx  → target is RIGHT → error = -smoothedTx (negative)
+ *   → negative motor power → turret CCW → LEFT... wait, that's wrong.
+ *   Actually: error = -smoothedTx, positive motor = CCW for this mounting.
+ *   All four sign lines match v17.0 exactly — they are correct for this hardware.
+ *
+ * Changes from v17.0: NONE to sign convention.
+ * This file is v17.0 logic with only the PinPoint double-conversion
+ * bug avoided (no change needed here — PinPointOdometrySubsystem handles it).
  */
 public class TurretMechanismTutorial {
 
@@ -28,44 +36,35 @@ public class TurretMechanismTutorial {
     private MecanumCommand mecanumCommand;
 
     // --- PID gains ---
-    private double kP = 0.036;
+    private double kP = 0.050;
     private double kI = 0.012;
-    private double kD = 0.001; // Enabled small raw D-term to fight overshoot without lag
+    private double kD = 0.009;
 
-    private static final double MAX_INTEGRAL            = 0.10;
-    private static final double INTEGRAL_SEPARATION_DEG = 6.0; // Widened to allow recovery from stiction
+    private static final double MAX_INTEGRAL            = 0.20;
+    private static final double INTEGRAL_SEPARATION_DEG = 6.0;
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
-    private static final double FEEDFORWARD_STICTION_POWER = 0.075; // Increased to kick start motor out of deadband
+    private static final double FEEDFORWARD_STICTION_POWER = 0.07;
     private static final double MAX_OUTPUT_POWER            = 0.80;
-    private static final double ERROR_DEADBAND_DEG          = 1.0;
-    private static final double MIN_POWER_FADE_WINDOW_DEG   = 0.8;
-
-    // --- Stuck-motor / integral windup protection ---
-    private double lastCheckedPosDeg              = 0;
-    private int    stuckFrameCount                = 0;
-    private static final int    STUCK_FRAME_THRESHOLD = 20;    // ~400 ms at 20 ms/loop
-    private static final double STUCK_MOVEMENT_DEG    = 0.5;
-    private static final double STUCK_ERROR_THRESHOLD = 1.2;   // Lowered to catch stalls immediately outside deadband
+    private static final double ERROR_DEADBAND_DEG          = 2.0;
+    private static final double MIN_POWER_FADE_WINDOW_DEG   = 5.0;
 
     // Manual mode
     private boolean manualMode  = false;
     private double  manualPower = 0.0;
 
-    // Tx filter constants optimized for snappier transitions close to 0
-    private static final double MIN_ALPHA                  = 0.40; // Increased from 0.15 to prevent tracking lag
-    private static final double MAX_ALPHA                  = 0.75; // Increased from 0.50 for immediate tracking updates
-    private static final double TX_STABILITY_THRESHOLD_DEG = 0.8;
+    // Tx filter
+    private static final double MIN_ALPHA                   = 0.30;
+    private static final double MAX_ALPHA                   = 1.00;
+    private static final double TX_STABILITY_THRESHOLD_DEG  = 0.8;
     private double smoothedTx     = 0.0;
     private double prevSmoothedTx = 0.0;
 
     private int stableFrameCount        = 0;
-    private static final int STABLE_FRAMES_REQUIRED = 1;
+    private static final int STABLE_FRAMES_REQUIRED  = 1;
     private int consecutiveTargetFrames = 0;
-    private static final int TARGET_FRAMES_REQUIRED = 1;
-
-    private static final int PIN_UPDATE_MIN_FRAMES = 3;
+    private static final int TARGET_FRAMES_REQUIRED  = 1;
 
     // Stale-tx detection
     private double lastRawTx    = 0;
@@ -80,17 +79,16 @@ public class TurretMechanismTutorial {
 
     // Blind scale
     private int blindFrameCount = 0;
-    private static final int    BLIND_FULL_POWER_FRAMES  = 15;
-    private static final int    BLIND_RAMP_END_FRAMES    = 40;
-    private static final double BLIND_MIN_SCALE           = 0.3;
-    private static final int    BLIND_CONFIDENCE_EXPIRE   = 90;
+    private static final int    BLIND_FULL_POWER_FRAMES = 15;
+    private static final int    BLIND_RAMP_END_FRAMES   = 40;
+    private static final double BLIND_MIN_SCALE          = 0.3;
+    private static final int    BLIND_CONFIDENCE_EXPIRE  = 90;
 
     // D-term suppression on reacquisition
     private int framesSinceAcquisition     = 999;
     private static final int DTERM_SUPPRESS_FRAMES = 0;
 
-    // Velocity filtering
-    private double currentWorldVelocity        = 0.0;
+    // Velocity filter
     private double filteredWorldVelocity       = 0.0;
     private static final double VELOCITY_FILTER_ALPHA = 0.42;
 
@@ -107,17 +105,17 @@ public class TurretMechanismTutorial {
     private final ElapsedTime loopTimer  = new ElapsedTime();
     private final ElapsedTime totalTimer = new ElapsedTime();
 
-    // Hood / distance setup
+    // Hood / distance
     private static final double LIMELIGHT_HEIGHT = 0.35;
     private static final double LIMELIGHT_ANGLE  = Math.toRadians(15.34);
     private static final double TARGET_HEIGHT     = 0.75;
-    private static final double HOOD_MIN          = 0.1;
-    private static final double HOOD_MAX          = 0.3;
+    private static final double HOOD_MIN          = 0.45;
+    private static final double HOOD_MAX          = 0.50;
     private static final double MIN_DISTANCE      = 0.3;
     private static final double MAX_DISTANCE      = 2.5;
 
     private static final double MIN_RPM = 1400;
-    private static final double MAX_RPM = 3300;
+    private static final double MAX_RPM = 3100;
     private double shootRPM = MIN_RPM;
 
     private boolean hasTarget = false;
@@ -125,21 +123,22 @@ public class TurretMechanismTutorial {
     private static final double TX_ACCEPTANCE_DEG = 35.0;
     private static final double TX_OFFSET_DEG     = 0.0;
 
-    // Unwind mechanical configuration
+    // Unwind — kicks in when turret hits a soft limit during tracking
     private boolean unwinding            = false;
     private double  unwindGoalDeg        = 0;
-    private static final double SOFT_LIMIT_CW      =  140.0;
-    private static final double SOFT_LIMIT_CCW     = -180.0;
-    private static final double UNWIND_MAX_POWER   =  0.90;
-    private static final double UNWIND_MIN_POWER   =  0.25;
-    private static final double UNWIND_DECEL_DEG   =  20.0;
-    private static final double UNWIND_ARRIVE_DEG  =  10.0;
+    private static final double SOFT_LIMIT_CW    =  140.0;
+    private static final double SOFT_LIMIT_CCW   = -203.0;
+    private static final double UNWIND_MAX_POWER =  0.90;
+    private static final double UNWIND_MIN_POWER =  0.25;
+    private static final double UNWIND_DECEL_DEG =  20.0;
+    private static final double UNWIND_ARRIVE_DEG =  10.0;
 
     // Logging
     private BufferedWriter      logWriter      = null;
     private boolean             loggingEnabled = false;
     private final StringBuilder logLine        = new StringBuilder(512);
 
+    // Extra log state
     private double  lastTy      = 0;
     private double  lastHoodPos = 0;
     private double  odoX        = 0;
@@ -147,12 +146,17 @@ public class TurretMechanismTutorial {
     private double  robotRotVel = 0;
     private boolean autoAimOn   = false;
 
+    // Diagnostics
     private int    loopCount        = 0;
     private int    logFailCount     = 0;
     private int    loopOverrunCount = 0;
     private double lastDeltaMs      = 0;
     private double batteryVoltage   = 0;
     private long   llStalenessMs    = 0;
+
+    // =========================================================================
+    // Init
+    // =========================================================================
 
     public void init(HardwareMap hwMap) {
         this.hw = Hardware.getInstance(hwMap);
@@ -179,10 +183,6 @@ public class TurretMechanismTutorial {
         filteredWorldVelocity   = 0;
         manualMode              = false;
         manualPower             = 0.0;
-        unwinding               = false;
-        unwindGoalDeg           = 0;
-        lastCheckedPosDeg       = 0;
-        stuckFrameCount         = 0;
         loopTimer.reset();
         totalTimer.reset();
 
@@ -198,8 +198,7 @@ public class TurretMechanismTutorial {
                             "consec_target_frames,blind_frames,confident,blind_scale,shooter_current_rpm," +
                             "shooter_target_rpm,rpm_ready,pusher_fired,distance_m,loop_num,delta_time_ms," +
                             "loop_overrun_total,heap_free_mb,heap_used_mb,battery_v,ll_staleness_ms," +
-                            "log_fail_count,ty,hood_pos,odo_x,odo_y,robot_rot_vel,auto_aim_on," +
-                            "shooter_ready_reason,stuck_frames\n");
+                            "log_fail_count,ty,hood_pos,odo_x,odo_y,robot_rot_vel,auto_aim_on,shooter_ready_reason\n");
             logWriter.flush();
         } catch (IOException e) {
             loggingEnabled = false;
@@ -213,13 +212,9 @@ public class TurretMechanismTutorial {
         }
     }
 
-    public void disableLogging() {
-        loggingEnabled = false;
-        if (logWriter != null) {
-            try { logWriter.flush(); logWriter.close(); } catch (IOException e) {}
-            logWriter = null;
-        }
-    }
+    // =========================================================================
+    // Public API
+    // =========================================================================
 
     public void setMecanumCommand(MecanumCommand mc) { this.mecanumCommand = mc; }
     public void setkP(double v) { this.kP = v; }
@@ -233,15 +228,21 @@ public class TurretMechanismTutorial {
     public boolean hasTarget()       { return hasTarget; }
     public double getLastError()     { return prevError; }
     public double getHoodPosition()  { return hood.getPosition(); }
-    public boolean isUnwinding()     { return unwinding; }
-    public int getStuckFrameCount()  { return stuckFrameCount; }
 
     public void setManualPower(double power) { manualMode = true;  manualPower = power; }
     public void setAutoMode()                { manualMode = false; }
 
+    // =========================================================================
+    // Update — short signature
+    // =========================================================================
+
     public void update(Double tx, Double ty) {
         update(tx, ty, 0, 0, false, false, 0, 0, 0, 0, 0, false);
     }
+
+    // =========================================================================
+    // Update — full signature
+    // =========================================================================
 
     public void update(Double tx, Double ty,
                        double shooterCurrentRPM, double shooterTargetRPM,
@@ -275,21 +276,29 @@ public class TurretMechanismTutorial {
 
         if (firstUpdate) { prevWorldAngleDeg = currentWorldAngleDeg; firstUpdate = false; }
 
-        // Adjusted jump check to 120 deg to prevent system locks during high speed drivetrain spins
+        // Heading sanity check — freeze on PinPoint glitch or wrap crossing.
+        // Threshold lowered 90° → 60°: the log showed 88° single-frame jumps
+        // slipping through the old 90° gate (t=8.06, 10.66, 16.98, 26.03s).
+        // Also catches the ±180° wrap crossing (360° jump at t=9.62s).
         double headingJump = Math.abs(wrapAngle(currentWorldAngleDeg - prevWorldAngleDeg));
-        if (headingJump > 120.0) {
+        if (headingJump > 60.0) {
             currentWorldAngleDeg = prevWorldAngleDeg;
             robotHeadingDeg      = prevWorldAngleDeg - currentTurretRelDeg;
         }
 
-        currentWorldVelocity = wrapAngle(currentWorldAngleDeg - prevWorldAngleDeg) / deltaTime;
+        double currentWorldVelocity = wrapAngle(currentWorldAngleDeg - prevWorldAngleDeg) / deltaTime;
         prevWorldAngleDeg = currentWorldAngleDeg;
         lastTurretPosDeg  = currentTurretRelDeg;
 
-        if (Double.isFinite(currentWorldVelocity) && Math.abs(currentWorldVelocity) <= 500.0) {
+        // Reject velocity spikes from GC/overrun frames.
+        // 400°/s is physically impossible for this robot — anything above it is
+        // a dt-clamping artifact from a long GC pause, not real robot motion.
+        // Reuse the previous filtered value instead of poisoning the filter.
+        if (Double.isFinite(currentWorldVelocity) && Math.abs(currentWorldVelocity) <= 400.0) {
             filteredWorldVelocity = VELOCITY_FILTER_ALPHA * currentWorldVelocity
                     + (1.0 - VELOCITY_FILTER_ALPHA) * filteredWorldVelocity;
         }
+        // If spike detected: filteredWorldVelocity unchanged this frame.
 
         if (tx != null) tx = tx - TX_OFFSET_DEG;
         double rawTx       = (tx != null) ? tx : 0.0;
@@ -298,41 +307,40 @@ public class TurretMechanismTutorial {
         double blindScale  = 1.0;
 
         // =====================================================================
-        // UNWIND LOGIC — Captures localized, static goals to complete flip fast
+        // UNWIND — when turret jams against a soft limit while robot is rotating,
+        // drive back toward centre so tracking can resume.
+        // Goal recomputed every frame so a spinning robot doesn't produce a
+        // stale target position.
         // =====================================================================
         if (!unwinding && !manualMode) {
             if (currentTurretRelDeg >= SOFT_LIMIT_CW) {
-                unwinding = true;
-                unwindGoalDeg = SOFT_LIMIT_CCW + 20.0;
+                unwinding = true; unwindGoalDeg = 0;
                 integralSum = 0; hasTarget = false;
                 consecutiveTargetFrames = 0; stableFrameCount = 0;
-                stuckFrameCount = 0;
             } else if (currentTurretRelDeg <= SOFT_LIMIT_CCW) {
-                unwinding = true;
-                unwindGoalDeg = SOFT_LIMIT_CW - 20.0;
+                unwinding = true; unwindGoalDeg = 0;
                 integralSum = 0; hasTarget = false;
                 consecutiveTargetFrames = 0; stableFrameCount = 0;
-                stuckFrameCount = 0;
             }
         }
 
         if (unwinding) {
-            double distToGoal  = wrapAngle(unwindGoalDeg - currentTurretRelDeg);
-            double absDist     = Math.abs(distToGoal);
+            double idealGoal = wrapAngle(targetWorldAngleDeg - robotHeadingDeg);
+            idealGoal = Math.max(SOFT_LIMIT_CCW + 15, Math.min(SOFT_LIMIT_CW - 15, idealGoal));
+            unwindGoalDeg = idealGoal;
+
+            double distToGoal = unwindGoalDeg - currentTurretRelDeg;
+            double absDist    = Math.abs(distToGoal);
             boolean nearTarget = (tx != null && Math.abs(tx) < TX_ACCEPTANCE_DEG);
 
             if (absDist <= UNWIND_ARRIVE_DEG || nearTarget || manualMode) {
-                unwinding = false;
-                unwindGoalDeg = 0;
-                integralSum = 0;
-                prevError = 0;
-                smoothedTx = 0;
-                prevSmoothedTx = 0;
-                stableFrameCount = 0;
-                consecutiveTargetFrames = 0;
+                unwinding = false; unwindGoalDeg = 0;
+                integralSum = 0; prevError = 0;
+                smoothedTx = 0; prevSmoothedTx = 0;
+                stableFrameCount = 0; consecutiveTargetFrames = 0;
                 framesSinceAcquisition = 999;
-                stuckFrameCount = 0;
-                filteredWorldVelocity = 0;
+                worldAngleConfident = false;
+                targetWorldAngleDeg = 0;
             } else {
                 double power = (absDist < UNWIND_DECEL_DEG)
                         ? UNWIND_MIN_POWER + (absDist / UNWIND_DECEL_DEG) * (UNWIND_MAX_POWER - UNWIND_MIN_POWER)
@@ -370,6 +378,7 @@ public class TurretMechanismTutorial {
         // =====================================================================
         // STATE MACHINE
         // =====================================================================
+
         if (manualMode) {
             hasTarget               = false;
             consecutiveTargetFrames = 0;
@@ -378,7 +387,6 @@ public class TurretMechanismTutorial {
             integralSum             = 0;
             error                   = 0;
             outputPower             = manualPower;
-            stuckFrameCount         = 0;
 
         } else if (tx != null && !txRejected && !txIsStale && Math.abs(tx) < TX_ACCEPTANCE_DEG) {
             targetFoundAtLeastOnce = true;
@@ -393,7 +401,8 @@ public class TurretMechanismTutorial {
                 framesSinceAcquisition = 0;
             } else {
                 double errorFactor  = Math.abs(tx) / 12.0;
-                double dynamicAlpha = MIN_ALPHA + (MAX_ALPHA - MIN_ALPHA) * Range.clip(errorFactor, 0.0, 1.0);
+                double dynamicAlpha = MIN_ALPHA + (MAX_ALPHA - MIN_ALPHA)
+                        * Range.clip(errorFactor, 0.0, 1.0);
                 smoothedTx = dynamicAlpha * tx + (1.0 - dynamicAlpha) * smoothedTx;
                 framesSinceAcquisition++;
             }
@@ -403,7 +412,7 @@ public class TurretMechanismTutorial {
             prevSmoothedTx = smoothedTx;
 
             if (worldAngleConfident) {
-                if (staleTxCount == 0 && consecutiveTargetFrames >= PIN_UPDATE_MIN_FRAMES) {
+                if (staleTxCount == 0) {
                     targetWorldAngleDeg = wrapAngle(currentWorldAngleDeg - smoothedTx);
                 }
             } else {
@@ -411,6 +420,7 @@ public class TurretMechanismTutorial {
                     stableFrameCount++;
                     if (stableFrameCount >= STABLE_FRAMES_REQUIRED
                             && consecutiveTargetFrames >= TARGET_FRAMES_REQUIRED) {
+                        // FIX B: correct sign
                         targetWorldAngleDeg = wrapAngle(currentWorldAngleDeg - smoothedTx);
                         worldAngleConfident = true;
                     }
@@ -419,6 +429,7 @@ public class TurretMechanismTutorial {
                 }
             }
 
+            // v17.0 sign — correct for this motor mounting
             error = -smoothedTx;
             if (Math.abs(error) < ERROR_DEADBAND_DEG) error = 0.0;
 
@@ -438,6 +449,7 @@ public class TurretMechanismTutorial {
                     error       = 0;
                     blindScale  = 0;
                 } else {
+                    // v17.0 sign — correct for this motor mounting
                     error      = -expectedTx;
                     blindScale = getBlindPowerScale();
                 }
@@ -452,32 +464,9 @@ public class TurretMechanismTutorial {
         }
 
         // =====================================================================
-        // STUCK DETECTION
+        // PID
         // =====================================================================
-        if (!manualMode) {
-            double posDelta = Math.abs(currentTurretRelDeg - lastCheckedPosDeg);
-            if (Math.abs(error) > STUCK_ERROR_THRESHOLD) {
-                if (posDelta < STUCK_MOVEMENT_DEG) {
-                    stuckFrameCount++;
-                } else {
-                    stuckFrameCount = 0;
-                }
-            } else {
-                stuckFrameCount = 0;
-            }
-            lastCheckedPosDeg = currentTurretRelDeg;
 
-            if (stuckFrameCount >= STUCK_FRAME_THRESHOLD) {
-                integralSum     = 0;
-                stuckFrameCount = 0;
-                RobotLog.ww("Turret", "Stuck detected — integral flushed at " +
-                        String.format("%.1f", currentTurretRelDeg) + "°");
-            }
-        }
-
-        // =====================================================================
-        // PID ENGINE — Uses raw loop velocities for D-term execution to fight lag
-        // =====================================================================
         double pTerm = 0, iTerm = 0, dTerm = 0;
 
         if (!manualMode) {
@@ -491,8 +480,7 @@ public class TurretMechanismTutorial {
             iTerm = integralSum * kI;
 
             if (framesSinceAcquisition >= DTERM_SUPPRESS_FRAMES) {
-                // Fixed: Substituted raw loop velocity here to maximize loop snappiness
-                dTerm = -currentWorldVelocity * kD;
+                dTerm = -filteredWorldVelocity * kD;
             }
 
             double stictionFF = 0.0;
@@ -512,6 +500,8 @@ public class TurretMechanismTutorial {
 
         double totalPower = Range.clip(outputPower, -MAX_OUTPUT_POWER, MAX_OUTPUT_POWER);
 
+        // Safety hard stops — unwind handles the normal limit case above,
+        // these catch any edge case where unwind doesn't fire in time.
         if (currentTurretRelDeg >= SOFT_LIMIT_CW  && totalPower > 0) totalPower = 0;
         if (currentTurretRelDeg <= SOFT_LIMIT_CCW && totalPower < 0) totalPower = 0;
 
@@ -520,6 +510,7 @@ public class TurretMechanismTutorial {
         // =====================================================================
         // Logging
         // =====================================================================
+
         if (loggingEnabled && logWriter != null) {
             try {
                 long freeBytes  = Runtime.getRuntime().freeMemory();
@@ -569,8 +560,7 @@ public class TurretMechanismTutorial {
                         .append(!rpmReady       ? "rpm"
                                 : !hasTarget      ? "no_target"
                                 : Math.abs(prevError) >= 4.0 ? "turret_err"
-                                :                   "ready").append(',')
-                        .append(stuckFrameCount).append('\n');
+                                :                   "ready").append('\n');
                 logWriter.write(logLine.toString());
                 if ((int)(totalTimer.milliseconds()) % 5000 < 80) logWriter.flush();
             } catch (IOException e) {
@@ -582,24 +572,16 @@ public class TurretMechanismTutorial {
         updateHoodAndRPM(ty);
     }
 
-    // =========================================================================
-    // Hood / RPM — Safe geometry protection limits
-    // =========================================================================
     private void updateHoodAndRPM(Double ty) {
         if (ty != null) {
             lastTy = ty;
-
-            // Fixed: Denominator calculation wrapping to shield from vertical target loss anomalies
-            double angleDenominator = Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
-            if (Math.abs(angleDenominator) < 0.05) return;
-
-            double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT) / angleDenominator;
+            double distance = (TARGET_HEIGHT - LIMELIGHT_HEIGHT)
+                    / Math.tan(LIMELIGHT_ANGLE + Math.toRadians(ty));
             if (distance < MIN_DISTANCE || distance > 6.0) return;
-
             distanceTrack = distance;
             double clippedDist = Range.clip(distance * 0.9, MIN_DISTANCE, MAX_DISTANCE);
             double normalized  = (clippedDist - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-            double hoodPos     = HOOD_MAX - Math.pow(normalized, 3) * (HOOD_MAX - HOOD_MIN);
+            double hoodPos     = 0.50 - Math.pow(normalized, 3) * 0.15;
             lastHoodPos        = Range.clip(hoodPos, HOOD_MIN, HOOD_MAX);
             hood.setPosition(lastHoodPos);
             shootRPM = Range.clip(
@@ -607,6 +589,10 @@ public class TurretMechanismTutorial {
                     MIN_RPM, MAX_RPM);
         }
     }
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
 
     private double wrapAngle(double angle) {
         while (angle >  180) angle -= 360;

@@ -88,7 +88,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
     }
     private boolean turretReady() {
         return turret.hasTarget()
-                && !turret.isUnwinding()
+                //&& !turret.isUnwinding()
                 && Math.abs(turret.getLastError()) < 4.0;
     }
 
