@@ -129,7 +129,7 @@ public class AutoTurret {
 
     private boolean hasTarget = false;
     private static final double TICKS_PER_DEGREE  = 1.8;
-    private static final double TX_ACCEPTANCE_DEG = 35.0;
+    private static final double TX_ACCEPTANCE_DEG = 45.0;
     private static final double TX_OFFSET_DEG     = 0.0;
 
     // Unwind

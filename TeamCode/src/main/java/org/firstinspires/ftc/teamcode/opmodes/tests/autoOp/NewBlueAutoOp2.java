@@ -13,7 +13,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LimelightVision;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.turret.AutoTurret;
+import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
@@ -77,7 +77,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
     private static Servo     hood;
     private static Servo     sorter;
     private static DcMotorEx intake;
-    private AutoTurret turret;
+    private TurretMechanismTutorial turret;
 
     boolean outtakeFlag = false;
     boolean intakeFlag  = false;
@@ -89,7 +89,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
     private boolean turretReady() {
         return turret.hasTarget()
                 //&& !turret.isUnwinding()
-                && Math.abs(turret.getLastError()) < 4.0;
+                && Math.abs(turret.getLastError()) < 8.0;
     }
 
 
@@ -188,7 +188,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
         hood     = hw.hood;
         intake   = hw.intake;
 
-        turret = new AutoTurret();
+        turret = new TurretMechanismTutorial();
         turret.init(hardwareMap);
         // No setkP/setkD override — uses our tuned defaults (kP=0.050, kD=0.009)
         turret.setMecanumCommand(mecanumCommand);
@@ -371,14 +371,14 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 case COLLECTION_2:
                     switch (stage) {
                         case 0:
-                            mecanumCommand.moveToPos(138, 34, Math.PI / 2);
+                            mecanumCommand.moveToPos(136, 34, Math.PI / 2);
 //                            mecanumCommand.moveToPos(0, 0, 0);
                             stageTimer.reset(); stage++; break;
                         case 1:
                             if (mecanumCommand.isPositionReached()) { stage++; stageTimer.reset(); } break;
                         case 2:
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(138, 52, Math.PI / 2);
+                                mecanumCommand.moveToPos(136, 52, Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
                         case 3:
@@ -387,7 +387,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                             } break;
                         case 4:
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(138, 63, Math.PI / 2);
+                                mecanumCommand.moveToPos(136, 63, Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
                         case 5:
@@ -397,8 +397,8 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                         case 6:
                             if (stageTimer.milliseconds() > 750) {
                                 stageTimer.reset(); stage = 0;
-                                autoState = AUTO_STATE.FINISH;
-                                shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
+                                autoState = AUTO_STATE.THIRD_SHOT;
+                                //shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
                                 mecanumCommand.moveToPos(26, -6, 0.355);
                             } break;
                     }
@@ -443,12 +443,12 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 // Pre-load at 2/3 while waiting; fire all the way when ready
                 if ((!shooterAtSpeed() || !turretReady()) && stageTimer.milliseconds() > 200) {
                     preload();
-                } else if (turretReady() &&  stageTimer.milliseconds() > 300) { //600
+                } else if (stageTimer.milliseconds() > 275) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
             case 3: case 6: case 9:
-                if (stageTimer.milliseconds() > 200) { //300
+                if (stageTimer.milliseconds() > 250) { //300
                     if (halfPush(false)) {
                         stage++;
                         stageTimer.reset(); }
@@ -485,12 +485,12 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 // Pre-load at 2/3 while waiting; fire all the way when ready
                 if ((!shooterAtSpeed() || !turretReady() )&& stageTimer.milliseconds() > 250) {
                     preload();
-                } else if (turretReady() && stageTimer.milliseconds() > 300) { //600
+                } else if (stageTimer.milliseconds() > 275) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
             case 3: case 6: case 9:
-                if (stageTimer.milliseconds() > 200) { //300
+                if (stageTimer.milliseconds() > 250) { //300
                     if (halfPush(false)) {
                         stage++;
                         stageTimer.reset(); }
@@ -527,12 +527,12 @@ public class NewBlueAutoOp2 extends LinearOpMode {
                 // Pre-load at 2/3 while waiting; fire all the way when ready
                 if ((!shooterAtSpeed() || !turretReady()) && stageTimer.milliseconds() > 200) {
                     preload();
-                } else if (turretReady() && stageTimer.milliseconds() > 300 ) { //600
+                } else if (stageTimer.milliseconds() > 275 ) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
             case 3: case 6: case 9:
-                if (stageTimer.milliseconds() > 200) { //300
+                if (stageTimer.milliseconds() > 250) { //300
                     if (halfPush(false)) {
                         stage++;
                         stageTimer.reset(); }
