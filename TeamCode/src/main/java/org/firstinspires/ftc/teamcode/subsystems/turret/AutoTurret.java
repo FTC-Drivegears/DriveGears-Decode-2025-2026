@@ -28,7 +28,7 @@ import java.util.Locale;
  * integral is flushed. Prevents the integral winding up to max during an
  * Expansion Hub disconnect and slamming the turret on reconnect.
  */
-public class TurretMechanismTutorial {
+public class AutoTurret {
 
     private DcMotorEx turret;
     private Servo hood;
@@ -38,14 +38,14 @@ public class TurretMechanismTutorial {
     // --- PID gains ---
     private double kP = 0.036;
     private double kI = 0.012;
-    private double kD = 0.02;
+    private double kD = 0; //0.02;
 
     private static final double MAX_INTEGRAL            = 0.10;
     private static final double INTEGRAL_SEPARATION_DEG = 3.0;
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
-    private static final double FEEDFORWARD_STICTION_POWER = 0.12;
+    private static final double FEEDFORWARD_STICTION_POWER = 0.05; //0.12;
     private static final double MAX_OUTPUT_POWER            = 0.80;
     private static final double ERROR_DEADBAND_DEG          = 1.0;
     private static final double MIN_POWER_FADE_WINDOW_DEG   = 0.8;
@@ -62,8 +62,8 @@ public class TurretMechanismTutorial {
     private double  manualPower = 0.0;
 
     // Tx filter
-    private static final double MIN_ALPHA                  = 0.30;
-    private static final double MAX_ALPHA                  = 1.00;
+    private static final double MIN_ALPHA                  = 0.15; //0.30
+    private static final double MAX_ALPHA                  = 0.50; //1.00
     private static final double TX_STABILITY_THRESHOLD_DEG = 0.8;
     private double smoothedTx     = 0.0;
     private double prevSmoothedTx = 0.0;

@@ -13,7 +13,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LimelightVision;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
+import org.firstinspires.ftc.teamcode.subsystems.turret.AutoTurret;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
@@ -77,7 +77,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
     private static Servo     hood;
     private static Servo     sorter;
     private static DcMotorEx intake;
-    private TurretMechanismTutorial turret;
+    private AutoTurret turret;
 
     boolean outtakeFlag = false;
     boolean intakeFlag  = false;
@@ -188,7 +188,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
         hood     = hw.hood;
         intake   = hw.intake;
 
-        turret = new TurretMechanismTutorial();
+        turret = new AutoTurret();
         turret.init(hardwareMap);
         // No setkP/setkD override — uses our tuned defaults (kP=0.050, kD=0.009)
         turret.setMecanumCommand(mecanumCommand);
