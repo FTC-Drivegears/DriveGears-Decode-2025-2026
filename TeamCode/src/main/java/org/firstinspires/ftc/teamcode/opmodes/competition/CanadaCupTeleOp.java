@@ -332,7 +332,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             if (gamepad2.b) sorterSubsystem.stopQuickfire();
 
             // --- Odometry reset ---
-            if (gamepad1.start) mecanumCommand.resetPositionOnly();
+            if (gamepad1.start) mecanumCommand.resetPinPointOdometry();
 
             // --- Telemetry (throttled) ---
             if (loopCount % 4 == 0) {
