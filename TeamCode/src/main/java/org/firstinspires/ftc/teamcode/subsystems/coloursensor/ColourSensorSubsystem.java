@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.Hardware;
@@ -16,6 +17,17 @@ public class ColourSensorSubsystem {
 
     // How many consecutive failures before we attempt a re-init
     private static final int REINIT_THRESHOLD = 10;
+
+    // Throttle: only hit the I2C bus this often. A sorter does not need colour at
+    // full loop rate, and each RevColorSensorV3 read is a synchronous bus
+    // transaction that can wedge the bus. Reading ~20 Hz instead of ~30 Hz cuts
+    // bus traffic (a known V3 lockup trigger) and halves loop-time exposure to a
+    // hang. NOTE: this lowers the probability/frequency of a hang; it does NOT
+    // make the read non-blocking — a hard bus lock is a wiring/power/firmware
+    // problem, not something user code on a single thread can time out.
+    private static final long READ_INTERVAL_MS = 50;
+    private final ElapsedTime readTimer = new ElapsedTime();
+    private boolean readToggle = false;   // alternate which sensor reads first each cycle
 
     private boolean lastArtifactPresent = false;
     private Hardware hw;
@@ -46,6 +58,7 @@ public class ColourSensorSubsystem {
         this.leftLight = hw.leftLight;
         this.sorterList = sorterSubsystem.getSorterList();
         initSensors();
+        readTimer.reset();
     }
 
     private void initSensors() {
@@ -71,50 +84,20 @@ public class ColourSensorSubsystem {
     }
 
     public void update(boolean isIntakeMotorOn) {
-        // Read sensor 1
-        if (colourSensor1 != null) {
-            try {
-                NormalizedRGBA colors1 = colourSensor1.getNormalizedColors();
-                red   = colors1.red;
-                green = colors1.green;
-                blue  = colors1.blue;
-                alpha = colors1.alpha;
-                failCount1 = 0;
-                sensor1Ok  = true;
-            } catch (Exception e) {
-                failCount1++;
-                red = green = blue = alpha = 0f;
-                RobotLog.ee(TAG, "colour1 read failed (" + failCount1 + "): " + e.getMessage());
-                if (failCount1 >= REINIT_THRESHOLD) {
-                    RobotLog.ww(TAG, "colour1 reinit attempt");
-                    tryReinit1();
-                }
-            }
-        } else {
-            red = green = blue = alpha = 0f;
-        }
+        // Throttle the actual I2C reads + detection. Between reads we keep the last
+        // cached colours and do nothing — no bus traffic, no chance to hang.
+        if (readTimer.milliseconds() < READ_INTERVAL_MS) return;
+        readTimer.reset();
 
-        // Read sensor 2
-        if (colourSensor2 != null) {
-            try {
-                NormalizedRGBA colors2 = colourSensor2.getNormalizedColors();
-                red2   = colors2.red;
-                green2 = colors2.green;
-                blue2  = colors2.blue;
-                alpha2 = colors2.alpha;
-                failCount2 = 0;
-                sensor2Ok  = true;
-            } catch (Exception e) {
-                failCount2++;
-                red2 = green2 = blue2 = alpha2 = 0f;
-                RobotLog.ee(TAG, "colour2 read failed (" + failCount2 + "): " + e.getMessage());
-                if (failCount2 >= REINIT_THRESHOLD) {
-                    RobotLog.ww(TAG, "colour2 reinit attempt");
-                    tryReinit2();
-                }
-            }
+        // Alternate read order each cycle so we don't always do the two bus
+        // transactions in the same back-to-back order.
+        readToggle = !readToggle;
+        if (readToggle) {
+            readSensor1();
+            readSensor2();
         } else {
-            red2 = green2 = blue2 = alpha2 = 0f;
+            readSensor2();
+            readSensor1();
         }
 
         // If both sensors are gone, bail out — don't touch sorter state
@@ -160,6 +143,54 @@ public class ColourSensorSubsystem {
             lastArtifactPresent = false;
         } else {
             lastArtifactPresent = artifactPresent;
+        }
+    }
+
+    private void readSensor1() {
+        if (colourSensor1 != null) {
+            try {
+                NormalizedRGBA colors1 = colourSensor1.getNormalizedColors();
+                red   = colors1.red;
+                green = colors1.green;
+                blue  = colors1.blue;
+                alpha = colors1.alpha;
+                failCount1 = 0;
+                sensor1Ok  = true;
+            } catch (Exception e) {
+                failCount1++;
+                red = green = blue = alpha = 0f;
+                RobotLog.ee(TAG, "colour1 read failed (" + failCount1 + "): " + e.getMessage());
+                if (failCount1 >= REINIT_THRESHOLD) {
+                    RobotLog.ww(TAG, "colour1 reinit attempt");
+                    tryReinit1();
+                }
+            }
+        } else {
+            red = green = blue = alpha = 0f;
+        }
+    }
+
+    private void readSensor2() {
+        if (colourSensor2 != null) {
+            try {
+                NormalizedRGBA colors2 = colourSensor2.getNormalizedColors();
+                red2   = colors2.red;
+                green2 = colors2.green;
+                blue2  = colors2.blue;
+                alpha2 = colors2.alpha;
+                failCount2 = 0;
+                sensor2Ok  = true;
+            } catch (Exception e) {
+                failCount2++;
+                red2 = green2 = blue2 = alpha2 = 0f;
+                RobotLog.ee(TAG, "colour2 read failed (" + failCount2 + "): " + e.getMessage());
+                if (failCount2 >= REINIT_THRESHOLD) {
+                    RobotLog.ww(TAG, "colour2 reinit attempt");
+                    tryReinit2();
+                }
+            }
+        } else {
+            red2 = green2 = blue2 = alpha2 = 0f;
         }
     }
 
