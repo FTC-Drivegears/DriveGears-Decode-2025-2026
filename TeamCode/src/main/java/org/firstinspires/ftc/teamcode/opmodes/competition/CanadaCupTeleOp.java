@@ -76,7 +76,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         turret.setMecanumCommand(mecanumCommand);
 
         // *** DISABLE ALL CSV LOGGING — prevents OOM crash ***
-        //turret.disableLogging();
+        turret.disableLogging();
         mecanumCommand.disableOdoLogging();
 
         limelight = hw.limelight;
@@ -112,6 +112,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         boolean pusherReturning = false;
         boolean pusherAtFire    = false;
         boolean rpmLatch        = false;
+        boolean prevFullReset   = false;
         int     loopCount       = 0;
 
         // Preload positions are constant — compute once outside the loop
@@ -125,21 +126,13 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            RobotLog.ee("DEBUG", "1 before odometry");
+            // ===== TEMP DIAGNOSTIC: stall locator. On a freeze, the LAST "PHASE:"
+            // line in logcat is the call that hung. Remove this block once found. =====
+            RobotLog.ii("PHASE", "odo");
             mecanumCommand.processOdometry();
 
-            RobotLog.ee("DEBUG", "2 before drive");
-
             double heading = mecanumCommand.getOdoHeading();
-
-//            RobotLog.ee("DEBUG",git  "3 before limelight");
-//            llResult = limelight.getLatestResult();
-
-
-//            RobotLog.ee("DEBUG", "5 before quickfire");
-//            if (sorterSubsystem.isActive()) sorterSubsystem.quickfireState();
-
-            RobotLog.ee("DEBUG", "6 loop end");
+            if (Double.isNaN(heading)) heading = 0;   // guard: never feed NaN into the field-oriented transform
 
             double inputY = -gamepad1.left_stick_y;
             double inputX =  gamepad1.left_stick_x;
@@ -153,8 +146,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             double fieldX = inputX * Math.cos(-heading) - inputY * Math.sin(-heading);
             double fieldY = inputX * Math.sin(-heading) + inputY * Math.cos(-heading);
+            RobotLog.ii("PHASE", "drive");
             theta = mecanumCommand.normalMove(fieldY, fieldX, inputR);
-            RobotLog.ee("DEBUG", "3 before limelight");
+            RobotLog.ii("PHASE", "limelight");
             llResult = limelight.getLatestResult();
             Double tx = (llResult != null && llResult.isValid()) ? llResult.getTx() : null;
             Double ty = (llResult != null && llResult.isValid()) ? llResult.getTy() : null;
@@ -223,7 +217,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
             boolean isOuttakeMotorOn = gamepad1.left_trigger  > 0.5;
             if (isIntakeMotorOn) isOuttakeMotorOn = false;
 
-            RobotLog.ee("DEBUG", "4 before colour");
+            RobotLog.ii("PHASE", "colour");
             colourSubsystem.update(isIntakeMotorOn);
 
             if (isIntakeMotorOn)       intake.setPower(0.8);
@@ -326,15 +320,24 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
             // --- Quickfire ---
             if (gamepad2.a && !prevDpadA) sorterSubsystem.startQuickfire();
-            RobotLog.ee("DEBUG", "5 before quickfire");
+            RobotLog.ii("PHASE", "quickfire");
             if (sorterSubsystem.isActive()) sorterSubsystem.quickfireState();
             prevDpadA = gamepad2.a;
             if (gamepad2.b) sorterSubsystem.stopQuickfire();
 
             // --- Odometry reset ---
-            if (gamepad1.start) mecanumCommand.resetPinPointOdometry();
+            // start = full reset: zero XY AND recalibrate IMU heading.
+            // Edge-triggered so holding the button doesn't restart the IMU
+            // calibration every loop. resetPosAndIMU() samples the gyro for
+            // ~0.25s, so press this only while the robot is stationary.
+            boolean fullReset = gamepad1.start;
+            if (fullReset && !prevFullReset) {
+                mecanumCommand.resetPinPointOdometry();
+            }
+            prevFullReset = fullReset;
 
             // --- Telemetry (throttled) ---
+            RobotLog.ii("PHASE", "telemetry");
             if (loopCount % 4 == 0) {
                 telemetry.addData("Turret",       String.format("%.1f°", turretDeg));
                 telemetry.addData("Has Target",   turret.hasTarget());
@@ -353,6 +356,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 telemetry.addData("Sensors",      colourSubsystem.isSensor1Ok() + " / " + colourSubsystem.isSensor2Ok());
                 telemetry.update();
             }
+            RobotLog.ii("PHASE", "end");
         }
     }
 }

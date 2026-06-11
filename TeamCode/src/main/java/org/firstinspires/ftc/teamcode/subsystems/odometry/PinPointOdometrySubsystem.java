@@ -21,6 +21,12 @@ import java.util.Locale;
  * getHeading() returns radians (as the driver provides).
  * DO NOT add Math.toRadians() — the driver already returns radians.
  *
+ * Driver units (confirmed against GoBildaPinpointDriver source):
+ *   getPosX/getPosY        — mm
+ *   getHeading             — radians
+ *   getVelX/getVelY        — mm/sec
+ *   getHeadingVelocity     — radians/sec   (NOT deg/s)
+ *
  * CSV log columns:
  * time_ms          — ms since subsystem init
  * x_cm             — estimated x position (cm)
@@ -29,9 +35,9 @@ import java.util.Locale;
  * heading_deg      — heading in degrees (for human readability)
  * raw_encoder_x    — raw x encoder ticks
  * raw_encoder_y    — raw y encoder ticks
- * vel_x            — x velocity (driver units)
- * vel_y            — y velocity (driver units)
- * heading_vel      — heading velocity (deg/s from driver)
+ * vel_x            — x velocity (mm/s, driver units)
+ * vel_y            — y velocity (mm/s, driver units)
+ * heading_vel      — heading velocity (rad/s from driver)
  * nan_count        — cumulative NaN readings detected
  * using_dead_reckon— 1 if this frame used dead reckoning, 0 if sensor valid
  * loop_dt_ms       — time since last processOdometry() call (ms)
@@ -39,7 +45,7 @@ import java.util.Locale;
  * delta_y_cm       — change in y since last frame (cm)
  * delta_heading_rad— change in heading since last frame (rad)
  * x_jump_flag      — 1 if |delta_x| > 50cm in one frame (sensor glitch)
- * h_jump_flag      — 1 if |delta_heading_rad| > 0.5 rad in one frame (glitch)
+ * h_jump_flag      — 1 if |delta_heading_rad| > 1.0 rad in one frame (glitch)
  */
 public class PinPointOdometrySubsystem {
 
@@ -53,9 +59,9 @@ public class PinPointOdometrySubsystem {
     private double previousY       = 0;
     private double previousHeading = 0;
 
-    private double vx     = 0;
-    private double vy     = 0;
-    private double vtheta = 0;
+    private double vx     = 0;   // mm/s
+    private double vy     = 0;   // mm/s
+    private double vtheta = 0;   // rad/s
 
     private ElapsedTime controllerLoopTime;
     private ElapsedTime totalTimer;
@@ -131,8 +137,8 @@ public class PinPointOdometrySubsystem {
 
         pinpointDriver.update();
         x       = pinpointDriver.getPosX() / 10.0;
-        y       = pinpointDriver.getPosY() / 10.0;
-        heading = pinpointDriver.getHeading();  // radians — do not convert
+        y       = pinpointDriver.getPosY() / 10.0;   // +Y convention (driver-native)
+        heading = pinpointDriver.getHeading();        // radians — do not convert
 
         writeLog(dtMs, false);
     }
@@ -152,21 +158,24 @@ public class PinPointOdometrySubsystem {
         if (checkX.isNaN() || checkY.isNaN() || checkHeading.isNaN()) {
             nanCounter++;
             usedDeadReckon = true;
-            x       = previousX       + (vx     / 10.0 * dtMs);
-            y       = previousY       + (vy     / 10.0 * dtMs);
-            heading = previousHeading + (vtheta * dtMs);
+            // dtMs is milliseconds; velocities are per-second → convert to seconds.
+            // vx,vy are mm/s → /10.0 = cm/s. vtheta is rad/s (matches heading in rad).
+            double dtSec = dtMs / 1000.0;
+            x       = previousX       + (vx / 10.0) * dtSec;
+            y       = previousY       + (vy / 10.0) * dtSec;
+            heading = previousHeading + vtheta * dtSec;
         } else {
-            x       =  pinpointDriver.getPosX() / 10.0;
-            y       = -pinpointDriver.getPosY() / 10.0;
-            heading =  pinpointDriver.getHeading();  // radians — do not convert
+            x       = pinpointDriver.getPosX() / 10.0;
+            y       = pinpointDriver.getPosY() / 10.0;   // +Y convention — matches processOdometry()
+            heading = pinpointDriver.getHeading();        // radians — do not convert
 
             previousX       = x;
             previousY       = y;
             previousHeading = heading;
 
-            vx     = pinpointDriver.getVelX();
-            vy     = pinpointDriver.getVelY();
-            vtheta = pinpointDriver.getHeadingVelocity();
+            vx     = pinpointDriver.getVelX();              // mm/s
+            vy     = pinpointDriver.getVelY();              // mm/s
+            vtheta = pinpointDriver.getHeadingVelocity();   // rad/s
         }
 
         writeLog(dtMs, usedDeadReckon);
@@ -215,9 +224,8 @@ public class PinPointOdometrySubsystem {
                     .append(hJump).append('\n');
             logWriter.write(logLine.toString());
 
-            // FIXED: Replaced time-based modulus with a clean frame-count modulus schedule.
-            // This guarantees only one background flush execution occurs every 100 loops,
-            // entirely clearing heap accumulation pressure without clogging the file system.
+            // Frame-count modulus flush: one flush every 100 loops, bounding heap
+            // accumulation without per-loop filesystem pressure.
             if (frameCount % 100 == 0) {
                 logWriter.flush();
             }
@@ -256,7 +264,7 @@ public class PinPointOdometrySubsystem {
     public double getX()              { return x; }
     public double getY()              { return y; }
     public double getHeading()        { return heading; }  // radians
-    public double getHeadingVelocity(){ return pinpointDriver.getHeadingVelocity(); }
+    public double getHeadingVelocity(){ return pinpointDriver.getHeadingVelocity(); }  // rad/s
     public double getVx()             { return vx; }
     public double getVy()             { return vy; }
     public double getVtheta()         { return vtheta; }
