@@ -26,7 +26,7 @@ public class ShooterSubsystem {
     private static final double PIDF_D = 2.0;
     private static final double PIDF_F = 14.0;
 
-    private static final double RPM_TOLERANCE_DEFAULT = 80.0;
+    private static final double RPM_TOLERANCE_DEFAULT = 150;
     private double rpmTolerance = RPM_TOLERANCE_DEFAULT;
 
     public ShooterSubsystem(Hardware hw) {
