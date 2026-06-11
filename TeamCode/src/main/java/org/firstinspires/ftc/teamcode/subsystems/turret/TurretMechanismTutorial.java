@@ -65,6 +65,12 @@ import java.util.Locale;
  *   90° still catches the genuine ±180° wrap artefact and large PinPoint
  *   glitches while allowing real robot motion through.
  *
+ * FIX 7 (servo) — Hood formula now interpolates between HOOD_MIN and HOOD_MAX.
+ *   The old `0.50 - normalized^3 * 0.15` produced 0.35–0.50, entirely above
+ *   HOOD_MAX (0.3), so Range.clip pinned the hood to 0.3 (full up) at every
+ *   distance. Now: normalized 0 (close) → HOOD_MIN (flat), normalized 1 (far)
+ *   → HOOD_MAX (0.3, up). The clip band matches the formula output.
+ *
  * Sign convention (unchanged from v17.x):
  *   Motor mounted CCW-positive.
  *   error = -smoothedTx  (positive tx → right → negative error → CW motor)
@@ -163,7 +169,7 @@ public class TurretMechanismTutorial {
     private static final double LIMELIGHT_ANGLE  = Math.toRadians(15.34);
     private static final double TARGET_HEIGHT     = 0.75;
     private static final double HOOD_MIN          = 0.05;
-    private static final double HOOD_MAX          = 0.3;
+    private static final double HOOD_MAX          = 0.2;
     private static final double MIN_DISTANCE      = 0.3;
     private static final double MAX_DISTANCE      = 2.5;
 
@@ -640,7 +646,8 @@ public class TurretMechanismTutorial {
             distanceTrack = distance;
             double clippedDist = Range.clip(distance * 0.9, MIN_DISTANCE, MAX_DISTANCE);
             double normalized  = (clippedDist - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-            double hoodPos     = 0.50 - Math.pow(normalized, 3) * 0.15;
+            // normalized 0 (close) -> HOOD_MAX,  normalized 1 (far) -> HOOD_MIN
+            double hoodPos     = HOOD_MAX - Math.pow(normalized, 3) * (HOOD_MAX - HOOD_MIN);
             lastHoodPos        = Range.clip(hoodPos, HOOD_MIN, HOOD_MAX);
             hood.setPosition(lastHoodPos);
             shootRPM = Range.clip(
