@@ -185,9 +185,8 @@ class MecanumSubsystem {
         rfvel = rfVelTemp;
         rbvel = rbVelTemp;
 
-        // set motor powers
-
-        setPowers(rfvel, lbvel, rbvel, lfvel);
+        // set motor powers — explicit, unambiguous wiring
+        setPowers(rfvel, lfvel, rbvel, lbvel);
     }
 
     //    named maxDouble temporarily to avoid name conflicts with local variable
@@ -226,6 +225,7 @@ class MecanumSubsystem {
     }
 
     // Basic Mecanum robot movement
+    // FIXED: arguments to setPowers were front/back swapped.
     public void move(boolean run, double vertical, double horizontal, double rotational){
         if (run){
             rightFrontMotorOutput = (-horizontal * Math.cos(Math.toRadians(45)) + vertical * Math.sin(Math.toRadians(45)) + rotational * Math.sin(Math.toRadians(45)))*(1.41421356237);
@@ -233,21 +233,37 @@ class MecanumSubsystem {
             rightBackMotorOutput = (vertical * Math.cos(Math.toRadians(45)) + horizontal * Math.sin(Math.toRadians(45)) + rotational * Math.sin(Math.toRadians(45)))*(1.41421356237);
             leftBackMotorOutput = (-horizontal * Math.cos(Math.toRadians(45)) + vertical * Math.sin(Math.toRadians(45)) - rotational * Math.sin(Math.toRadians(45)))*(1.41421356237);
 
-            setPowers(rightBackMotorOutput,leftBackMotorOutput,rightFrontMotorOutput,leftFrontMotorOutput);
+            setPowers(rightFrontMotorOutput, leftFrontMotorOutput, rightBackMotorOutput, leftBackMotorOutput);
         }
     }
 
+    /**
+     * FIXED: this used to busy-spin forever — it commanded ZERO power while
+     * waiting for the encoder to advance, never checked a timeout, and never
+     * yielded. That is an OpMode freeze by construction.
+     *
+     * Now: drives at the requested power/heading, exits on target, timeout,
+     * or interrupt. Caller is responsible for only invoking while the
+     * OpMode is active (or pass opModeIsActive() via the `run` flag each call).
+     */
     public void moveToPosition(boolean run, double power, double degree, int position){
-        if (run){
-            double y1 = power * Math.sin(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) - power * Math.cos(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            double x1 = power * Math.cos(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) + power * Math.sin(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            double y2 = power * Math.sin(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) - power * Math.cos(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            double x2 = power * Math.cos(Math.toRadians(degree)) * Math.cos(Math.toRadians(45)) + power * Math.sin(Math.toRadians(degree)) * Math.sin(Math.toRadians(45));
-            while (hw.rf.getCurrentPosition()<position){
-                setPowers(0,0,0,0);
+        if (!run) return;
+
+        double vertical   = power * Math.cos(Math.toRadians(degree));
+        double horizontal = power * Math.sin(Math.toRadians(degree));
+
+        long deadline = System.currentTimeMillis() + 5000;   // hard 5 s timeout
+
+        while (hw.rf.getCurrentPosition() < position
+                && System.currentTimeMillis() < deadline
+                && !Thread.currentThread().isInterrupted()) {
+            move(true, vertical, horizontal, 0);
+            try { Thread.sleep(10); } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
             }
-        setPowers(0,0,0,0);
         }
+        setPowers(0, 0, 0, 0);
     }
 
     //Update PID controllers with new constants
@@ -283,7 +299,6 @@ class MecanumSubsystem {
     // input theta - current heading (radians)
     public void fieldOrientedMove(double x, double y, double z, double theta) {
         // translate the field relative movement (joystick) into the robot relative movement
-        //changed all 3 lines below
         double newX = x * Math.cos(theta) - y * Math.sin(theta);
         double newY = x * Math.sin(theta) + y * Math.cos(theta);
 
@@ -311,14 +326,20 @@ class MecanumSubsystem {
         rightBackMotorOutput *= POWER_SCALE_FACTOR;
         leftBackMotorOutput *= POWER_SCALE_FACTOR;
 
-        setPowers(rightFrontMotorOutput,leftBackMotorOutput,rightBackMotorOutput,leftFrontMotorOutput);
+        setPowers(rightFrontMotorOutput, leftFrontMotorOutput, rightBackMotorOutput, leftBackMotorOutput);
     }
 
-    public void setPowers (double rightFront, double leftFront, double rightBack, double leftBack){
+    /**
+     * FIXED: parameter names previously did not match the motors they were
+     * written to (leftFront went to the LEFT BACK motor and vice versa),
+     * and every caller compensated by passing arguments in scrambled order.
+     * Wiring is now literal: each parameter drives the motor it names.
+     */
+    public void setPowers(double rightFront, double leftFront, double rightBack, double leftBack){
         hw.rf.setPower(rightFront);
-        hw.lb.setPower(leftFront);
+        hw.lf.setPower(leftFront);
         hw.rb.setPower(rightBack);
-        hw.lf.setPower(leftBack);
+        hw.lb.setPower(leftBack);
     }
 
     public void normalMove(double x, double y, double z, double theta) {
@@ -346,7 +367,6 @@ class MecanumSubsystem {
         rightBackMotorOutput *= POWER_SCALE_FACTOR;
         leftBackMotorOutput *= POWER_SCALE_FACTOR;
 
-        setPowers(rightFrontMotorOutput,leftBackMotorOutput,rightBackMotorOutput,leftFrontMotorOutput);
+        setPowers(rightFrontMotorOutput, leftFrontMotorOutput, rightBackMotorOutput, leftBackMotorOutput);
     }
 }
-
