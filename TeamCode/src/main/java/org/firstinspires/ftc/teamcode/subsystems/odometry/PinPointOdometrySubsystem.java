@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems.odometry;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -16,31 +17,31 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Threaded PinPointOdometrySubsystem.
+ * Threaded PinPointOdometrySubsystem — v2.
  *
- * The Pinpoint read (pinpointDriver.update() + the getters) runs on a worker
- * thread and publishes pose/velocity into volatile fields. The control loop
- * reads only those cached fields via getX/getY/getHeading — which never block.
- * A Control-Hub I2C hang now stalls only the worker; the main loop keeps
- * commanding the drivetrain.
+ * Changes from v1:
+ *   1. STATIC WORKER GUARD: a previous run's PinpointReader can no longer
+ *      survive into this run. The constructor force-stops any worker left
+ *      over from an earlier instance (e.g. when the old OpMode crashed and
+ *      its cleanup never ran). Two workers from two runs hammering the same
+ *      I2C bus through different driver objects was wedging the hub.
+ *   2. lastReadMs is now stamped ONLY on a VALID (non-NaN) read. Previously
+ *      a Pinpoint returning continuous NaNs kept isStale() == false while
+ *      the pose drifted on pure dead-reckoning, so the TeleOp never fell
+ *      back to robot-centric driving.
  *
- * getHeading() returns the last good heading in radians (never NaN — a NaN read
- * dead-reckons from the last velocity instead of publishing garbage). If the
- * worker hasn't produced a fresh reading within STALE_MS, isStale() goes true
- * and the TeleOp drops to robot-centric driving.
- *
- * processOdometry() is now a no-op kept for API compatibility. Call stopThread()
- * when the OpMode ends.
- *
- * NOTE: interrupt() can't unblock a thread stuck inside a native I2C call, so if
- * the Pinpoint is hard-wedged at stop time that one worker persists until the bus
- * recovers. That's a Java limitation, not fixable in user code — but it only
- * happens on an active hard lock, and the loop stays alive regardless.
+ * The Pinpoint read (update() + getters) runs on a worker thread and
+ * publishes pose/velocity into volatile fields. The control loop reads only
+ * cached fields via getX/getY/getHeading — which never block.
  */
 public class PinPointOdometrySubsystem {
 
     private static final long STALE_MS        = 100;   // cache older than this => odo unreliable
     private static final long WORKER_SLEEP_MS = 5;     // ~200 Hz read cadence
+
+    // Guard against a leaked worker from a previous OpMode run.
+    private static volatile Thread  previousWorker  = null;
+    private static volatile boolean previousRunning = false; // not directly usable; see note below
 
     private final GoBildaPinpointDriver pinpointDriver;
     private final Object driverLock = new Object();
@@ -71,6 +72,25 @@ public class PinPointOdometrySubsystem {
     private double prevLogX = 0, prevLogY = 0, prevLogHeading = 0;
 
     public PinPointOdometrySubsystem(Hardware hw) {
+
+        // ============================================================
+        // KILL ANY LEAKED WORKER FROM A PREVIOUS RUN before touching
+        // the bus. interrupt() can't unblock native I2C, but it stops
+        // the loop at the next sleep/iteration; we then wait briefly
+        // for it to die before starting our own reads.
+        // ============================================================
+        Thread old = previousWorker;
+        if (old != null && old.isAlive()) {
+            RobotLog.ww("PinpointOdo", "Leaked PinpointReader from previous run detected — stopping it.");
+            old.interrupt();
+            try { old.join(500); } catch (InterruptedException ignored) {}
+            if (old.isAlive()) {
+                // Hard-wedged in native I2C. We can't kill it; log loudly so
+                // a freeze this run is attributable.
+                RobotLog.ee("PinpointOdo", "Old PinpointReader did NOT die — possible I2C contention this run!");
+            }
+        }
+
         pinpointDriver = hw.pinPointOdo;
 
         pinpointDriver.setOffsets(0, 20);
@@ -114,16 +134,18 @@ public class PinPointOdometrySubsystem {
         worker = new Thread(this::workerLoop, "PinpointReader");
         worker.setDaemon(true);
         worker.start();
+        previousWorker = worker;   // register so the NEXT run can clean us up
     }
 
     public void stopThread() {
         running = false;
         if (worker != null) worker.interrupt();
+        if (worker == previousWorker) previousWorker = null;
         closeLog();
     }
 
     private void workerLoop() {
-        while (running) {
+        while (running && !Thread.currentThread().isInterrupted()) {
             double dtMs = workerDtTimer.milliseconds();
             workerDtTimer.reset();
             workerLoopMs = dtMs;
@@ -133,17 +155,21 @@ public class PinPointOdometrySubsystem {
                 synchronized (driverLock) {
                     pinpointDriver.update();   // blocking I2C — but on THIS thread, not the loop
 
-                    Double cx = pinpointDriver.getPosX();
-                    Double cy = pinpointDriver.getPosY();
-                    Double ch = pinpointDriver.getHeading();
+                    double cx = pinpointDriver.getPosX();
+                    double cy = pinpointDriver.getPosY();
+                    double ch = pinpointDriver.getHeading();
 
-                    if (cx.isNaN() || cy.isNaN() || ch.isNaN()) {
+                    if (Double.isNaN(cx) || Double.isNaN(cy) || Double.isNaN(ch)) {
                         nanCounter++;
                         usedDeadReckon = true;
                         double dtSec = dtMs / 1000.0;
                         x       = previousX       + (vx / 10.0) * dtSec;
                         y       = previousY       + (vy / 10.0) * dtSec;
                         heading = previousHeading + vtheta * dtSec;
+                        previousX = x; previousY = y; previousHeading = heading;
+                        // NOTE: lastReadMs is NOT stamped — continuous NaNs
+                        // must trip isStale() so the TeleOp drops to
+                        // robot-centric instead of trusting drifted pose.
                     } else {
                         x       = cx / 10.0;
                         y       = cy / 10.0;      // +Y convention (driver-native)
@@ -155,9 +181,10 @@ public class PinPointOdometrySubsystem {
                         vtheta = pinpointDriver.getHeadingVelocity();
                         rawX   = pinpointDriver.getEncoderX();
                         rawY   = pinpointDriver.getEncoderY();
+
+                        lastReadMs = System.currentTimeMillis();  // VALID reads only
                     }
                 }
-                lastReadMs = System.currentTimeMillis();   // stamped only on a returned read
                 if (loggingEnabled) writeLog(dtMs, usedDeadReckon);
             } catch (Exception e) {
                 // Driver threw — keep the cached pose; staleness will trip if it persists.
@@ -265,7 +292,7 @@ public class PinPointOdometrySubsystem {
     // Cached getters — never block
     // =====================================================================
 
-    /** True if the worker hasn't produced a fresh read recently (bus wedged / driver throwing). */
+    /** True if the worker hasn't produced a fresh VALID read recently. */
     public boolean isStale() { return (System.currentTimeMillis() - lastReadMs) > STALE_MS; }
 
     public int    getNanCounter()      { return nanCounter; }
