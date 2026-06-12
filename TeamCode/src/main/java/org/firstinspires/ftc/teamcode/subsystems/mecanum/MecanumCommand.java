@@ -11,7 +11,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * positional PID and field-oriented driving.
  */
 public class MecanumCommand {
-
+    public boolean isHeadingStale() { return pinPointOdoSubsystem.isStale(); }
+    public void    stopOdometry()   { pinPointOdoSubsystem.stopThread(); }
     private MecanumSubsystem mecanumSubsystem;
     private PinPointOdometrySubsystem pinPointOdoSubsystem;
     private Hardware hw;

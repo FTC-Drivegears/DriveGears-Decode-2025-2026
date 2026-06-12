@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.lynx.LynxModule;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.coloursensor.ColourSensorSubsystem;
@@ -20,10 +21,18 @@ import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * CanadaCup Competition TeleOp — ALL CSV LOGGING DISABLED.
  * Use DiagnosticTeleOp for testing with full logging.
+ *
+ * Anti-freeze build:
+ *   - Both blocking I2C reads (V3 colour sensors, Pinpoint) run on worker
+ *     threads inside their subsystems; a wedged sensor can't freeze this loop.
+ *   - Heading falls back to robot-centric driving when the odo worker goes stale.
+ *   - LoopWatchdog (nested below) cuts drive power if the loop stalls anyway.
+ *   - Lynx bulk caching (MANUAL) keeps the Exp-Hub encoder reads cheap.
  */
 @TeleOp(name = "CanadaCup", group = "TeleOp")
 public class CanadaCupTeleOp extends LinearOpMode {
@@ -122,17 +131,33 @@ public class CanadaCupTeleOp extends LinearOpMode {
         final double preloadL = PusherConsts.PUSHER_DOWN_POSITION_L
                 + (PusherConsts.PUSHER_UP_POSITION_L - PusherConsts.PUSHER_DOWN_POSITION_L) * PRELOAD_FRACTION;
 
+        // Turret + flywheel encoders live on the Expansion Hub (relayed over RS-485).
+        // MANUAL bulk caching => one bulk read per hub per loop instead of one per call.
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule m : allHubs) m.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+
+        // Drive watchdog — zeros drive if the main loop stalls > 250 ms.
+        LoopWatchdog watchdog = new LoopWatchdog(250, hw.lf, hw.rf, hw.lb, hw.rb);
+        watchdog.start();
+
         waitForStart();
 
         while (opModeIsActive()) {
 
+            // Refresh the per-hub bulk cache once, then pet the watchdog.
+            for (LynxModule m : allHubs) m.clearBulkCache();
+            watchdog.pet();
+
             // ===== TEMP DIAGNOSTIC: stall locator. On a freeze, the LAST "PHASE:"
-            // line in logcat is the call that hung. Remove this block once found. =====
+            // line in logcat is the call that hung. Safe to delete now that the
+            // blocking reads are off the loop. =====
             RobotLog.ii("PHASE", "odo");
             mecanumCommand.processOdometry();
 
             double heading = mecanumCommand.getOdoHeading();
-            if (Double.isNaN(heading)) heading = 0;   // guard: never feed NaN into the field-oriented transform
+            // Robot-centric fallback: zero the heading fed to the field transform
+            // whenever odo is dead (NaN or worker gone stale).
+            if (Double.isNaN(heading) || mecanumCommand.isHeadingStale()) heading = 0;
 
             double inputY = -gamepad1.left_stick_y;
             double inputX =  gamepad1.left_stick_x;
@@ -349,6 +374,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 telemetry.addData("Shooter on",   isShooterOn);
                 telemetry.addData("RPM Latched",  rpmLatch);
                 telemetry.addLine("---");
+                telemetry.addData("Odo stale",    mecanumCommand.isHeadingStale());
+                telemetry.addData("Colour stale", colourSubsystem.isStale());
+                telemetry.addData("Watchdog",     watchdog.isTripped() ? "TRIPPED" : "ok");
+                telemetry.addLine("---");
                 telemetry.addData("Balls",        Arrays.toString(sorterSubsystem.getSorterList()));
                 telemetry.addData("Sorter pos",   sorterSubsystem.getSorterPos());
                 telemetry.addData("Colour",       sorterSubsystem.selectedColour);
@@ -358,5 +387,51 @@ public class CanadaCupTeleOp extends LinearOpMode {
             }
             RobotLog.ii("PHASE", "end");
         }
+
+        // Loop exited normally (STOP pressed) — shut the worker threads down.
+        watchdog.stop();
+        mecanumCommand.stopOdometry();
+        colourSubsystem.stop();
+    }
+
+    /**
+     * Cuts drive power if the main loop stops petting it. Backstop only — does not
+     * recover a hung read. Can only zero motors on a live hub, which is why the
+     * drivetrain sits alone on the Control Hub.
+     */
+    private static class LoopWatchdog {
+        private final DcMotor[] drive;
+        private final long stallMs;
+        private volatile long    lastPet = System.currentTimeMillis();
+        private volatile boolean running = false;
+        private volatile boolean tripped = false;
+        private Thread thread;
+
+        LoopWatchdog(long stallMs, DcMotor... drive) {
+            this.stallMs = stallMs;
+            this.drive   = drive;
+        }
+
+        void start() {
+            running = true;
+            lastPet = System.currentTimeMillis();
+            thread = new Thread(() -> {
+                while (running) {
+                    if (System.currentTimeMillis() - lastPet > stallMs) {
+                        tripped = true;
+                        for (DcMotor m : drive) {
+                            try { m.setPower(0); } catch (Exception ignored) {}
+                        }
+                    }
+                    try { Thread.sleep(20); } catch (InterruptedException e) { break; }
+                }
+            }, "LoopWatchdog");
+            thread.setDaemon(true);
+            thread.start();
+        }
+
+        void pet()          { lastPet = System.currentTimeMillis(); tripped = false; }
+        boolean isTripped() { return tripped; }
+        void stop()         { running = false; if (thread != null) thread.interrupt(); }
     }
 }

@@ -16,68 +16,59 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * PinPointOdometrySubsystem wraps GoBildaPinpointDriver.
+ * Threaded PinPointOdometrySubsystem.
  *
- * getHeading() returns radians (as the driver provides).
- * DO NOT add Math.toRadians() — the driver already returns radians.
+ * The Pinpoint read (pinpointDriver.update() + the getters) runs on a worker
+ * thread and publishes pose/velocity into volatile fields. The control loop
+ * reads only those cached fields via getX/getY/getHeading — which never block.
+ * A Control-Hub I2C hang now stalls only the worker; the main loop keeps
+ * commanding the drivetrain.
  *
- * Driver units (confirmed against GoBildaPinpointDriver source):
- *   getPosX/getPosY        — mm
- *   getHeading             — radians
- *   getVelX/getVelY        — mm/sec
- *   getHeadingVelocity     — radians/sec   (NOT deg/s)
+ * getHeading() returns the last good heading in radians (never NaN — a NaN read
+ * dead-reckons from the last velocity instead of publishing garbage). If the
+ * worker hasn't produced a fresh reading within STALE_MS, isStale() goes true
+ * and the TeleOp drops to robot-centric driving.
  *
- * CSV log columns:
- * time_ms          — ms since subsystem init
- * x_cm             — estimated x position (cm)
- * y_cm             — estimated y position (cm)
- * heading_rad      — heading in radians
- * heading_deg      — heading in degrees (for human readability)
- * raw_encoder_x    — raw x encoder ticks
- * raw_encoder_y    — raw y encoder ticks
- * vel_x            — x velocity (mm/s, driver units)
- * vel_y            — y velocity (mm/s, driver units)
- * heading_vel      — heading velocity (rad/s from driver)
- * nan_count        — cumulative NaN readings detected
- * using_dead_reckon— 1 if this frame used dead reckoning, 0 if sensor valid
- * loop_dt_ms       — time since last processOdometry() call (ms)
- * delta_x_cm       — change in x since last frame (cm)
- * delta_y_cm       — change in y since last frame (cm)
- * delta_heading_rad— change in heading since last frame (rad)
- * x_jump_flag      — 1 if |delta_x| > 50cm in one frame (sensor glitch)
- * h_jump_flag      — 1 if |delta_heading_rad| > 1.0 rad in one frame (glitch)
+ * processOdometry() is now a no-op kept for API compatibility. Call stopThread()
+ * when the OpMode ends.
+ *
+ * NOTE: interrupt() can't unblock a thread stuck inside a native I2C call, so if
+ * the Pinpoint is hard-wedged at stop time that one worker persists until the bus
+ * recovers. That's a Java limitation, not fixable in user code — but it only
+ * happens on an active hard lock, and the loop stays alive regardless.
  */
 public class PinPointOdometrySubsystem {
 
-    private GoBildaPinpointDriver pinpointDriver;
+    private static final long STALE_MS        = 100;   // cache older than this => odo unreliable
+    private static final long WORKER_SLEEP_MS = 5;     // ~200 Hz read cadence
 
-    private double x       = 0;
-    private double y       = 0;
-    private double heading = 0;
+    private final GoBildaPinpointDriver pinpointDriver;
+    private final Object driverLock = new Object();
 
-    private double previousX       = 0;
-    private double previousY       = 0;
-    private double previousHeading = 0;
+    // ---- published by worker, read by main loop ----
+    private volatile double x = 0, y = 0, heading = 0;   // cm, cm, rad
+    private volatile double vx = 0, vy = 0, vtheta = 0;  // mm/s, mm/s, rad/s
+    private volatile int    rawX = 0, rawY = 0;
+    private volatile long   lastReadMs  = 0;
+    private volatile int    nanCounter  = 0;
+    private volatile double workerLoopMs = 0;
 
-    private double vx     = 0;   // mm/s
-    private double vy     = 0;   // mm/s
-    private double vtheta = 0;   // rad/s
+    // ---- worker-thread-only dead-reckon state ----
+    private double previousX = 0, previousY = 0, previousHeading = 0;
 
-    private ElapsedTime controllerLoopTime;
-    private ElapsedTime totalTimer;
-    private int nanCounter = 0;
+    private final ElapsedTime totalTimer    = new ElapsedTime();
+    private final ElapsedTime workerDtTimer = new ElapsedTime();
 
-    // Logging
+    private Thread worker;
+    private volatile boolean running = false;
+
+    // ---- logging (worker thread only) ----
     private BufferedWriter      logWriter      = null;
-    private boolean             loggingEnabled = false;
+    private volatile boolean    loggingEnabled = false;
     private final StringBuilder logLine        = new StringBuilder(256);
     private int                 logFailCount   = 0;
     private int                 frameCount     = 0;
-
-    // Previous frame values for delta computation
-    private double prevLogX       = 0;
-    private double prevLogY       = 0;
-    private double prevLogHeading = 0;
+    private double prevLogX = 0, prevLogY = 0, prevLogHeading = 0;
 
     public PinPointOdometrySubsystem(Hardware hw) {
         pinpointDriver = hw.pinPointOdo;
@@ -88,12 +79,10 @@ public class PinPointOdometrySubsystem {
         pinpointDriver.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
                 GoBildaPinpointDriver.EncoderDirection.FORWARD);
-
-        controllerLoopTime = new ElapsedTime();
-        totalTimer         = new ElapsedTime();
         pinpointDriver.resetPosAndIMU();
-        controllerLoopTime.reset();
+
         totalTimer.reset();
+        workerDtTimer.reset();
 
         try {
             String ts   = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
@@ -111,96 +100,88 @@ public class PinPointOdometrySubsystem {
         } catch (IOException e) {
             loggingEnabled = false;
         }
+
+        startWorker();
     }
 
-    public void disableLogging() {
-        loggingEnabled = false;
-        if (logWriter != null) {
-            try { logWriter.flush(); logWriter.close(); } catch (IOException e) {}
-            logWriter = null;
+    // =====================================================================
+    // Worker thread — the ONLY place the Pinpoint is read
+    // =====================================================================
+
+    private void startWorker() {
+        running    = true;
+        lastReadMs = System.currentTimeMillis();
+        worker = new Thread(this::workerLoop, "PinpointReader");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    public void stopThread() {
+        running = false;
+        if (worker != null) worker.interrupt();
+        closeLog();
+    }
+
+    private void workerLoop() {
+        while (running) {
+            double dtMs = workerDtTimer.milliseconds();
+            workerDtTimer.reset();
+            workerLoopMs = dtMs;
+
+            boolean usedDeadReckon = false;
+            try {
+                synchronized (driverLock) {
+                    pinpointDriver.update();   // blocking I2C — but on THIS thread, not the loop
+
+                    Double cx = pinpointDriver.getPosX();
+                    Double cy = pinpointDriver.getPosY();
+                    Double ch = pinpointDriver.getHeading();
+
+                    if (cx.isNaN() || cy.isNaN() || ch.isNaN()) {
+                        nanCounter++;
+                        usedDeadReckon = true;
+                        double dtSec = dtMs / 1000.0;
+                        x       = previousX       + (vx / 10.0) * dtSec;
+                        y       = previousY       + (vy / 10.0) * dtSec;
+                        heading = previousHeading + vtheta * dtSec;
+                    } else {
+                        x       = cx / 10.0;
+                        y       = cy / 10.0;      // +Y convention (driver-native)
+                        heading = ch;             // radians — do not convert
+                        previousX = x; previousY = y; previousHeading = heading;
+
+                        vx     = pinpointDriver.getVelX();
+                        vy     = pinpointDriver.getVelY();
+                        vtheta = pinpointDriver.getHeadingVelocity();
+                        rawX   = pinpointDriver.getEncoderX();
+                        rawY   = pinpointDriver.getEncoderY();
+                    }
+                }
+                lastReadMs = System.currentTimeMillis();   // stamped only on a returned read
+                if (loggingEnabled) writeLog(dtMs, usedDeadReckon);
+            } catch (Exception e) {
+                // Driver threw — keep the cached pose; staleness will trip if it persists.
+            }
+
+            try { Thread.sleep(WORKER_SLEEP_MS); }
+            catch (InterruptedException e) { break; }
         }
-    }
-
-    public void closeLog() {
-        if (logWriter != null) {
-            try { logWriter.flush(); logWriter.close(); } catch (IOException ignored) {}
-            logWriter = null;
-        }
-    }
-
-    public int    getNanCounter()       { return nanCounter; }
-    public double getControlLoopTime()  { return controllerLoopTime.seconds(); }
-
-    public void processOdometry() {
-        double dtMs = controllerLoopTime.milliseconds();
-        controllerLoopTime.reset();
-
-        pinpointDriver.update();
-        x       = pinpointDriver.getPosX() / 10.0;
-        y       = pinpointDriver.getPosY() / 10.0;   // +Y convention (driver-native)
-        heading = pinpointDriver.getHeading();        // radians — do not convert
-
-        writeLog(dtMs, false);
-    }
-
-    public void deadReckoning() {
-        double dtMs = controllerLoopTime.milliseconds();
-        controllerLoopTime.reset();
-
-        pinpointDriver.update();
-
-        Double checkX       = pinpointDriver.getPosX();
-        Double checkY       = pinpointDriver.getPosY();
-        Double checkHeading = pinpointDriver.getHeading();
-
-        boolean usedDeadReckon = false;
-
-        if (checkX.isNaN() || checkY.isNaN() || checkHeading.isNaN()) {
-            nanCounter++;
-            usedDeadReckon = true;
-            // dtMs is milliseconds; velocities are per-second → convert to seconds.
-            // vx,vy are mm/s → /10.0 = cm/s. vtheta is rad/s (matches heading in rad).
-            double dtSec = dtMs / 1000.0;
-            x       = previousX       + (vx / 10.0) * dtSec;
-            y       = previousY       + (vy / 10.0) * dtSec;
-            heading = previousHeading + vtheta * dtSec;
-        } else {
-            x       = pinpointDriver.getPosX() / 10.0;
-            y       = pinpointDriver.getPosY() / 10.0;   // +Y convention — matches processOdometry()
-            heading = pinpointDriver.getHeading();        // radians — do not convert
-
-            previousX       = x;
-            previousY       = y;
-            previousHeading = heading;
-
-            vx     = pinpointDriver.getVelX();              // mm/s
-            vy     = pinpointDriver.getVelY();              // mm/s
-            vtheta = pinpointDriver.getHeadingVelocity();   // rad/s
-        }
-
-        writeLog(dtMs, usedDeadReckon);
     }
 
     private void writeLog(double dtMs, boolean usedDeadReckon) {
-        if (!loggingEnabled || logWriter == null) return;
+        if (logWriter == null) return;
         frameCount++;
 
-        double deltaX   = x       - prevLogX;
-        double deltaY   = y       - prevLogY;
-        double deltaH   = heading - prevLogHeading;
-        // wrap delta heading
+        double deltaX = x - prevLogX;
+        double deltaY = y - prevLogY;
+        double deltaH = heading - prevLogHeading;
         while (deltaH >  Math.PI) deltaH -= 2 * Math.PI;
         while (deltaH < -Math.PI) deltaH += 2 * Math.PI;
 
-        int xJump = Math.abs(deltaX) > 50.0 ? 1 : 0;   // >50cm jump in one frame = glitch
-        // Threshold raised 0.5→1.0 rad (57°): PinPoint accumulates heading unboundedly
-        // so fast rotation legitimately produces large per-frame deltas at 38ms loop rate.
-        // 1.0 rad (~57°) in one frame at 38ms = 1500°/s which is physically impossible.
-        int hJump = Math.abs(deltaH) > 1.0 ? 1 : 0;
+        int xJump = Math.abs(deltaX) > 50.0 ? 1 : 0;
+        int hJump = Math.abs(deltaH) > 1.0  ? 1 : 0;
 
-        prevLogX       = x;
-        prevLogY       = y;
-        prevLogHeading = heading;
+        prevLogX = x; prevLogY = y; prevLogHeading = heading;
 
         try {
             logLine.setLength(0);
@@ -209,8 +190,8 @@ public class PinPointOdometrySubsystem {
                     .append(y).append(',')
                     .append(heading).append(',')
                     .append(Math.toDegrees(heading)).append(',')
-                    .append(pinpointDriver.getEncoderX()).append(',')
-                    .append(pinpointDriver.getEncoderY()).append(',')
+                    .append(rawX).append(',')
+                    .append(rawY).append(',')
                     .append(vx).append(',')
                     .append(vy).append(',')
                     .append(vtheta).append(',')
@@ -223,49 +204,79 @@ public class PinPointOdometrySubsystem {
                     .append(xJump).append(',')
                     .append(hJump).append('\n');
             logWriter.write(logLine.toString());
-
-            // Frame-count modulus flush: one flush every 100 loops, bounding heap
-            // accumulation without per-loop filesystem pressure.
-            if (frameCount % 100 == 0) {
-                logWriter.flush();
-            }
+            if (frameCount % 100 == 0) logWriter.flush();
         } catch (IOException e) {
             logFailCount++;
             if (logFailCount > 20) loggingEnabled = false;
         }
     }
 
-    public void setNewPosition(double x, double y, double headingDeg) {
-        pinpointDriver.setPosition(
-                new Pose2D(DistanceUnit.CM, x, y, AngleUnit.DEGREES, headingDeg));
+    // =====================================================================
+    // Logging control
+    // =====================================================================
+
+    public void disableLogging() {
+        loggingEnabled = false;
+        if (logWriter != null) {
+            try { logWriter.flush(); logWriter.close(); } catch (IOException ignored) {}
+            logWriter = null;
+        }
+    }
+
+    public void closeLog() {
+        if (logWriter != null) {
+            try { logWriter.flush(); logWriter.close(); } catch (IOException ignored) {}
+            logWriter = null;
+        }
+        loggingEnabled = false;
+    }
+
+    // No-op kept for API compatibility — the worker reads continuously now.
+    public void processOdometry() { /* intentionally empty */ }
+
+    // =====================================================================
+    // Position writes — synchronized against the worker's reads
+    // =====================================================================
+
+    public void setNewPosition(double xCm, double yCm, double headingDeg) {
+        synchronized (driverLock) {
+            pinpointDriver.setPosition(
+                    new Pose2D(DistanceUnit.CM, xCm, yCm, AngleUnit.DEGREES, headingDeg));
+        }
     }
 
     public void reset() {
-        pinpointDriver.resetPosAndIMU();
+        synchronized (driverLock) {
+            pinpointDriver.resetPosAndIMU();
+        }
         prevLogX = 0; prevLogY = 0; prevLogHeading = 0;
     }
 
-    /**
-     * Resets only the XY position to zero while preserving the current heading.
-     * Use this for mid-match re-zeroing — avoids corrupting the heading estimate
-     * (and therefore the turret's world-angle tracking) the way resetPosAndIMU() does.
-     */
     public void resetPositionOnly() {
-        double currentHeadingDeg = Math.toDegrees(getHeading());
-        pinpointDriver.setPosition(
-                new Pose2D(DistanceUnit.CM, 0, 0, AngleUnit.DEGREES, currentHeadingDeg));
+        synchronized (driverLock) {
+            double currentHeadingDeg = Math.toDegrees(heading);
+            pinpointDriver.setPosition(
+                    new Pose2D(DistanceUnit.CM, 0, 0, AngleUnit.DEGREES, currentHeadingDeg));
+        }
         prevLogX = 0; prevLogY = 0;
-        // prevLogHeading preserved intentionally
     }
 
-    public double getRawX()  { return pinpointDriver.getEncoderX(); }
-    public double getRawY()  { return pinpointDriver.getEncoderY(); }
+    // =====================================================================
+    // Cached getters — never block
+    // =====================================================================
 
-    public double getX()              { return x; }
-    public double getY()              { return y; }
-    public double getHeading()        { return heading; }  // radians
-    public double getHeadingVelocity(){ return pinpointDriver.getHeadingVelocity(); }  // rad/s
-    public double getVx()             { return vx; }
-    public double getVy()             { return vy; }
-    public double getVtheta()         { return vtheta; }
+    /** True if the worker hasn't produced a fresh read recently (bus wedged / driver throwing). */
+    public boolean isStale() { return (System.currentTimeMillis() - lastReadMs) > STALE_MS; }
+
+    public int    getNanCounter()      { return nanCounter; }
+    public double getControlLoopTime() { return workerLoopMs / 1000.0; }
+    public double getX()               { return x; }
+    public double getY()               { return y; }
+    public double getHeading()         { return heading; }   // radians
+    public double getHeadingVelocity() { return vtheta; }    // rad/s (cached)
+    public double getVx()              { return vx; }
+    public double getVy()              { return vy; }
+    public double getVtheta()          { return vtheta; }
+    public double getRawX()            { return rawX; }
+    public double getRawY()            { return rawY; }
 }
