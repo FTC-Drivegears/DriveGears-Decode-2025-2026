@@ -13,7 +13,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.opmodes.tests.vision.LimelightVision;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.turret.AutoTurret;
+import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismAuto;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
@@ -77,7 +77,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
     private static Servo     hood;
     private static Servo     sorter;
     private static DcMotorEx intake;
-    private AutoTurret turret;
+    private TurretMechanismAuto turret;
 
     boolean outtakeFlag = false;
     boolean intakeFlag  = false;
@@ -85,11 +85,6 @@ public class NewRedAutoOp2 extends LinearOpMode {
     private boolean shooterAtSpeed() {
 
         return shooterSubsystem.isRPMReached();
-    }
-    private boolean turretReady() {
-        return turret.hasTarget()
-                && !turret.isUnwinding()
-                && Math.abs(turret.getLastError()) < 7.0;
     }
 
 
@@ -188,10 +183,9 @@ public class NewRedAutoOp2 extends LinearOpMode {
         hood     = hw.hood;
         intake   = hw.intake;
 
-        turret = new AutoTurret();
+        turret = new TurretMechanismAuto();
         turret.init(hardwareMap);
         // No setkP/setkD override — uses our tuned defaults (kP=0.050, kD=0.009)
-        turret.setMecanumCommand(mecanumCommand);
 
         limelight = hw.limelight;
         limelight.pipelineSwitch(0);
@@ -253,24 +247,13 @@ public class NewRedAutoOp2 extends LinearOpMode {
 
             // Full update signature — passes odo position for accurate world-angle tracking
             long llStaleMs = (llResult != null) ? llResult.getStaleness() : -1;
-            turret.update(tx, ty,
-                    shooterSubsystem.getShooterVelocity() * 60.0 / 28.0,
-                    turret.getShootRPM(),
-                    shooterSubsystem.isRPMReached(),
-                    false,
-                    0,
-                    llStaleMs,
-                    mecanumCommand.getOdoX(),
-                    mecanumCommand.getOdoY(),
-                    mecanumCommand.getHeadingVelocity(),
-                    true);   // autoAimOn always true in auto
+            turret.update();   // autoAimOn always true in auto
 
             telemetry.addData("stage",      stage);
             telemetry.addData("Pattern",    pattern);
             telemetry.addData("tx",         tx);
             telemetry.addData("ty",         ty);
             telemetry.addData("RPM ready",  shooterSubsystem.isRPMReached());
-            telemetry.addData("distance",   turret.getDistanceTrack());
             processTelemetry();
 
             switch (autoState) {
@@ -422,7 +405,6 @@ public class NewRedAutoOp2 extends LinearOpMode {
             }
         }
 
-        turret.closeLog();
     }
 
     // -------------------------------------------------------------------------
@@ -441,9 +423,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 } break;
             case 2: case 5: case 8:
                 // Pre-load at 2/3 while waiting; fire all the way when ready
-                if ((!shooterAtSpeed() || !turretReady()) && stageTimer.milliseconds() > 250) {
-                    preload();
-                } else if (turretReady() &&  stageTimer.milliseconds() > 300) { //600
+                if (shooterAtSpeed()) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
@@ -483,9 +463,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 } break;
             case 2: case 5: case 8:
                 // Pre-load at 2/3 while waiting; fire all the way when ready
-                if ((!shooterAtSpeed() || !turretReady() )&& stageTimer.milliseconds() > 250) {
-                    preload();
-                } else if (turretReady() && stageTimer.milliseconds() > 300) { //600
+                if (shooterAtSpeed()) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
@@ -525,9 +503,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 } break;
             case 2: case 5: case 8:
                 // Pre-load at 2/3 while waiting; fire all the way when ready
-                if ((!shooterAtSpeed() || !turretReady()) && stageTimer.milliseconds() > 250) {
-                    preload();
-                } else if (turretReady() && stageTimer.milliseconds() > 300 ) { //600
+                if (shooterAtSpeed()) { //600
                     halfPush(true);
                     stage++; stageTimer.reset();
                 } break;
