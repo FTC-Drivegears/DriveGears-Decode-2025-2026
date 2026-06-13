@@ -39,9 +39,9 @@ public class NewRedAutoOp2 extends LinearOpMode {
     }
 
     // Pusher positions
-    private static final double PUSHER_UP_L      = PusherConsts.PUSHER_UP_POSITION_L;
+    private static final double PUSHER_UP_L      = PusherConsts.PUSHER_UP_POSITION_L + 0.15;
     private static final double PUSHER_DOWN_L     = PusherConsts.PUSHER_DOWN_POSITION_L;
-    private static final double PUSHER_UP_R      = PusherConsts.PUSHER_UP_POSITION_R;
+    private static final double PUSHER_UP_R      = PusherConsts.PUSHER_UP_POSITION_R - 0.15;
     private static final double PUSHER_DOWN_R     = PusherConsts.PUSHER_DOWN_POSITION_R;
 
     // 2/3 pre-load position — same as TeleOp, holds ball against flywheel
@@ -111,22 +111,30 @@ public class NewRedAutoOp2 extends LinearOpMode {
 
     /** Moves pusher to full up (fire) or full down. Returns true when move is complete. */
     static boolean halfPush(boolean isUp) {
+
         if (isUp) {
+
             if (!isPusherUp) {
                 pusher_L.setPosition(PUSHER_UP_L);
                 pusher_R.setPosition(PUSHER_UP_R);
                 isPusherUp = true;
                 pusherTimer.reset();
             }
-        } else {
+
+            return pusherTimer.milliseconds() >= PUSHER_TIME;
+        }
+
+        else {
+
             if (isPusherUp) {
                 pusher_L.setPosition(PUSHER_DOWN_L);
                 pusher_R.setPosition(PUSHER_DOWN_R);
                 isPusherUp = false;
                 pusherTimer.reset();
             }
+
+            return pusherTimer.milliseconds() >= PUSHER_TIME;
         }
-        return pusherTimer.milliseconds() >= PUSHER_TIME;
     }
 
     static boolean sort(int sp) {
@@ -186,6 +194,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
         turret = new TurretMechanismAuto();
         turret.init(hardwareMap);
         // No setkP/setkD override — uses our tuned defaults (kP=0.050, kD=0.009)
+        turret.setTarget(0, 3300, 0.359);
 
         limelight = hw.limelight;
         limelight.pipelineSwitch(0);
@@ -227,7 +236,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
             telemetry.update();
         }
 
-        limelight.pipelineSwitch(7);
+        limelight.pipelineSwitch(8);
 
         waitForStart();
 
@@ -260,7 +269,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 case FIRST_SHOT:
                     outtakeFlag = true;
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
-                    mecanumCommand.moveToPos(26, 6, -0.357);
+                    mecanumCommand.moveToPos(26, 6, -0.43);
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1: processGPP1(AUTO_STATE.RESET);  break;
@@ -285,7 +294,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                     switch (stage) {
                         case 0:
 //                            mecanumCommand.moveToPos(0, 0, 0);
-                            mecanumCommand.moveToPos(78, -30, -Math.PI / 2);
+                            mecanumCommand.moveToPos(76, -30, -Math.PI / 2);
                             stageTimer.reset();
                             stage++;
                             break;
@@ -297,7 +306,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                         case 2:
                             if (stageTimer.milliseconds() > 250) {
 //                                mecanumCommand.moveToPos(0, 0, 0);
-                                mecanumCommand.moveToPos(78, -44, -Math.PI / 2);
+                                mecanumCommand.moveToPos(76, -46, -Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
                         case 3:
@@ -310,7 +319,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                         case 4:
                             if (stageTimer.milliseconds() > 500) {
 //                                mecanumCommand.moveToPos(0, 0, 0);
-                                mecanumCommand.moveToPos(78, -60, -Math.PI / 2);
+                                mecanumCommand.moveToPos(76, -60, -Math.PI / 2);
                                 stageTimer.reset();
                                 stage++;
                             } break;
@@ -323,7 +332,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                                 stageTimer.reset(); stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
 //                                mecanumCommand.moveToPos(0, 0, 0);
-                                mecanumCommand.moveToPos(26, 6, -0.357);
+                                mecanumCommand.moveToPos(26, 6, -0.43);
                             } break;
                     }
                     break;
@@ -344,7 +353,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 case RESET_2:
                     if (!isPusherUp && stageTimer.milliseconds() > 500) {
                         if (sort(2)) {
-                            stage = 0; stageTimer.reset();
+                            stage = -1; stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_2;
                             intakeFlag = true;
                         }
@@ -353,15 +362,22 @@ public class NewRedAutoOp2 extends LinearOpMode {
 
                 case COLLECTION_2:
                     switch (stage) {
+                        case -1:
+                            mecanumCommand.moveToPos(136, -20, -Math.PI / 2);
+                            stage++;
+                            stageTimer.reset();
+                            break;
                         case 0:
-                            mecanumCommand.moveToPos(138, -34, -Math.PI / 2);
+                            if(stageTimer.milliseconds() > 500){
+                                mecanumCommand.moveToPos(136, -38, -Math.PI / 2);
+                                stageTimer.reset(); stage++; break;
+                            };
 //                            mecanumCommand.moveToPos(0, 0, 0);
-                            stageTimer.reset(); stage++; break;
                         case 1:
                             if (mecanumCommand.isPositionReached()) { stage++; stageTimer.reset(); } break;
                         case 2:
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(138, -52, -Math.PI / 2);
+                                mecanumCommand.moveToPos(136, -52, -Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
                         case 3:
@@ -370,7 +386,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                             } break;
                         case 4:
                             if (stageTimer.milliseconds() > 500) {
-                                mecanumCommand.moveToPos(138, -63, -Math.PI / 2);
+                                mecanumCommand.moveToPos(136, -68, -Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
                         case 5:
@@ -380,9 +396,9 @@ public class NewRedAutoOp2 extends LinearOpMode {
                         case 6:
                             if (stageTimer.milliseconds() > 750) {
                                 stageTimer.reset(); stage = 0;
-                                autoState = AUTO_STATE.FINISH;
-                                shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
-                                mecanumCommand.moveToPos(26, 6, -0.355);
+                                autoState = AUTO_STATE.THIRD_SHOT;
+                                //shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
+                                mecanumCommand.moveToPos(26, 6, -0.43);
                             } break;
                     }
                     break;
@@ -398,10 +414,19 @@ public class NewRedAutoOp2 extends LinearOpMode {
                     break;
 
                 case FINISH:
-                    outtakeFlag = false;
-                    intakeFlag  = false;
-                    mecanumCommand.stop();
-                    break;
+                    switch(stage){
+                        case 0:
+                            mecanumCommand.moveToPos(100, 0, 0);
+                            stageTimer.reset();
+                            stage++;
+                            break;
+                        case 1:
+                            outtakeFlag = false;
+                            intakeFlag  = false;
+                            mecanumCommand.stop();
+                            break;
+                    }
+
             }
         }
 
@@ -418,15 +443,28 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 intakeFlag = false; outtakeFlag = true;
                 stage++; stageTimer.reset(); break;
             case 1: //500
-                if (stageTimer.milliseconds() > 250) {
-                    if (sort(0)) { stage++; stageTimer.reset(); }
+                if (sort(0)) {
+                    if (stageTimer.milliseconds() > 250) { stage++; stageTimer.reset(); }
                 } break;
-            case 2: case 5: case 8:
-                // Pre-load at 2/3 while waiting; fire all the way when ready
-                if (shooterAtSpeed()) { //600
-                    halfPush(true);
-                    stage++; stageTimer.reset();
+            case 2:
+                if(shooterAtSpeed()  && halfPush(true)) {
+                    stage++;
+                    stageTimer.reset();
                 } break;
+
+            case 5:
+                // Pre-load at 2/3 while waiting; fire all the way when ready//600
+                if(shooterAtSpeed()  && halfPush(true)) {
+                    stage++;
+                    stageTimer.reset();
+                } break;
+
+            case 8:
+                if(shooterAtSpeed()  && halfPush(true) && stageTimer.milliseconds() > 200) {
+                    stage++;
+                    stageTimer.reset();
+                } break;
+
             case 3: case 6: case 9:
                 if (stageTimer.milliseconds() > 200) { //300
                     if (halfPush(false)) {
@@ -434,14 +472,14 @@ public class NewRedAutoOp2 extends LinearOpMode {
                         stageTimer.reset(); }
                 } break;
             case 4:
-                if (stageTimer.milliseconds() > 250) { //650
-                    if (sort(1)) {
+                if (sort(1)) { //650
+                    if (stageTimer.milliseconds() > 300) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 7:
-                if (stageTimer.milliseconds() > 400) { //1000
-                    if (sort(2)) {
+                if (sort(2)) { //1000
+                    if (stageTimer.milliseconds() > 250 ) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
@@ -458,30 +496,43 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 intakeFlag = false; outtakeFlag = true;
                 stage++; stageTimer.reset(); break;
             case 1: //500
-                if (stageTimer.milliseconds() > 250) {
-                    if (sort(2)) { stage++; stageTimer.reset(); }
+                if (sort(2)) {
+                    if (stageTimer.milliseconds() > 250) { stage++; stageTimer.reset(); }
                 } break;
-            case 2: case 5: case 8:
-                // Pre-load at 2/3 while waiting; fire all the way when ready
-                if (shooterAtSpeed()) { //600
-                    halfPush(true);
-                    stage++; stageTimer.reset();
+            case 2:
+                if(shooterAtSpeed()  && halfPush(true)) {
+                    stage++;
+                    stageTimer.reset();
                 } break;
+
+            case 5:
+                // Pre-load at 2/3 while waiting; fire all the way when ready//600
+                if(shooterAtSpeed()  && halfPush(true)) {
+                    stage++;
+                    stageTimer.reset();
+                } break;
+
+            case 8:
+                if(shooterAtSpeed()  && halfPush(true) && stageTimer.milliseconds() > 200) {
+                    stage++;
+                    stageTimer.reset();
+                } break;
+
             case 3: case 6: case 9:
-                if (stageTimer.milliseconds() > 200) { //300
+                if (stageTimer.milliseconds() > 225) { //300
                     if (halfPush(false)) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 4:
-                if (stageTimer.milliseconds() > 400) { //650
-                    if (sort(0)) {
+                if (sort(0)) { //650
+                    if (stageTimer.milliseconds() > 400 ) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 7:
-                if (stageTimer.milliseconds() > 250) { //1000
-                    if (sort(1)) {
+                if (sort(1)) { //1000
+                    if (stageTimer.milliseconds() > 250) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
@@ -498,15 +549,30 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 intakeFlag = false; outtakeFlag = true;
                 stage++; stageTimer.reset(); break;
             case 1: //500
-                if (stageTimer.milliseconds() > 250) {
-                    if (sort(1)) { stage++; stageTimer.reset(); }
+                if (sort(1)) {
+                    if (stageTimer.milliseconds() > 250) { stage++; stageTimer.reset(); }
                 } break;
-            case 2: case 5: case 8:
-                // Pre-load at 2/3 while waiting; fire all the way when ready
-                if (shooterAtSpeed()) { //600
-                    halfPush(true);
-                    stage++; stageTimer.reset();
+            case 2:
+                if(shooterAtSpeed()  && halfPush(true)) {
+                    stage++;
+                    stageTimer.reset();
                 } break;
+
+            case 5:
+                // Pre-load at 2/3 while waiting; fire all the way when ready//600
+                if(shooterAtSpeed()  && halfPush(true)) {
+                    stage++;
+                    stageTimer.reset();
+                } break;
+
+            case 8:
+                if(shooterAtSpeed()  && stageTimer.milliseconds() > 200) {
+                    if(halfPush(true)) {
+                        stage++;
+                        stageTimer.reset();
+                    }
+                } break;
+
             case 3: case 6: case 9:
                 if (stageTimer.milliseconds() > 200) { //300
                     if (halfPush(false)) {
@@ -514,14 +580,14 @@ public class NewRedAutoOp2 extends LinearOpMode {
                         stageTimer.reset(); }
                 } break;
             case 4:
-                if (stageTimer.milliseconds() > 250) { //650
-                    if (sort(2)) {
+                if (sort(2)) { //650
+                    if (stageTimer.milliseconds() > 250) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
             case 7:
-                if (stageTimer.milliseconds() > 400) { //1000
-                    if (sort(0)) {
+                if (sort(0)) { //1000
+                    if (stageTimer.milliseconds() > 300) {
                         stage++;
                         stageTimer.reset(); }
                 } break;
