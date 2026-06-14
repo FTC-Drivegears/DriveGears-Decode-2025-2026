@@ -14,7 +14,7 @@ public class ShooterSubsystem {
     private boolean pidfApplied = false;
     private boolean braking     = false;
 
-    private static final double BRAKE_THRESHOLD_RPM = 150.0;
+    private static final double BRAKE_THRESHOLD_RPM = 100.0;
     private static final double BRAKE_POWER_MAX     = 0.25;
 
     static final double DEFAULT_RPM          = 2600;
