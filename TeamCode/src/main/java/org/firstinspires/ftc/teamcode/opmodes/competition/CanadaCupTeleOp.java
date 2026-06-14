@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.lynx.LynxModule;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.coloursensor.ColourSensorSubsystem;
@@ -22,23 +21,7 @@ import org.firstinspires.ftc.teamcode.util.Artifact;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.Arrays;
-import java.util.List;
 
-/**
- * CanadaCup Competition TeleOp.
- *
- * Merged build:
- *   - Teammate features kept intact: sorter rescan state machine,
- *     sensor-confirmed quickfire, light helper methods (ready/auto on left,
- *     ball-colour + blinking selected-colour on right), dual-bumper slow mode.
- *   - Anti-freeze fixes restored:
- *       * try/finally cleanup — worker threads can NEVER leak into the next
- *         run (the leaked-thread I2C contention was the freeze root cause).
- *       * LoopWatchdog — zeros drive if the main loop stalls > 250 ms;
- *         trip flag latches for telemetry.
- *       * Lynx MANUAL bulk caching — keeps Exp-Hub encoder reads cheap.
- *       * Robot-centric fallback when odo heading is NaN OR stale.
- */
 @TeleOp(name = "CanadaCup", group = "TeleOp")
 public class CanadaCupTeleOp extends LinearOpMode {
 
@@ -225,38 +208,24 @@ public class CanadaCupTeleOp extends LinearOpMode {
         final double preloadL = PusherConsts.PUSHER_DOWN_POSITION_L
                 + (PusherConsts.PUSHER_UP_POSITION_L - PusherConsts.PUSHER_DOWN_POSITION_L) * PRELOAD_FRACTION;
 
-        // Turret + flywheel encoders live on the Expansion Hub (relayed over RS-485).
-        // MANUAL bulk caching => one bulk read per hub per loop instead of one per call.
-        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-        for (LynxModule m : allHubs) m.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-
-        // Drive watchdog — zeros drive if the main loop stalls > 250 ms.
-        LoopWatchdog watchdog = new LoopWatchdog(250, hw.lf, hw.rf, hw.lb, hw.rb);
-        watchdog.start();
-
         waitForStart();
 
-        // ============================================================
-        // try/finally: if ANY iteration throws, the worker threads are
-        // still shut down — they can never leak into the next run and
-        // wedge the I2C bus.
-        // ============================================================
+        // ---------------------------------------------------------------
+        // try/finally: guarantees the odometry worker thread is stopped on
+        // exit (clean stop, exception, or SDK kill).  A leaked odo thread
+        // contends on the I2C bus in the next run and hangs the colour
+        // sensor — this single block is the fix.
+        // ---------------------------------------------------------------
         try {
             while (opModeIsActive()) {
-
-                // Refresh the per-hub bulk cache once, then pet the watchdog.
-                for (LynxModule m : allHubs) m.clearBulkCache();
-                watchdog.pet();
 
                 RobotLog.ii("PHASE", "odo");
                 mecanumCommand.processOdometry();
 
                 double rawHeading = mecanumCommand.getOdoHeading();
+                if (Double.isNaN(rawHeading)) rawHeading = 0;
 
-                // Robot-centric fallback: zero the heading fed to the field
-                // transform whenever odo is dead (NaN) OR the worker is stale.
-                boolean odoUsable = !Double.isNaN(rawHeading) && !mecanumCommand.isHeadingStale();
-                double heading = odoUsable ? rawHeading : 0;
+                double heading = rawHeading;
 
                 double inputY = -gamepad1.left_stick_y;
                 double inputX =  gamepad1.left_stick_x;
@@ -511,11 +480,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     telemetry.addData("Shooter on",   isShooterOn);
                     telemetry.addData("RPM Latched",  rpmLatch);
                     telemetry.addLine("---");
-                    telemetry.addData("Drive Mode",   odoUsable ? "FIELD" : "ROBOT (odo stale)");
+                    telemetry.addData("Drive Mode",   "FIELD");
                     telemetry.addData("Heading Raw",  rawHeading);
                     telemetry.addData("Heading Deg",  Math.toDegrees(heading));
-                    telemetry.addData("Odo stale",    mecanumCommand.isHeadingStale());
-                    telemetry.addData("Watchdog",     watchdog.everTripped() ? "TRIPPED (latched)" : "ok");
                     telemetry.addLine("---");
                     telemetry.addData("Balls",        Arrays.toString(sorterSubsystem.getSorterList()));
                     telemetry.addData("Ball Count",   sorterSubsystem.getArtifactCount());
@@ -546,52 +513,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 RobotLog.ii("PHASE", "end");
             }
         } finally {
-            // ALWAYS runs — clean exit, exception, or SDK stop.
-            watchdog.stop();
+            // ALWAYS runs — clean stop, exception, or SDK kill.
+            // Stops the odometry worker thread so it cannot leak into the
+            // next run and contend on the I2C bus with the colour sensors.
             try { mecanumCommand.stopOdometry(); } catch (Exception ignored) {}
         }
-    }
-
-    /**
-     * Cuts drive power if the main loop stops petting it. Backstop only.
-     * everTripped latches so a transient stall stays visible on telemetry.
-     */
-    private static class LoopWatchdog {
-        private final DcMotor[] drive;
-        private final long stallMs;
-        private volatile long    lastPet     = System.currentTimeMillis();
-        private volatile boolean running     = false;
-        private volatile boolean tripped     = false;
-        private volatile boolean everTripped = false;
-        private Thread thread;
-
-        LoopWatchdog(long stallMs, DcMotor... drive) {
-            this.stallMs = stallMs;
-            this.drive   = drive;
-        }
-
-        void start() {
-            running = true;
-            lastPet = System.currentTimeMillis();
-            thread = new Thread(() -> {
-                while (running) {
-                    if (System.currentTimeMillis() - lastPet > stallMs) {
-                        tripped     = true;
-                        everTripped = true;
-                        for (DcMotor m : drive) {
-                            try { m.setPower(0); } catch (Exception ignored) {}
-                        }
-                    }
-                    try { Thread.sleep(20); } catch (InterruptedException e) { break; }
-                }
-            }, "LoopWatchdog");
-            thread.setDaemon(true);
-            thread.start();
-        }
-
-        void pet()            { lastPet = System.currentTimeMillis(); tripped = false; }
-        boolean isTripped()   { return tripped; }
-        boolean everTripped() { return everTripped; }
-        void stop()           { running = false; if (thread != null) thread.interrupt(); }
     }
 }
