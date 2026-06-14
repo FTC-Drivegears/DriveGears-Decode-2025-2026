@@ -18,13 +18,12 @@ import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.Artifact;
-import org.firstinspires.ftc.teamcode.util.FieldOrientedOffset;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.Arrays;
 
-@TeleOp(name = "CanadaCupBlue", group = "TeleOp")
-public class CanadaCupTeleOp extends LinearOpMode {
+@TeleOp(name = "CanadaCupRed", group = "TeleOp")
+public class CCRed extends LinearOpMode {
 
     private Hardware hw;
     private MecanumCommand mecanumCommand;
@@ -164,7 +163,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
         mecanumCommand.disableOdoLogging();
 
         limelight = hw.limelight;
-        limelight.pipelineSwitch(8);
+        limelight.pipelineSwitch(7);
         limelight.start();
 
         sorterSubsystem = new SorterSubsystem(hw, shooterSubsystem, this, telemetry, "pgg");
@@ -226,7 +225,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 double rawHeading = mecanumCommand.getOdoHeading();
                 if (Double.isNaN(rawHeading)) rawHeading = 0;
 
-                double heading = rawHeading + FieldOrientedOffset.headingOffsetRad;
+                double heading = rawHeading;
 
                 double inputY = -gamepad1.left_stick_y;
                 double inputX =  gamepad1.left_stick_x;

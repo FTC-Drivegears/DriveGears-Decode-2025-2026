@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismAuto;
 import org.firstinspires.ftc.teamcode.subsystems.mecanum.MecanumCommand;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.util.FieldOrientedOffset;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
@@ -178,6 +179,7 @@ public class NewBlueAutoOp2 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         Hardware hw = Hardware.getInstance(hardwareMap);
+        FieldOrientedOffset.headingOffsetRad = Math.PI / 2;
 
         mecanumCommand   = new MecanumCommand(hw);
         shooterSubsystem = new ShooterSubsystem(hw);
