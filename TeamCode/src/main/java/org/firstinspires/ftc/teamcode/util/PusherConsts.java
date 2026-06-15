@@ -4,10 +4,10 @@ public class PusherConsts {
     //    public static final double PUSHER_DOWN_POSITION_R = 0.2;
     public static final double PUSHER_DOWN_POSITION_R = 0.6;
     //    public static final double PUSHER_UP_POSITION_R   = 0.4;
-    public static final double PUSHER_UP_POSITION_R   = 0.2;  // was 0.34 — raised for more push; 0.4 snaps
+    public static final double PUSHER_UP_POSITION_R   = 0.1;  // was 0.34 — raised for more push; 0.4 snaps
 
     public static final double PUSHER_DOWN_POSITION_L = 0.0;
-    public static final double PUSHER_UP_POSITION_L   = 0.4;  // was 0.35 — raised for more push; 0.4 snaps
+    public static final double PUSHER_UP_POSITION_L   = 0.5;  // was 0.35 — raised for more push; 0.4 snaps
 
     /*
      * Pusher dwell timings (ms).

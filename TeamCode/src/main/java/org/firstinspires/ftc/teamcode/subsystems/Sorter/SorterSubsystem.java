@@ -114,9 +114,10 @@ public class SorterSubsystem {
 
     /*
      * Quickfire direction: +1 = forward (increasing index), -1 = reverse.
-     * Always starts forward from position 0, so the path is always 0 → 1 → 2.
+     * Always starts reverse from the last position, so the path is always
+     * 2 → 1 → 0.
      */
-    private int quickfireDirection = 1;
+    private int quickfireDirection = -1;
 
     public SorterSubsystem(
             Hardware hw,
@@ -281,15 +282,15 @@ public class SorterSubsystem {
         quickfirePositionsChecked = 0;
         quickfireSawTargetThisPosition = false;
         quickfireBallsFired = 0;
-        quickfireDirection = 1;
+        quickfireDirection = -1;
 
-        // Always snap to position 0 before starting so the traversal is always
-        // 0 → 1 → 2, visiting every slot exactly once. Without this, starting
-        // from the middle (index 1) would go 1 → 2 → bounce → 1 and never
-        // reach index 0 before the ball-count limit stopped the sequence.
-        curSorterPositionIndex = 0;
+        // Always snap to the LAST position before starting so the traversal is
+        // always 2 → 1 → 0, visiting every slot exactly once. Without this,
+        // starting from the middle (index 1) would go 1 → 0 → bounce → 1 and
+        // never reach index 2 before the ball-count limit stopped the sequence.
+        curSorterPositionIndex = MAX_NUM_BALLS - 1;
         lastMoveWasWrap = false;
-        sorter.setPosition(sorterPositions[0]);
+        sorter.setPosition(sorterPositions[MAX_NUM_BALLS - 1]);
         sorterMoveTimer.reset();
 
         sorterTimer.reset();
@@ -310,7 +311,7 @@ public class SorterSubsystem {
         quickfirePositionsChecked = 0;
         quickfireSawTargetThisPosition = false;
         quickfireBallsFired = 0;
-        quickfireDirection = 1;
+        quickfireDirection = -1;
     }
 
     public void quickfireState() {
@@ -463,7 +464,7 @@ public class SorterSubsystem {
                 return;
             }
 
-            manualSpin();
+            quickfireManualSpin(); // direction-aware bounce: 2 → 1 → 0
             sorterTimer.reset();
             quickfireSawTargetThisPosition = false;
         }
