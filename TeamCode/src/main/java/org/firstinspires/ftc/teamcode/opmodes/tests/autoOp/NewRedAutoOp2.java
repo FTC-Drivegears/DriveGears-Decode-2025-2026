@@ -196,7 +196,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
         turret = new TurretMechanismAuto();
         turret.init(hardwareMap);
         // No setkP/setkD override — uses our tuned defaults (kP=0.050, kD=0.009)
-        turret.setTarget(0, 3300, 0.359);
+        turret.setTarget(0, 3250, 0.359);
 
         limelight = hw.limelight;
         limelight.pipelineSwitch(0);
@@ -272,7 +272,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 case FIRST_SHOT:
                     outtakeFlag = true;
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
-                    mecanumCommand.moveToPos(26, 6, -0.43);
+                    mecanumCommand.moveToPos(26, 6, -0.42);
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1: processGPP1(AUTO_STATE.RESET);  break;
@@ -335,7 +335,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                                 stageTimer.reset(); stage = 0;
                                 autoState = AUTO_STATE.SECOND_SHOT;
 //                                mecanumCommand.moveToPos(0, 0, 0);
-                                mecanumCommand.moveToPos(26, 6, -0.43);
+                                mecanumCommand.moveToPos(26, 6, -0.42);
                             } break;
                     }
                     break;
@@ -401,7 +401,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                                 stageTimer.reset(); stage = 0;
                                 autoState = AUTO_STATE.THIRD_SHOT;
                                 //shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
-                                mecanumCommand.moveToPos(26, 6, -0.43);
+                                mecanumCommand.moveToPos(26, 6, -0.42);
                             } break;
                     }
                     break;
