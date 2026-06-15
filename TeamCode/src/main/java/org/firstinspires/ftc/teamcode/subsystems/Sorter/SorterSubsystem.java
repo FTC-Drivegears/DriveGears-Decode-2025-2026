@@ -58,8 +58,8 @@ public class SorterSubsystem {
      * Don't drop these below the servo's physical down->up travel or the
      * stroke won't complete.
      */
-    private static final long ANY_PUSHER_UP_MS = 80;
-    private static final long ANY_PUSHER_DOWN_MS = 80;
+    private static final long ANY_PUSHER_UP_MS = 100;
+    private static final long ANY_PUSHER_DOWN_MS = 100;
 
     public SelectedColour selectedColour = SelectedColour.ANY;
 

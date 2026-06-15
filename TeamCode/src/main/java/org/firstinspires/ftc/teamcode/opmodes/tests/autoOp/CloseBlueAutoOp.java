@@ -202,7 +202,7 @@ public class CloseBlueAutoOp extends LinearOpMode {
         turret = new TurretMechanismAuto();
         turret.init(hardwareMap);
         // No setkP/setkD override — uses our tuned defaults (kP=0.050, kD=0.009)
-        turret.setTarget(0, 3300, 0.359);
+        turret.setTarget(0, 3300, 0.1);
 
         limelight = hw.limelight;
         limelight.pipelineSwitch(0);
@@ -278,7 +278,7 @@ public class CloseBlueAutoOp extends LinearOpMode {
                 case FIRST_SHOT:
                     outtakeFlag = true;
                     shooterSubsystem.setMaxRPM((int) Math.round(turret.getShootRPM()));
-                    mecanumCommand.moveToPos(0, -43, Math.PI/4);
+                    mecanumCommand.moveToPos(-50, 0, 0);
                     if (mecanumCommand.isPositionReached()) {
                         switch (pattern) {
                             case GPP_1: processGPP1(AUTO_STATE.RESET);  break;
@@ -303,7 +303,7 @@ public class CloseBlueAutoOp extends LinearOpMode {
                     switch (stage) {
                         case 0:
 //                            mecanumCommand.moveToPos(0, 0, 0);
-                            mecanumCommand.moveToPos(-66, -15, Math.PI / 2);
+                            mecanumCommand.moveToPos(-50, -15, Math.PI / 2);
                             stageTimer.reset();
                             stage++;
                             break;
