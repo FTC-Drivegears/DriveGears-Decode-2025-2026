@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.Artifact;
+import org.firstinspires.ftc.teamcode.util.FieldOrientedOffset;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.Arrays;
@@ -225,7 +226,7 @@ public class CCRed extends LinearOpMode {
                 double rawHeading = mecanumCommand.getOdoHeading();
                 if (Double.isNaN(rawHeading)) rawHeading = 0;
 
-                double heading = rawHeading;
+                double heading = rawHeading + FieldOrientedOffset.headingOffsetRad;
 
                 double inputY = -gamepad1.left_stick_y;
                 double inputX =  gamepad1.left_stick_x;
@@ -438,6 +439,7 @@ public class CCRed extends LinearOpMode {
 
                 if (!isRescanningSorter()) {
                     if (gamepad2.a && !prevQuickfireA) {
+                        sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
                         sorterSubsystem.startQuickfire();
                     }
 

@@ -226,7 +226,7 @@ public class CanadaCupTeleOp extends LinearOpMode {
                 double rawHeading = mecanumCommand.getOdoHeading();
                 if (Double.isNaN(rawHeading)) rawHeading = 0;
 
-                double heading = rawHeading + FieldOrientedOffset.headingOffsetRad;
+                double heading = rawHeading - FieldOrientedOffset.headingOffsetRad;
 
                 double inputY = -gamepad1.left_stick_y;
                 double inputX =  gamepad1.left_stick_x;
@@ -439,6 +439,10 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
                 if (!isRescanningSorter()) {
                     if (gamepad2.a && !prevQuickfireA) {
+                        // TEMP (sorter-timing test): force ANY so quickfire runs on
+                        // timing alone — no shooter RPM gate, no ball-presence check.
+                        // Remove this line to restore normal colour selection.
+                        sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
                         sorterSubsystem.startQuickfire();
                     }
 

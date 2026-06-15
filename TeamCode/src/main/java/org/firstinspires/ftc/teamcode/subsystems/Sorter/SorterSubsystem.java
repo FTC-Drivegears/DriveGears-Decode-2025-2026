@@ -25,18 +25,41 @@ public class SorterSubsystem {
     private final ElapsedTime pusherTimer = new ElapsedTime();
     private final ElapsedTime sorterMoveTimer = new ElapsedTime();
 
-    private static final long SORTER_SETTLE_MS = 250;
-    private static final long SORTER_WRAP_SETTLE_MS = 500;
+    private static final long SORTER_SETTLE_MS = 200;
+    private static final long SORTER_WRAP_SETTLE_MS = 500; //500
 
     private boolean lastMoveWasWrap = false;
+
+    /*
+     * MASTER TEST SWITCH.
+     * true  -> quickfire ignores selected colour, ball presence, AND shooter
+     *          RPM. It just settles, pushes, spins, and repeats across all 3
+     *          sorter positions. This is the "push & sort 3 balls no matter
+     *          what" timing test path.
+     * false -> normal match behaviour: colour-sorted, sensor-confirmed firing
+     *          for GREEN/PURPLE, RPM-gated firing for ANY.
+     *
+     * Flip this to false for real matches.
+     */
+    private static final boolean TIMING_TEST_MODE = false;
 
     /*
      * Quickfire sensor-confirmation timing.
      * Quickfire waits for the sorter to settle, then watches the sensors
      * during a small scan window before deciding to move on.
+     * (Only used for GREEN / PURPLE — ANY fires straight through.)
      */
-    private static final long QUICKFIRE_SCAN_START_MS = 300;
-    private static final long QUICKFIRE_SCAN_WINDOW_MS = 300;
+    private static final long QUICKFIRE_SCAN_START_MS = 200; //300
+    private static final long QUICKFIRE_SCAN_WINDOW_MS = 230; //300
+
+    /*
+     * ANY-mode pusher dwell. Pushed to the servo-travel floor (auto-op
+     * PUSHER_TIME = 100). GREEN / PURPLE keep the padded 190 / 160 below.
+     * Don't drop these below the servo's physical down->up travel or the
+     * stroke won't complete.
+     */
+    private static final long ANY_PUSHER_UP_MS = 80;
+    private static final long ANY_PUSHER_DOWN_MS = 80;
 
     public SelectedColour selectedColour = SelectedColour.ANY;
 
@@ -78,10 +101,22 @@ public class SorterSubsystem {
 
     /*
      * Sensor-confirmed quickfire state.
-     * This is used for ANY, GREEN, and PURPLE.
+     * This is used for GREEN and PURPLE only.
      */
     private int quickfirePositionsChecked = 0;
     private boolean quickfireSawTargetThisPosition = false;
+
+    /*
+     * Simple quickfire: counts how many balls we've fired so we stop
+     * after all 3 positions instead of relying on the sensor scan.
+     */
+    private int quickfireBallsFired = 0;
+
+    /*
+     * Quickfire direction: +1 = forward (increasing index), -1 = reverse.
+     * Always starts forward from position 0, so the path is always 0 → 1 → 2.
+     */
+    private int quickfireDirection = 1;
 
     public SorterSubsystem(
             Hardware hw,
@@ -100,6 +135,15 @@ public class SorterSubsystem {
 
         this.reinitPattern(pattern);
         sorterMoveTimer.reset();
+    }
+
+    /*
+     * True whenever quickfire should run the simple, gate-free timing path
+     * (push & sort all 3 regardless of balls/shooter). Centralised so every
+     * call site agrees.
+     */
+    private boolean useSimplePath() {
+        return TIMING_TEST_MODE || selectedColour == SelectedColour.ANY;
     }
 
     public long getCurrentSettleTimeMs() {
@@ -202,6 +246,28 @@ public class SorterSubsystem {
         }
     }
 
+    /*
+     * Quickfire-private spin: steps by quickfireDirection and bounces at the
+     * ends instead of wrapping. When the next index would go out of bounds the
+     * direction flips and the index moves one step in the new direction.
+     * lastMoveWasWrap is always false here — a bounce is not a wrap, so we
+     * never pay the longer SORTER_WRAP_SETTLE_MS penalty.
+     */
+    private void quickfireManualSpin() {
+        int next = curSorterPositionIndex + quickfireDirection;
+
+        if (next < 0 || next >= MAX_NUM_BALLS) {
+            quickfireDirection = -quickfireDirection;
+            next = curSorterPositionIndex + quickfireDirection;
+        }
+
+        curSorterPositionIndex = next;
+        lastMoveWasWrap = false;
+
+        sorter.setPosition(sorterPositions[curSorterPositionIndex]);
+        sorterMoveTimer.reset();
+    }
+
     public void removeCurrentBall() {
         if (!sorterList[curSorterPositionIndex].is(Artifact.BallColour.NONE)) {
             sorterList[curSorterPositionIndex] = new Artifact(Artifact.BallColour.NONE);
@@ -214,6 +280,17 @@ public class SorterSubsystem {
 
         quickfirePositionsChecked = 0;
         quickfireSawTargetThisPosition = false;
+        quickfireBallsFired = 0;
+        quickfireDirection = 1;
+
+        // Always snap to position 0 before starting so the traversal is always
+        // 0 → 1 → 2, visiting every slot exactly once. Without this, starting
+        // from the middle (index 1) would go 1 → 2 → bounce → 1 and never
+        // reach index 0 before the ball-count limit stopped the sequence.
+        curSorterPositionIndex = 0;
+        lastMoveWasWrap = false;
+        sorter.setPosition(sorterPositions[0]);
+        sorterMoveTimer.reset();
 
         sorterTimer.reset();
         quickfireState = QuickfireState.WAIT_SORT;
@@ -232,6 +309,8 @@ public class SorterSubsystem {
         isPusherUp = false;
         quickfirePositionsChecked = 0;
         quickfireSawTargetThisPosition = false;
+        quickfireBallsFired = 0;
+        quickfireDirection = 1;
     }
 
     public void quickfireState() {
@@ -241,7 +320,13 @@ public class SorterSubsystem {
     public void quickfireState(Artifact.BallColour sensedColour, boolean ballPresent) {
         switch (quickfireState) {
             case WAIT_SORT:
-                updateSensorConfirmedQuickfire(sensedColour, ballPresent);
+                if (useSimplePath()) {
+                    // Timing test / ANY: fire all 3 as fast as possible,
+                    // no ball-presence check, no RPM gate.
+                    updateSimpleQuickfire();
+                } else {
+                    updateSensorConfirmedQuickfire(sensedColour, ballPresent);
+                }
                 break;
 
             case PUSH:
@@ -257,7 +342,7 @@ public class SorterSubsystem {
                 break;
 
             case WAIT_UP:
-                if (pusherTimer.milliseconds() >= 300) {
+                if (pusherTimer.milliseconds() >= waitUpMs()) { //300
                     quickfireState = QuickfireState.DOWN;
                 }
                 break;
@@ -273,14 +358,22 @@ public class SorterSubsystem {
                 break;
 
             case WAIT_DOWN:
-                if (pusherTimer.milliseconds() >= 400) {
+                if (pusherTimer.milliseconds() >= waitDownMs()) { //400
                     quickfirePositionsChecked = 0;
                     quickfireSawTargetThisPosition = false;
 
-                    if (selectedColour == SelectedColour.ANY) {
-                        manualSpin();
-                        sorterTimer.reset();
-                        quickfireState = QuickfireState.WAIT_SORT;
+                    if (useSimplePath()) {
+                        // Count the ball we just fired; bounce to the next slot
+                        // and fire again until all 3 are out.
+                        quickfireBallsFired++;
+
+                        if (quickfireBallsFired >= MAX_NUM_BALLS) {
+                            quickfireState = QuickfireState.FINISH;
+                        } else {
+                            quickfireManualSpin(); // bounce instead of wrap
+                            sorterTimer.reset();
+                            quickfireState = QuickfireState.WAIT_SORT;
+                        }
                     } else {
                         quickfireState = QuickfireState.FINISH;
                     }
@@ -291,12 +384,47 @@ public class SorterSubsystem {
                 isPusherUp = false;
                 quickfirePositionsChecked = 0;
                 quickfireSawTargetThisPosition = false;
+                quickfireBallsFired = 0;
                 break;
         }
     }
 
+    private long waitUpMs() {
+        return useSimplePath() ? ANY_PUSHER_UP_MS : 190; //300
+    }
+
+    private long waitDownMs() {
+        return useSimplePath() ? ANY_PUSHER_DOWN_MS : 160; //400
+    }
+
+    /*
+     * Simple quickfire.
+     * Mirrors the auto-op approach: wait for the sorter to settle, (optionally)
+     * wait for the shooter to reach RPM, then fire — no sensor scan window.
+     * This is the fast path that shoots all 3 balls back-to-back.
+     */
+    private void updateSimpleQuickfire() {
+        // Settle on the quickfire-OWNED sorterTimer, NOT sorterMoveTimer.
+        // The colour subsystem re-indexes the sorter every loop (resetting
+        // sorterMoveTimer), so isSorterSettling() never cleared and quickfire
+        // froze here in WAIT_SORT forever. sorterTimer is reset only by
+        // quickfire itself (startQuickfire + after each WAIT_DOWN manualSpin),
+        // so nothing external can stomp it.
+        if (sorterTimer.milliseconds() < getCurrentSettleTimeMs()) return;
+
+        // In timing-test mode we skip the RPM gate entirely so the sorter
+        // cycles all 3 positions on timing alone — no shooter, no balls needed.
+        // For real matches (TIMING_TEST_MODE = false), gate on RPM like
+        // shooterAtSpeed() in the auto-op so shots land instead of dry-firing.
+        if (!TIMING_TEST_MODE && !shooterSubsystem.isRPMReached()) return;
+
+        quickfireState = QuickfireState.PUSH;
+    }
+
     private void updateSensorConfirmedQuickfire(Artifact.BallColour sensedColour, boolean ballPresent) {
-        if (isSorterSettling()) return;
+        // Gate on the quickfire-owned sorterTimer instead of sorterMoveTimer,
+        // which the colour subsystem keeps resetting.
+        if (sorterTimer.milliseconds() < getCurrentSettleTimeMs()) return;
 
         double elapsed = sorterTimer.milliseconds();
 
@@ -311,8 +439,9 @@ public class SorterSubsystem {
         }
 
         /*
-         * If the correct target has been seen at this position, hold here until RPM is ready,
-         * then fire. This prevents moving away just because RPM was late.
+         * If the correct target has been seen at this position, hold here until
+         * RPM is ready, then fire. This prevents moving away just because RPM
+         * was late.
          */
         if (quickfireSawTargetThisPosition) {
             if (shooterSubsystem.isRPMReached()) {

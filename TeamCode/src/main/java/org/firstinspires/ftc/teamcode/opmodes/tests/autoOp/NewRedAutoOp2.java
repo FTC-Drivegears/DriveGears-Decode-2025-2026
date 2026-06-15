@@ -238,7 +238,6 @@ public class NewRedAutoOp2 extends LinearOpMode {
             telemetry.update();
         }
 
-        limelight.pipelineSwitch(8);
 
         waitForStart();
 
@@ -255,6 +254,8 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 tx = llResult.getTx();
                 ty = llResult.getTy();
             }
+
+            limelight.pipelineSwitch(7);
 
             // Full update signature — passes odo position for accurate world-angle tracking
             long llStaleMs = (llResult != null) ? llResult.getStaleness() : -1;

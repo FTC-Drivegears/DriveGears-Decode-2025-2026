@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 
-@Autonomous (name = "New Blue Auto")
+//@Autonomous (name = "New Blue Auto")
 public class NewBlueAutoOp extends LinearOpMode {
     //Initialize mecanumCommand, shooterSubsystem, and sorterSubsystem
     private MecanumCommand mecanumCommand;
