@@ -16,7 +16,23 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * TurretMechanism v18.3
+ * TurretMechanism v18.4
+ *
+ * FIX 8 (v18.4) — Manual override now wins outright and clears the auto-aim lock.
+ *   Symptom: the camera became "confident" on a phantom point with no real
+ *   target, locking targetWorldAngleDeg there. Two mechanisms then fought the
+ *   operator: (a) with no detection the blind reachability logic kept swinging
+ *   the turret back to that phantom world angle, and (b) the drift gate (FIX 3)
+ *   rejected the genuine target because it sat >MAX_EXPECTED_TX_DRIFT_DEG away
+ *   from the phantom lock. So even after a human aimed the turret correctly,
+ *   releasing snapped it back and the real target was discarded as "drift".
+ *   Fix: while manualMode is active the turret applies manualPower directly
+ *   (soft limits still enforced) AND resets worldAngleConfident,
+ *   targetFoundAtLeastOnce, wedgeHoldSide and the blind/stale/stable counters.
+ *   On release the turret holds where the operator left it and re-acquires
+ *   fresh from the next valid detection — no snap-back, no drift rejection.
+ *   Engaging manual = call setManualPower(power) each loop the stick is pushed;
+ *   releasing = call setAutoMode() (or setManualPower(0) then setAutoMode()).
  *
  * FIX 6 (v18.3) — Replaced unwind with reachability-based hold/swing.
  *   Travel is < 360°, so the turret can't wrap to re-face the target. Instead
@@ -306,6 +322,9 @@ public class TurretMechanismTutorial {
     public void setManualPower(double power) { manualMode = true;  manualPower = power; }
     public void setAutoMode()                { manualMode = false; }
 
+    /** True while the operator is overriding auto-aim by hand. */
+    public boolean isManualMode()            { return manualMode; }
+
     // =========================================================================
     // Update — short signature
     // =========================================================================
@@ -419,6 +438,28 @@ public class TurretMechanismTutorial {
             integralSum             = 0;
             error                   = 0;
             outputPower             = manualPower;
+
+            // FIX 8 — Operator override discards the auto-aim world lock.
+            // While the human is driving the turret by hand we throw away any
+            // existing world-angle confidence and the "found a target" flag.
+            // This kills both ways auto-aim would otherwise fight the operator
+            // on release:
+            //   1. The blind reachability branch no longer swings the turret
+            //      back to the (possibly phantom) targetWorldAngleDeg.
+            //   2. The drift gate (FIX 3) is disarmed, so the real target —
+            //      which may be >MAX_EXPECTED_TX_DRIFT_DEG from the phantom
+            //      lock — is accepted instead of rejected as "drift".
+            // On release the turret holds where it was left (no detection →
+            // blindScale 0 → zero power → brake) and re-acquires fresh from the
+            // next valid camera frame.
+            worldAngleConfident       = false;
+            worldAngleConfidentFrames = 0;
+            targetFoundAtLeastOnce    = false;
+            wedgeHoldSide             = 0;
+            blindFrameCount           = 0;
+            staleTxCount              = 0;
+            stableFrameCount          = 0;
+            framesSinceAcquisition    = 999;
 
         } else if (tx != null && !txRejected && !txIsStale && Math.abs(tx) < TX_ACCEPTANCE_DEG) {
             targetFoundAtLeastOnce = true;
