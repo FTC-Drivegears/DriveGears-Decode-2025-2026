@@ -356,7 +356,7 @@ public class NewRedAutoOp2 extends LinearOpMode {
                 case RESET_2:
                     if (!isPusherUp && stageTimer.milliseconds() > 500) {
                         if (sort(2)) {
-                            stage = -1; stageTimer.reset();
+                            stage = 0; stageTimer.reset();
                             autoState = AUTO_STATE.COLLECTION_2;
                             intakeFlag = true;
                         }
@@ -365,38 +365,37 @@ public class NewRedAutoOp2 extends LinearOpMode {
 
                 case COLLECTION_2:
                     switch (stage) {
-                        case -1:
-                            mecanumCommand.moveToPos(136, -20, -Math.PI / 2);
+                        case 0:
+                            mecanumCommand.moveToPos(136, -22, -Math.PI / 2);
                             stage++;
                             stageTimer.reset();
                             break;
-                        case 0:
-                            if(stageTimer.milliseconds() > 500){
+                        case 1:
+                            if(stageTimer.milliseconds() > 1000){
                                 mecanumCommand.moveToPos(136, -38, -Math.PI / 2);
                                 stageTimer.reset(); stage++; break;
-                            };
-//                            mecanumCommand.moveToPos(0, 0, 0);
-                        case 1:
-                            if (mecanumCommand.isPositionReached()) { stage++; stageTimer.reset(); } break;
+                            }
                         case 2:
+                            if (mecanumCommand.isPositionReached()) { stage++; stageTimer.reset(); } break;
+                        case 3:
                             if (stageTimer.milliseconds() > 500) {
                                 mecanumCommand.moveToPos(136, -52, -Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
-                        case 3:
+                        case 4:
                             if (stageTimer.milliseconds() > 500 && intakeTimer.milliseconds() >= INTAKE_WAIT) {
                                 if (sort(0)) { stageTimer.reset(); stage++; }
                             } break;
-                        case 4:
+                        case 5:
                             if (stageTimer.milliseconds() > 500) {
                                 mecanumCommand.moveToPos(136, -68, -Math.PI / 2);
                                 stageTimer.reset(); stage++;
                             } break;
-                        case 5:
+                        case 6:
                             if (stageTimer.milliseconds() > 500 && intakeTimer.milliseconds() >= INTAKE_WAIT) {
                                 if (sort(1)) { stageTimer.reset(); stage++; }
                             } break;
-                        case 6:
+                        case 7:
                             if (stageTimer.milliseconds() > 750) {
                                 stageTimer.reset(); stage = 0;
                                 autoState = AUTO_STATE.THIRD_SHOT;
