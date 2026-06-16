@@ -99,8 +99,8 @@ public class TurretMechanismTutorial {
     private MecanumCommand mecanumCommand;
 
     // --- PID gains ---
-    private double kP = 0.050;
-    private double kI = 0.012;
+    private double kP = 0.065;
+    private double kI = 0.015;
     private double kD = 0.009;
 
     private static final double MAX_INTEGRAL            = 0.20;
@@ -108,8 +108,8 @@ public class TurretMechanismTutorial {
     private double integralSum = 0.0;
     private double prevError   = 0.0;
 
-    private static final double FEEDFORWARD_STICTION_POWER = 0.07;
-    private static final double MAX_OUTPUT_POWER            = 0.80;
+    private static final double FEEDFORWARD_STICTION_POWER = 0.12;
+    private static final double MAX_OUTPUT_POWER            = 1.00;
 
     // FIX 1: reduced from 2.0 → 0.5 to stop locking off-target inside deadband
     private static final double ERROR_DEADBAND_DEG        = 0.5;

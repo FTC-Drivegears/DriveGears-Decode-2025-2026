@@ -22,7 +22,7 @@ public class ColourSensorSubsystem {
     private static final long READ_INTERVAL_MS = 50;
     private static final long ADD_COOLDOWN_MS = 100;
 
-    private static final float BALL_PRESENT_ALPHA_THRESHOLD = 0.25f;
+    private static final float BALL_PRESENT_ALPHA_THRESHOLD = 0.3f;
     private static final float BALL_CLEAR_ALPHA_THRESHOLD   = 0.15f;
 
     private static final int BALL_PRESENT_CONFIRM_READS = 2;

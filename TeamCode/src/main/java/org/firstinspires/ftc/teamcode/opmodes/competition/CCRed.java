@@ -291,13 +291,13 @@ public class CCRed extends LinearOpMode {
                     if (turretDeg >= MANUAL_LIMIT_CW_DEG) manualPower = 0;
                     else {
                         double scale = Math.min((MANUAL_LIMIT_CW_DEG - turretDeg) / 30.0, 1.0);
-                        manualPower = 0.15 + 0.25 * scale;
+                        manualPower = 0.25 + 0.75 * scale;
                     }
                 } else if (gamepad2.right_bumper) {
                     if (turretDeg <= MANUAL_LIMIT_CCW_DEG) manualPower = 0;
                     else {
                         double scale = Math.min((turretDeg - MANUAL_LIMIT_CCW_DEG) / 30.0, 1.0);
-                        manualPower = -(0.15 + 0.25 * scale);
+                        manualPower = -(0.25 + 0.75 * scale);
                     }
                 }
 

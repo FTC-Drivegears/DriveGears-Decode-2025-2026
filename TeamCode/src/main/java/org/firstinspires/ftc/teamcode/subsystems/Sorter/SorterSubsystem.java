@@ -25,8 +25,10 @@ public class SorterSubsystem {
     private final ElapsedTime pusherTimer = new ElapsedTime();
     private final ElapsedTime sorterMoveTimer = new ElapsedTime();
 
-    private static final long SORTER_SETTLE_MS = 200;
-    private static final long SORTER_WRAP_SETTLE_MS = 500; //500
+    private static final long SORTER_SETTLE_MS = 100; //200 - 180
+
+    // fix correlatio hetween jnmanual override and turret autoaim
+    private static final long SORTER_WRAP_SETTLE_MS = 200; //500 - 400
 
     private boolean lastMoveWasWrap = false;
 
@@ -50,7 +52,7 @@ public class SorterSubsystem {
      * (Only used for GREEN / PURPLE — ANY fires straight through.)
      */
     private static final long QUICKFIRE_SCAN_START_MS = 200; //300
-    private static final long QUICKFIRE_SCAN_WINDOW_MS = 230; //300
+    private static final long QUICKFIRE_SCAN_WINDOW_MS = 200; //300
 
     /*
      * ANY-mode pusher dwell. Pushed to the servo-travel floor (auto-op
@@ -288,6 +290,7 @@ public class SorterSubsystem {
         // always 2 → 1 → 0, visiting every slot exactly once. Without this,
         // starting from the middle (index 1) would go 1 → 0 → bounce → 1 and
         // never reach index 2 before the ball-count limit stopped the sequence.
+
         curSorterPositionIndex = MAX_NUM_BALLS - 1;
         lastMoveWasWrap = false;
         sorter.setPosition(sorterPositions[MAX_NUM_BALLS - 1]);
@@ -343,7 +346,7 @@ public class SorterSubsystem {
                 break;
 
             case WAIT_UP:
-                if (pusherTimer.milliseconds() >= waitUpMs()) { //300
+                if (pusherTimer.milliseconds() >= ANY_PUSHER_UP_MS) { //300
                     quickfireState = QuickfireState.DOWN;
                 }
                 break;
@@ -356,28 +359,34 @@ public class SorterSubsystem {
                 pusherTimer.reset();
 
                 quickfireState = QuickfireState.WAIT_DOWN;
-                break;
-
             case WAIT_DOWN:
-                if (pusherTimer.milliseconds() >= waitDownMs()) { //400
-                    quickfirePositionsChecked = 0;
-                    quickfireSawTargetThisPosition = false;
+                /*
+                 * The pusher still needs enough time to physically retract before another
+                 * push. The sorter is already moving during this wait.
+                 */
+                if (pusherTimer.milliseconds() < ANY_PUSHER_DOWN_MS) {
+                    break;
+                }
 
-                    if (useSimplePath()) {
-                        // Count the ball we just fired; bounce to the next slot
-                        // and fire again until all 3 are out.
-                        quickfireBallsFired++;
+                quickfirePositionsChecked = 0;
+                quickfireSawTargetThisPosition = false;
 
-                        if (quickfireBallsFired >= MAX_NUM_BALLS) {
-                            quickfireState = QuickfireState.FINISH;
-                        } else {
-                            quickfireManualSpin(); // bounce instead of wrap
-                            sorterTimer.reset();
-                            quickfireState = QuickfireState.WAIT_SORT;
-                        }
-                    } else {
+                if (useSimplePath()) {
+                    quickfireBallsFired++;
+
+                    if (quickfireBallsFired >= MAX_NUM_BALLS) {
                         quickfireState = QuickfireState.FINISH;
+                        break;
                     }
+
+                    quickfireManualSpin();
+                    sorterTimer.reset();
+                    quickfireState = QuickfireState.WAIT_SORT;
+                } else {
+                    /*
+                     * Selected-colour quickfire only fires one matching ball.
+                     */
+                    quickfireState = QuickfireState.FINISH;
                 }
                 break;
 
@@ -390,33 +399,16 @@ public class SorterSubsystem {
         }
     }
 
-    private long waitUpMs() {
-        return useSimplePath() ? ANY_PUSHER_UP_MS : 190; //300
-    }
-
-    private long waitDownMs() {
-        return useSimplePath() ? ANY_PUSHER_DOWN_MS : 160; //400
-    }
-
     /*
      * Simple quickfire.
-     * Mirrors the auto-op approach: wait for the sorter to settle, (optionally)
-     * wait for the shooter to reach RPM, then fire — no sensor scan window.
-     * This is the fast path that shoots all 3 balls back-to-back.
+     *
+     * The first shot waits for the sorter to settle normally. After each shot,
+     * the sorter begins moving at the same time that the pusher is commanded
+     * down. Therefore, pusher-down travel and sorter settling overlap.
      */
     private void updateSimpleQuickfire() {
-        // Settle on the quickfire-OWNED sorterTimer, NOT sorterMoveTimer.
-        // The colour subsystem re-indexes the sorter every loop (resetting
-        // sorterMoveTimer), so isSorterSettling() never cleared and quickfire
-        // froze here in WAIT_SORT forever. sorterTimer is reset only by
-        // quickfire itself (startQuickfire + after each WAIT_DOWN manualSpin),
-        // so nothing external can stomp it.
         if (sorterTimer.milliseconds() < getCurrentSettleTimeMs()) return;
 
-        // In timing-test mode we skip the RPM gate entirely so the sorter
-        // cycles all 3 positions on timing alone — no shooter, no balls needed.
-        // For real matches (TIMING_TEST_MODE = false), gate on RPM like
-        // shooterAtSpeed() in the auto-op so shots land instead of dry-firing.
         if (!TIMING_TEST_MODE && !shooterSubsystem.isRPMReached()) return;
 
         quickfireState = QuickfireState.PUSH;
