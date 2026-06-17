@@ -18,7 +18,6 @@ import org.firstinspires.ftc.teamcode.subsystems.turret.TurretMechanismTutorial;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.Sorter.SorterSubsystem;
 import org.firstinspires.ftc.teamcode.util.Artifact;
-import org.firstinspires.ftc.teamcode.util.FieldOrientedOffset;
 import org.firstinspires.ftc.teamcode.util.PusherConsts;
 
 import java.util.Arrays;
@@ -221,12 +220,14 @@ public class CanadaCupTeleOp extends LinearOpMode {
             while (opModeIsActive()) {
 
                 RobotLog.ii("PHASE", "odo");
+                // Odometry is still processed every loop so the turret's
+                // heading-based tracking keeps working.  Drive is now
+                // robot-oriented, so the heading no longer rotates the
+                // stick inputs — it's read only for telemetry.
                 mecanumCommand.processOdometry();
 
                 double rawHeading = mecanumCommand.getOdoHeading();
                 if (Double.isNaN(rawHeading)) rawHeading = 0;
-
-                double heading = rawHeading - FieldOrientedOffset.headingOffsetRad;
 
                 double inputY = -gamepad1.left_stick_y;
                 double inputX =  gamepad1.left_stick_x;
@@ -244,11 +245,11 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     inputR /= 2;
                 }
 
-                double driveX = inputX * Math.cos(-heading) - inputY * Math.sin(-heading);
-                double driveY = inputX * Math.sin(-heading) + inputY * Math.cos(-heading);
-
                 RobotLog.ii("PHASE", "drive");
-                theta = mecanumCommand.normalMove(driveY, driveX, inputR);
+                // Robot-oriented: pass raw stick inputs straight through.
+                // (Field-oriented passed normalMove(driveY, driveX, inputR);
+                // with heading = 0 that reduces to normalMove(inputY, inputX, inputR).)
+                theta = mecanumCommand.normalMove(inputY, inputX, inputR);
 
                 RobotLog.ii("PHASE", "limelight");
                 llResult = limelight.getLatestResult();
@@ -439,9 +440,6 @@ public class CanadaCupTeleOp extends LinearOpMode {
 
                 if (!isRescanningSorter()) {
                     if (gamepad2.a && !prevQuickfireA) {
-                        // TEMP (sorter-timing test): force ANY so quickfire runs on
-                        // timing alone — no shooter RPM gate, no ball-presence check.
-                        // Remove this line to restore normal colour selection.
                         sorterSubsystem.selectedColour = SorterSubsystem.SelectedColour.ANY;
                         sorterSubsystem.startQuickfire();
                     }
@@ -485,9 +483,9 @@ public class CanadaCupTeleOp extends LinearOpMode {
                     telemetry.addData("Shooter on",   isShooterOn);
                     telemetry.addData("RPM Latched",  rpmLatch);
                     telemetry.addLine("---");
-                    telemetry.addData("Drive Mode",   "FIELD");
+                    telemetry.addData("Drive Mode",   "ROBOT");
                     telemetry.addData("Heading Raw",  rawHeading);
-                    telemetry.addData("Heading Deg",  Math.toDegrees(heading));
+                    telemetry.addData("Heading Deg",  Math.toDegrees(rawHeading));
                     telemetry.addLine("---");
                     telemetry.addData("Balls",        Arrays.toString(sorterSubsystem.getSorterList()));
                     telemetry.addData("Ball Count",   sorterSubsystem.getArtifactCount());

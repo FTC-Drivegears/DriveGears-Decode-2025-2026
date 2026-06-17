@@ -355,9 +355,8 @@ public class SixBallRedAuto extends LinearOpMode {
                 case RESET_2:
                     if (!isPusherUp && stageTimer.milliseconds() > 500) {
                         if (sort(2)) {
-                            stage = -1; stageTimer.reset();
+                            stage = 0; stageTimer.reset();
                             autoState = AUTO_STATE.FINISH;
-                            intakeFlag = true;
                         }
                     }
                     break;

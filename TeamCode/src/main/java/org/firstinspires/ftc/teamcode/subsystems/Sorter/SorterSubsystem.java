@@ -25,10 +25,10 @@ public class SorterSubsystem {
     private final ElapsedTime pusherTimer = new ElapsedTime();
     private final ElapsedTime sorterMoveTimer = new ElapsedTime();
 
-    private static final long SORTER_SETTLE_MS = 100; //200 - 180
+    private static final long SORTER_SETTLE_MS = 75; //200 - 180
 
     // fix correlatio hetween jnmanual override and turret autoaim
-    private static final long SORTER_WRAP_SETTLE_MS = 200; //500 - 400
+    private static final long SORTER_WRAP_SETTLE_MS = 150; //500 - 400
 
     private boolean lastMoveWasWrap = false;
 
@@ -60,8 +60,8 @@ public class SorterSubsystem {
      * Don't drop these below the servo's physical down->up travel or the
      * stroke won't complete.
      */
-    private static final long ANY_PUSHER_UP_MS = 100;
-    private static final long ANY_PUSHER_DOWN_MS = 100;
+    private static final long ANY_PUSHER_UP_MS = 75; //100
+    private static final long ANY_PUSHER_DOWN_MS = 75; //100
 
     public SelectedColour selectedColour = SelectedColour.ANY;
 
